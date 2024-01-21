@@ -1,29 +1,30 @@
 use std::collections::HashMap;
+use clap::builder::PossibleValue;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
-pub(crate) struct Release {
-    pub(crate) date: String,
+pub struct Release {
+    pub date: String,
 
     #[serde(rename = "notesLink")]
-    pub(crate) notes_link: Option<String>,
+    pub notes_link: Option<String>,
     #[serde(rename = "licenseRequired")]
-    pub(crate) license_required: bool,
+    pub license_required: bool,
 
-    pub(crate) version: String,
+    pub version: String,
     #[serde(rename = "majorVersion")]
-    pub(crate) major_version: String,
-    pub(crate) build: String,
+    pub major_version: String,
+    pub build: String,
 
-    pub(crate) downloads: HashMap<String, Download>,
+    pub downloads: HashMap<String, Download>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub(crate) struct Download {
-    pub(crate) link: String,
-    pub(crate) size: u64,
+pub struct Download {
+    pub link: String,
+    pub size: u64,
     #[serde(rename = "checksumLink")]
-    pub(crate) checksum_link: String,
+    pub checksum_link: String,
 }
 
 static ARCHITECTURES: &[&[&str]] = &[
@@ -33,9 +34,9 @@ static ARCHITECTURES: &[&[&str]] = &[
 ];
 
 impl Release {
-    pub fn download(&self, platform: Option<String>, arch: Option<String>) -> Option<&Download> {
-        let platform = platform.unwrap_or_else(|| std::env::consts::OS.to_string());
-        let arch = arch.unwrap_or_else(|| std::env::consts::ARCH.to_string());
+    pub fn download(&self) -> Option<&Download> {
+        let platform = std::env::consts::OS.to_string();
+        let arch = std::env::consts::ARCH.to_string();
 
         let platform = match platform.as_str() {
             "linux" => "linux",
@@ -65,6 +66,37 @@ impl Release {
             (Some(arch), _) => Some(arch),
             (_, Some(platform)) => Some(platform),
             _ => None,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum ReleaseType {
+    Release,
+    EAP,
+    Preview,
+}
+
+impl ReleaseType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Release => "release",
+            Self::EAP => "eap",
+            Self::Preview => "preview",
+        }
+    }
+}
+
+impl clap::ValueEnum for ReleaseType {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::Release, Self::EAP, Self::Preview]
+    }
+
+    fn to_possible_value(&self) -> Option<PossibleValue> {
+        match self {
+            Self::Release => Some(PossibleValue::new("release")),
+            Self::EAP => Some(PossibleValue::new("eap")),
+            Self::Preview => Some(PossibleValue::new("preview")),
         }
     }
 }

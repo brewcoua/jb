@@ -1,10 +1,12 @@
-mod release;
+pub mod release;
+pub mod install;
 
 use std::collections::HashMap;
 use clap::builder::PossibleValue;
+use release::ReleaseType;
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) enum Tool {
+pub enum Tool {
     IntelliJIdeaUltimate,
     IntelliJIdeaCommunity,
     PyCharmProfessional,
@@ -22,30 +24,19 @@ pub(crate) enum Tool {
     Fleet,
     Aqua,
     Writerside,
-    dotMemory,
-    dotTrace,
+    DotMemory,
+    DotTrace,
     MPS,
 
     Space,
     Gateway,
 }
 
-#[derive(Copy, Clone)]
-pub(crate) enum ReleaseType {
-    Release,
-    EAP,
-    Preview,
-}
-
 impl Tool {
-    pub(crate) fn latest_release(&self, release_type: Option<ReleaseType>, latest: Option<bool>) -> release::Release {
-        let release_type = release_type.unwrap_or_else(|| self.default_type());
-        let latest = latest.unwrap_or(true);
-
+    pub fn latest_release(&self, release_type: &ReleaseType) -> release::Release {
         let url = format!(
-            "https://data.services.jetbrains.com/products/releases?code={}&latest={}&type={}",
+            "https://data.services.jetbrains.com/products/releases?code={}&latest=true&type={}",
             self.as_code(),
-            latest,
             release_type.as_str()
         );
 
@@ -64,7 +55,7 @@ impl Tool {
             .clone()
     }
 
-    pub(crate) fn as_code(&self) -> &str {
+    pub fn as_code(&self) -> &str {
         match self {
             Self::IntelliJIdeaUltimate => "IIU",
             Self::IntelliJIdeaCommunity => "IIC",
@@ -83,8 +74,8 @@ impl Tool {
             Self::Fleet => "FL",
             Self::Aqua => "QA",
             Self::Writerside => "WRS",
-            Self::dotMemory => "DM",
-            Self::dotTrace => "DP",
+            Self::DotMemory => "DM",
+            Self::DotTrace => "DP",
             Self::MPS => "MPS",
 
             Self::Space => "SPA",
@@ -92,7 +83,7 @@ impl Tool {
         }
     }
 
-    pub(crate) fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Self::IntelliJIdeaUltimate => "idea-ultimate",
             Self::IntelliJIdeaCommunity => "idea-community",
@@ -111,8 +102,8 @@ impl Tool {
             Self::Fleet => "fleet",
             Self::Aqua => "aqua",
             Self::Writerside => "writerside",
-            Self::dotMemory => "dotmemory",
-            Self::dotTrace => "dottrace",
+            Self::DotMemory => "dotmemory",
+            Self::DotTrace => "dottrace",
             Self::MPS => "mps",
 
             Self::Space => "space",
@@ -120,7 +111,7 @@ impl Tool {
         }
     }
 
-    pub(crate) fn src_name(&self) -> &str {
+    pub fn src_name(&self) -> &str {
         match self {
             Self::IntelliJIdeaUltimate => "idea",
             Self::IntelliJIdeaCommunity => "idea",
@@ -148,8 +139,8 @@ impl Tool {
             Self::Fleet => ReleaseType::Preview,
             Self::Aqua => ReleaseType::Preview,
             Self::Writerside => ReleaseType::EAP,
-            Self::dotMemory => ReleaseType::Release,
-            Self::dotTrace => ReleaseType::Release,
+            Self::DotMemory => ReleaseType::Release,
+            Self::DotTrace => ReleaseType::Release,
             Self::MPS => ReleaseType::Release,
 
             Self::Space => ReleaseType::Release,
@@ -178,8 +169,8 @@ impl clap::ValueEnum for Tool {
             Self::Fleet,
             Self::Aqua,
             Self::Writerside,
-            Self::dotMemory,
-            Self::dotTrace,
+            Self::DotMemory,
+            Self::DotTrace,
             Self::MPS,
 
             Self::Space,
@@ -206,8 +197,8 @@ impl clap::ValueEnum for Tool {
             Self::Fleet => Some(PossibleValue::new("fleet")),
             Self::Aqua => Some(PossibleValue::new("aqua")),
             Self::Writerside => Some(PossibleValue::new("writerside")),
-            Self::dotMemory => Some(PossibleValue::new("dotmemory")),
-            Self::dotTrace => Some(PossibleValue::new("dottrace")),
+            Self::DotMemory => Some(PossibleValue::new("dotmemory")),
+            Self::DotTrace => Some(PossibleValue::new("dottrace")),
             Self::MPS => Some(PossibleValue::new("mps")),
 
             Self::Space => Some(PossibleValue::new("space")),
@@ -216,26 +207,4 @@ impl clap::ValueEnum for Tool {
     }
 }
 
-impl ReleaseType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Release => "release",
-            Self::EAP => "eap",
-            Self::Preview => "preview",
-        }
-    }
-}
 
-impl clap::ValueEnum for ReleaseType {
-    fn value_variants<'a>() -> &'a [Self] {
-        &[Self::Release, Self::EAP, Self::Preview]
-    }
-
-    fn to_possible_value(&self) -> Option<PossibleValue> {
-        match self {
-            Self::Release => Some(PossibleValue::new("release")),
-            Self::EAP => Some(PossibleValue::new("eap")),
-            Self::Preview => Some(PossibleValue::new("preview")),
-        }
-    }
-}

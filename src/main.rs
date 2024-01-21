@@ -1,17 +1,29 @@
-use clap::Parser;
 use env_logger::{Builder, WriteStyle};
-use jb_cli::{JetBrainsCLI, dispatch };
+
+mod cmds;
 
 fn main() {
+    let cli = cmds::cli();
+    let matches = cli.get_matches();
+
+    let log_level = if matches.get_flag("verbose") {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+    let write_style = match matches.get_one::<String>("color").map(|s| s.as_str()) {
+        Some("always") => WriteStyle::Always,
+        Some("never") => WriteStyle::Never,
+        Some("auto") => WriteStyle::Auto,
+        _ => WriteStyle::Auto,
+    };
+
     Builder::new()
-        .filter(None, log::LevelFilter::Debug)
+        .filter(None, log_level)
         .format_timestamp(None)
         .format_module_path(false)
-        .write_style(WriteStyle::Always)
+        .write_style(write_style)
         .init();
 
-    let args = JetBrainsCLI::parse();
-
-
-    dispatch(args);
+    cmds::dispatch(matches.subcommand());
 }
