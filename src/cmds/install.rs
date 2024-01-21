@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, Command};
-use jb_cli::tools::{Tool, release::ReleaseType};
+use jb_tool::tools::{Tool, release::ReleaseType, install::ToolInstaller};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -59,7 +59,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
         .collect::<Vec<_>>();
 
 
-    let result = jb_cli::tools::install::ToolInstaller::new(tool.clone(), release_type, directory)
+    let result = ToolInstaller::new(tool.clone(), release_type, directory)
         .install()
         .expect("Failed to install tool");
 

@@ -1,4 +1,7 @@
 mod install;
+mod refresh;
+mod list;
+mod uninstall;
 
 use clap::{arg, Command};
 
@@ -26,12 +29,14 @@ pub fn cli() -> Command {
                 .global(true)
         )
         .subcommand(install::command())
+        .subcommand(list::command())
 }
 
 pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) {
     if let Some((name, sub_matches)) = args {
         match name {
             "install" => install::dispatch(sub_matches),
+            "list" => list::dispatch(sub_matches),
             _ => {
                 log::error!("Unknown subcommand {}", name);
                 std::process::exit(1);

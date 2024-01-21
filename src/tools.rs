@@ -1,5 +1,6 @@
 pub mod release;
 pub mod install;
+pub mod list;
 
 use std::collections::HashMap;
 use clap::builder::PossibleValue;
@@ -33,6 +34,33 @@ pub enum Tool {
 }
 
 impl Tool {
+    pub fn list() -> Vec<Self> {
+        vec![
+            Self::IntelliJIdeaUltimate,
+            Self::IntelliJIdeaCommunity,
+            Self::PyCharmProfessional,
+            Self::PyCharmCommunity,
+            Self::PhpStorm,
+            Self::GoLand,
+            Self::Rider,
+            Self::CLion,
+            Self::ClionNova,
+            Self::RustRover,
+            Self::WebStorm,
+            Self::RubyMine,
+            Self::DataGrip,
+            Self::DataSpell,
+            Self::Fleet,
+            Self::Aqua,
+            Self::Writerside,
+            Self::DotMemory,
+            Self::DotTrace,
+            Self::MPS,
+            Self::Space,
+            Self::Gateway,
+        ]
+    }
+
     pub fn latest_release(&self, release_type: &ReleaseType) -> release::Release {
         let url = format!(
             "https://data.services.jetbrains.com/products/releases?code={}&latest=true&type={}",
@@ -108,6 +136,34 @@ impl Tool {
 
             Self::Space => "space",
             Self::Gateway => "gateway",
+        }
+    }
+
+    pub fn pretty(&self) -> &str {
+        match self {
+            Self::IntelliJIdeaUltimate => "IntelliJ IDEA Ultimate",
+            Self::IntelliJIdeaCommunity => "IntelliJ IDEA Community",
+            Self::PyCharmProfessional => "PyCharm Professional",
+            Self::PyCharmCommunity => "PyCharm Community",
+            Self::PhpStorm => "PhpStorm",
+            Self::GoLand => "GoLand",
+            Self::Rider => "Rider",
+            Self::CLion => "CLion",
+            Self::ClionNova => "CLion Nova",
+            Self::RustRover => "RustRover",
+            Self::WebStorm => "WebStorm",
+            Self::RubyMine => "RubyMine",
+            Self::DataGrip => "DataGrip",
+            Self::DataSpell => "DataSpell",
+            Self::Fleet => "Fleet",
+            Self::Aqua => "Aqua",
+            Self::Writerside => "Writerside",
+            Self::DotMemory => "dotMemory",
+            Self::DotTrace => "dotTrace",
+            Self::MPS => "MPS",
+
+            Self::Space => "Space",
+            Self::Gateway => "Gateway",
         }
     }
 

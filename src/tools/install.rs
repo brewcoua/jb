@@ -19,7 +19,7 @@ impl ToolInstaller {
         }
     }
 
-    pub fn install(self) -> Result<bool, &'static str> {
+    pub fn install(&self) -> Result<bool, &'static str> {
         log::debug!("Fetching latest release for {}", self.tool.as_str());
         let release = self.tool.latest_release(&self.release_type);
 
