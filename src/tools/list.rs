@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 use super::release::ReleaseVersion;
-use super::Tool;
+use super::Kind;
 
 #[derive(Debug, Copy, Clone)]
 pub struct InstalledTool {
-    pub tool: Tool,
+    pub tool: Kind,
     pub version: ReleaseVersion,
 }
 
@@ -16,7 +16,7 @@ impl InstalledTool {
 }
 
 pub fn list_tools(directory: PathBuf) -> Vec<InstalledTool> {
-    let tools = Tool::list();
+    let tools = Kind::list();
 
     let mut installed_tools: Vec<InstalledTool> = Vec::new();
 

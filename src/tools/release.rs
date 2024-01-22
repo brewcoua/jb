@@ -1,76 +1,8 @@
-use std::collections::HashMap;
+use std::cmp::Ordering;
 use clap::builder::PossibleValue;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct Release {
-    pub date: String,
-
-    #[serde(rename = "notesLink")]
-    pub notes_link: Option<String>,
-    #[serde(rename = "licenseRequired")]
-    pub license_required: bool,
-
-    pub version: ReleaseVersion,
-    #[serde(rename = "majorVersion")]
-    pub major_version: String,
-    pub build: String,
-
-    pub downloads: HashMap<String, Download>,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct Download {
-    pub link: String,
-    pub size: u64,
-    #[serde(rename = "checksumLink")]
-    pub checksum_link: String,
-}
-
-static ARCHITECTURES: &[&[&str]] = &[
-    &["x86_64", "amd64", "x86", "x64"],
-    &["aarch64", "arm64", "armv8l", "armv8b", "armv8", "armv9"],
-    &["i386", "x86_32", "x86_32b", "x86_32l"],
-];
-
-impl Release {
-    pub fn download(&self) -> Option<&Download> {
-        let platform = std::env::consts::OS.to_string();
-        let arch = std::env::consts::ARCH.to_string();
-
-        let platform = match platform.as_str() {
-            "linux" => "linux",
-            "macos" => "mac",
-            "windows" => "windows",
-            _ => return None,
-        };
-
-        // Find the list of architectures that match the given architecture
-        let archs = ARCHITECTURES
-            .iter()
-            .find(|archs| archs.contains(&arch.to_lowercase().as_str()))
-            .expect("Failed to find architectures matching the given architecture");
-
-        let arch_specific = archs
-            .iter()
-            .map(|arch| format!("{}_{}", platform, arch))
-            .chain(archs.iter().map(|arch| format!("{}-{}", platform, arch)))
-            .chain(archs.iter().map(|arch| format!("{}{}", platform, arch)))
-            .find(|arch| self.downloads.keys().any(|key| key.eq_ignore_ascii_case(arch)))
-            .map(|arch| self.downloads.get(arch.as_str()))
-            .flatten();
-
-        let platform_specific = self.downloads.get(platform);
-
-        match (arch_specific, platform_specific) {
-            (Some(arch), _) => Some(arch),
-            (_, Some(platform)) => Some(platform),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Deserialize, Debug, Copy, Clone, PartialEq)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ReleaseType {
     Release,
     EAP,
@@ -122,30 +54,104 @@ impl std::str::FromStr for ReleaseType {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+impl Ord for ReleaseType {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Self::Release, Self::Release) => Ordering::Equal,
+            (Self::Release, _) => Ordering::Greater,
+            (_, Self::Release) => Ordering::Less,
+
+            (Self::EAP, Self::EAP) => Ordering::Equal,
+            (Self::EAP, _) => Ordering::Greater,
+            (_, Self::EAP) => Ordering::Less,
+
+            (Self::Preview, Self::Preview) => Ordering::Equal,
+            (Self::Preview, _) => Ordering::Greater,
+            (_, Self::Preview) => Ordering::Less,
+        }
+    }
+}
+
+impl PartialOrd for ReleaseType {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Deserialize, Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct ReleaseVersion {
-    pub major: u32,
-    pub minor: u32,
+    pub major: Option<u32>,
+    pub minor: Option<u32>,
     pub patch: Option<u32>,
     pub release: ReleaseType,
 }
 
 impl ReleaseVersion {
-    pub fn new(major: u32, minor: u32, patch: Option<u32>) -> Self {
+    pub fn new(major: Option<u32>, minor: Option<u32>, patch: Option<u32>) -> Self {
         Self { major, minor, patch, release: ReleaseType::Release }
     }
 
     pub fn with_release(self, release: ReleaseType) -> Self {
         Self { release, ..self }
     }
+
+    pub fn is_latest(&self) -> bool {
+        self.major.is_none() && self.minor.is_none() && self.patch.is_none()
+    }
+
+    pub fn compare_builds(&self, other: &Self) -> Ordering {
+        // Compare without checking release type
+        if self.major.is_none() || other.major.is_none() {
+            return Ordering::Equal;
+        }
+
+        let major = self.major.unwrap().cmp(&other.major.unwrap());
+
+        if major != Ordering::Equal {
+            return major;
+        }
+
+        if self.minor.is_none() || other.minor.is_none() {
+            return Ordering::Equal;
+        }
+
+        let minor = self.minor.unwrap().cmp(&other.minor.unwrap());
+
+        if minor != Ordering::Equal {
+            return minor;
+        }
+
+        if self.patch.is_none() || other.patch.is_none() {
+            return Ordering::Equal;
+        }
+
+        self.patch.unwrap().cmp(&other.patch.unwrap())
+    }
+}
+
+impl Default for ReleaseVersion {
+    fn default() -> Self {
+        Self::new(None, None, None)
+    }
 }
 
 impl std::fmt::Display for ReleaseVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut version = format!("{}.{}", self.major, self.minor);
-        if let Some(patch) = self.patch {
-            version.push_str(&format!(".{}", patch));
+        if self.major.is_none() && self.minor.is_none() && self.patch.is_none() {
+            return if self.release == ReleaseType::Release {
+                write!(f, "latest")
+            } else {
+                write!(f, "{}", self.release.as_str())
+            }
         }
+
+        let mut version = vec![self.major, self.minor, self.patch]
+            .into_iter()
+            .filter_map(|version| version)
+            .map(|version| version.to_string())
+            .collect::<Vec<_>>()
+            .join(".");
+
         if self.release != ReleaseType::Release {
             version.push_str(&format!("-{}", self.release.as_str()));
         }
@@ -158,26 +164,34 @@ impl std::str::FromStr for ReleaseVersion {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut base = s.split('-');
-        let mut parts = base.next().ok_or("Failed to parse version")?
-            .split('.');
 
-        // Parse version numbers
-        let major = parts
-            .next()
-            .ok_or("Failed to parse major version")?
-            .parse::<u32>()
-            .map_err(|_| "Failed to parse major version")?;
+        let first = base.next().ok_or("Failed to parse version")?;
 
-        let minor = parts
-            .next()
-            .ok_or("Failed to parse minor version")?
-            .parse::<u32>()
-            .map_err(|_| "Failed to parse minor version")?;
+        // Check if it's a release type
+        if let Ok(release) = ReleaseType::from_str(first) {
+            return Ok(Self::new(None, None, None).with_release(release));
+        }
 
-        let patch = parts
-            .next()
-            .map(|patch| patch.parse::<u32>().map_err(|_| "Failed to parse patch version"))
-            .transpose()?;
+        let mut parts = first
+            .split('.')
+            .map(|part| {
+                if part.is_empty() {
+                    return Ok(None);
+                }
+
+                part.parse::<u32>()
+                    .map_err(|_| "Failed to parse version number")
+                    .map(Some)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        if parts.len() > 3 {
+            return Err("Failed to parse version: too many version numbers");
+        }
+
+        if parts.get(0).is_none() {
+            return Err("Failed to parse version: major version is required if no release_type is specified");
+        }
 
         // Parse release type
         let release = base
@@ -190,10 +204,11 @@ impl std::str::FromStr for ReleaseVersion {
             })
             .transpose()?;
 
-        if let Some(release) = release {
-            Ok(Self::new(major, minor, patch).with_release(release))
-        } else {
-            Ok(Self::new(major, minor, patch))
-        }
+        Ok(Self {
+            major: parts.get(0).cloned().flatten(),
+            minor: parts.get(1).cloned().flatten(),
+            patch: parts.get(2).cloned().flatten(),
+            release: release.unwrap_or(ReleaseType::Release),
+        })
     }
 }

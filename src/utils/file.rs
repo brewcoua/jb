@@ -6,14 +6,7 @@ use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
 
-pub fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<(), Box<dyn std::error::Error>> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-    rt.block_on(download_file_stream(url, path, size))
-}
-
-pub async fn download_file_stream(url: &str, path: &PathBuf, size: u64) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<(), Box<dyn std::error::Error>> {
     let response = reqwest::get(url).await.or_else(|_| {
         log::error!("Failed to download file from {}", url);
         Err("Failed to download file")

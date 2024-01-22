@@ -1,22 +1,29 @@
 use std::path::PathBuf;
-use super::{Tool, release:: ReleaseType };
+use super::{Kind, release::{ReleaseType, ReleaseVersion}, list::InstalledTool};
 use crate::{ utils::sys, utils::file };
 
 pub struct ToolInstaller {
-    tool: Tool,
+    tool: Kind,
     release_type: ReleaseType,
     directory: PathBuf,
+    version: Option<ReleaseVersion>
 }
 
 impl ToolInstaller {
-    pub fn new(tool: Tool, release_type: Option<&ReleaseType>, directory: PathBuf) -> Self {
+    pub fn new(tool: Kind, release_type: Option<&ReleaseType>, directory: PathBuf) -> Self {
         let release_type = release_type.unwrap_or(&tool.default_type()).clone();
 
         Self {
             tool,
             release_type,
             directory,
+            version: None,
         }
+    }
+
+    pub fn with_version(mut self, version: ReleaseVersion) -> Self {
+        self.version = Some(version);
+        self
     }
 
     pub fn install(&self) -> Result<bool, &'static str> {
@@ -86,6 +93,76 @@ impl ToolInstaller {
         } else {
             log::error!("Failed to find compatible download for {}", self.tool.as_str());
             Err("Failed to find compatible download")
+        }
+    }
+
+    pub fn uninstall(&self) -> Result<(), &'static str> {
+        if let Some(version) = self.version {
+            self.uninstall_version(version)?;
+        } else {
+            let installed_tools = super::list::list_tools(self.directory.clone())
+                .into_iter()
+                .filter(|installed_tool| installed_tool.tool == self.tool);
+
+            for installed_tool in installed_tools {
+                self.uninstall_version(installed_tool.version)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn uninstall_version(&self, version: ReleaseVersion) -> Result<bool, &'static str> {
+        let apps_dir = self.directory.join("apps");
+        let tool_dir = apps_dir.join(format!("{}-{}", self.tool.as_str(), version));
+
+        if tool_dir.exists() {
+            std::fs::remove_dir_all(&tool_dir).expect("Failed to remove tool directory");
+            log::info!("Successfully uninstalled {} from {}", self.tool.as_str(), tool_dir.display());
+
+            // Check if tool is symlinked
+            let binary_folder = sys::get_binary_dir().expect("Failed to get binary directory");
+            let binary_path = binary_folder.join(self.tool.as_str());
+
+            // Check if symlink path is tool directory
+            if binary_path.exists() && binary_path.read_link().expect("Failed to read symlink") == tool_dir.join(format!("bin/{}.sh", self.tool.src_name())) {
+                // Search for a fallback
+                let mut installed_tools = super::list::list_tools(self.directory.clone())
+                    .into_iter()
+                    .filter(|installed_tool| installed_tool.tool == self.tool)
+                    .filter(|installed_tool| installed_tool.version != version)
+                    .collect::<Vec<_>>();
+
+                installed_tools.sort_by_key(|installed_tool| installed_tool.version);
+
+                if let Some(installed_tool) = installed_tools.last() {
+                    let installed_tool_path = apps_dir.join(installed_tool.as_path());
+
+                    let src_path = installed_tool_path.join(format!("bin/{}.sh", self.tool.src_name()));
+                    let dest_path = binary_folder.join(self.tool.as_str());
+
+                    sys::symlink(&src_path, &dest_path).expect("Failed to create symlink");
+                    log::info!("Successfully created symlink from {} to {}", src_path.display(), dest_path.display());
+
+                    let src_path = installed_tool_path.join(format!("bin/{}.svg", self.tool.src_name()));
+                    let dest_path = self.directory.join("icons").join(self.tool.as_str());
+
+                    sys::symlink(&src_path, &dest_path).expect("Failed to create symlink");
+                    log::info!("Successfully created symlink from {} to {}", src_path.display(), dest_path.display());
+                } else {
+                    std::fs::remove_file(&binary_path).expect("Failed to remove symlink");
+                    log::info!("Successfully removed symlink from {} to {}", binary_path.display(), tool_dir.display());
+
+                    let dest_path = self.directory.join("icons").join(self.tool.as_str());
+                    std::fs::remove_file(&dest_path).expect("Failed to remove symlink");
+                    log::info!("Successfully removed symlink from {} to {}", dest_path.display(), tool_dir.display());
+                }
+            }
+
+            Ok(true)
+        } else {
+            log::info!("{} is not installed", self.tool.as_str());
+            Ok(false)
         }
     }
 }

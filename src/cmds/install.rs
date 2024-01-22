@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, Command};
-use jb_tool::tools::{Tool, release::ReleaseType, install::ToolInstaller};
+use jb_tool::tools::{Kind, release::ReleaseType, install::ToolInstaller};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -7,7 +7,7 @@ pub(crate) fn command() -> Command {
         .arg(
             arg!(tool: <TOOL> "The tool to install")
                 .required(true)
-                .value_parser(value_parser!(Tool))
+                .value_parser(value_parser!(Kind))
         )
         .arg(
             arg!(--type <TYPE>)
@@ -27,7 +27,7 @@ pub(crate) fn command() -> Command {
 }
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) {
-    let tool: &Tool = args.get_one::<Tool>("tool").expect("Could not find argument tool");
+    let tool: &Kind = args.get_one::<Kind>("tool").expect("Could not find argument tool");
     let release_type = args.get_one::<ReleaseType>("type");
 
     let directory = args.get_one::<std::path::PathBuf>("directory");

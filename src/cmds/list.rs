@@ -7,7 +7,7 @@ pub(crate) fn command() -> Command {
         .about("List all installed tools and their versions")
         .arg(
             arg!(-d --directory <PATH>)
-                .help("The directory to install the tool to")
+                .help("The directory to list tools from")
                 .value_parser(value_parser!(std::path::PathBuf))
         )
 }
