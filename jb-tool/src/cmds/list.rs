@@ -20,7 +20,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
     let result = Tool::list(directory);
 
     if let Err(e) = result {
-        log::error!("Failed to list tools:\nError: {}", e);
+        log::error!("Failed to list tools:\n{}", e);
         std::process::exit(1);
     }
 
@@ -45,10 +45,13 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
             );
         } else {
             println!(
-                "{:<20} {:<20} {:<20}",
-                tool.kind().pretty().dimmed(),
-                version.to_string().dimmed(),
-                version.release.pretty().dimmed(),
+                "{}",
+                format!(
+                    "{:<20} {:<20} {:<20}",
+                    tool.kind().pretty(),
+                    version.to_string(),
+                    version.release.pretty(),
+                ).dimmed()
             );
         }
     }

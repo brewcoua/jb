@@ -50,6 +50,8 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
         std::process::exit(1);
     }
 
+    log::info!("Installed {} to {}", tool.kind().as_str(), tool.as_path().display());
+
     if args.get_flag("clean") {
         // TODO: Clean up old versions (to be done after uninstall method is implemented)
         todo!();

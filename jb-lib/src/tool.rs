@@ -151,31 +151,85 @@ impl Tool {
         let icon_path = icons_dir.join(self.kind.as_str());
         let src_path = tool_dir.join(format!("bin/{}.svg", self.kind.src_name()));
 
-        if icon_path.exists() {
-            std::fs::remove_file(&icon_path)?;
-        }
+        log::debug!("Linking {} to {}", self.kind.as_str(), src_path.display());
+
+        // Delete the icon symlink, regardless of whether it exists or not
+        std::fs::remove_file(&icon_path).ok();
 
         std::os::unix::fs::symlink(&src_path, &icon_path)?;
+        log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         // Create a symlink to the latest version
         let binary_folder = sys::get_binary_dir()?;
         let binary_path = binary_folder.join(self.kind.as_str());
 
-        if binary_path.exists() {
-            std::fs::remove_file(&binary_path)?;
-        }
-
         let src_path = tool_dir.join(format!("bin/{}.sh", self.kind.src_name()));
 
+        log::debug!("Linking {} to {}", self.kind.as_str(), src_path.display());
+
+        // Delete the binary symlink, regardless of whether it exists or not
+        std::fs::remove_file(&binary_path).ok();
+
         std::os::unix::fs::symlink(&src_path, &binary_path)?;
+        log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         Ok(())
+    }
+
+    pub fn unlink(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.is_linked() {
+            return Err("Tool is not linked".into());
+        }
+
+        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+
+        // Try to find an alternative version to link
+        let mut installed_tools = Self::list(self.directory.as_ref())?
+            .into_iter()
+            .filter(|installed_tool| installed_tool.kind == self.kind)
+            .filter(|installed_tool| installed_tool.version != self.version)
+            .collect::<Vec<_>>();
+
+        installed_tools.sort_by_key(|installed_tool| installed_tool.version);
+
+        let icons_dir = directory.join("icons");
+
+        let icon_path = icons_dir.join(self.kind.as_str());
+        let binary_path = sys::get_binary_dir()?.join(self.kind.as_str());
+
+        // Delete the icon symlink
+        std::fs::remove_file(&icon_path)?;
+
+        // Delete the binary symlink
+        std::fs::remove_file(&binary_path)?;
+
+        if !installed_tools.is_empty() {
+            // Link to the next version
+            let fallback_tool = installed_tools.last().unwrap();
+            let fallback_path = fallback_tool.as_path();
+
+            log::debug!("Linking {} to {}", self.kind.as_str(), fallback_path.display());
+
+            let src_path = fallback_path.join(format!("bin/{}.svg", self.kind.src_name()));
+            std::os::unix::fs::symlink(&src_path, &icon_path)?;
+
+            let src_path = fallback_path.join(format!("bin/{}.sh", self.kind.src_name()));
+            std::os::unix::fs::symlink(&src_path, &binary_path)?;
+        } else {
+            log::debug!("No fallback version found for {}", self.kind.as_str());
+        }
+
+        Ok(())
+    }
+
+    pub fn name(&self) -> String {
+        format!("{}-{}", self.kind.as_str(), self.version.unwrap_or(ReleaseVersion::default()).to_string())
     }
 
     pub fn as_path(&self) -> PathBuf {
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let apps_dir = directory.join("apps");
-        apps_dir.join(format!("{}-{}", self.kind.as_str(), self.version.unwrap().to_string()))
+        apps_dir.join(self.name())
     }
 
     pub fn download_link(&self) -> Result<Download, Box<dyn std::error::Error>> {
@@ -236,7 +290,7 @@ impl Tool {
             return Err(format!("{} is already installed to its latest version ({})", self.kind.as_str(), download.version).into());
         }
 
-        log::info!("Installing {} to {}", self.kind.as_str(), tool_dir.display());
+        log::debug!("Installing {} to {}", self.name(), tool_dir.display());
 
         std::fs::create_dir_all(&tool_dir)?;
         std::fs::create_dir_all(&icons_dir)?;
@@ -267,7 +321,24 @@ impl Tool {
 
         // Symlink the tool
         self.link()?;
-        log::info!("Installed {} to {}", self.kind.as_str(), tool_dir.display());
+        log::debug!("Symlinked {} to {}", self.name(), tool_dir.display());
+
+        Ok(())
+    }
+
+    pub fn uninstall(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let tool_dir = self.as_path();
+
+        if !tool_dir.exists() {
+            return Err(format!("{} is not installed", self.name()).into());
+        }
+
+        if self.is_linked() {
+            log::debug!("Unlinking {}", self.name());
+            self.unlink()?;
+        }
+
+        std::fs::remove_dir_all(&tool_dir)?;
 
         Ok(())
     }
