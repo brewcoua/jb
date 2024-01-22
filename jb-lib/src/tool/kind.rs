@@ -1,7 +1,5 @@
-use std::collections::HashMap;
 use clap::builder::PossibleValue;
 use super::release::ReleaseType;
-use crate::utils::parsing::Release;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Kind {
@@ -31,8 +29,8 @@ pub enum Kind {
 }
 
 impl Kind {
-    pub fn list() -> Vec<Self> {
-        vec![
+    pub fn list() -> &'static [Self] {
+        &[
             Self::IntelliJIdeaUltimate,
             Self::IntelliJIdeaCommunity,
             Self::PyCharmProfessional,
@@ -57,7 +55,6 @@ impl Kind {
             Self::Gateway,
         ]
     }
-
 
 
     pub fn as_code(&self) -> &str {
@@ -88,7 +85,7 @@ impl Kind {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Self::IntelliJIdeaUltimate => "idea-ultimate",
             Self::IntelliJIdeaCommunity => "idea-community",
@@ -116,7 +113,7 @@ impl Kind {
         }
     }
 
-    pub fn pretty(&self) -> &str {
+    pub fn pretty(&self) -> &'static str {
         match self {
             Self::IntelliJIdeaUltimate => "IntelliJ IDEA Ultimate",
             Self::IntelliJIdeaCommunity => "IntelliJ IDEA Community",
@@ -153,7 +150,7 @@ impl Kind {
         }
     }
 
-    fn default_type(&self) -> ReleaseType {
+    pub fn default_type(&self) -> ReleaseType {
         match self {
             Self::IntelliJIdeaUltimate => ReleaseType::Release,
             Self::IntelliJIdeaCommunity => ReleaseType::Release,
@@ -184,58 +181,10 @@ impl Kind {
 
 impl clap::ValueEnum for Kind {
     fn value_variants<'a>() -> &'a [Self] {
-        &[
-            Self::IntelliJIdeaUltimate,
-            Self::IntelliJIdeaCommunity,
-            Self::PyCharmProfessional,
-            Self::PyCharmCommunity,
-            Self::PhpStorm,
-            Self::GoLand,
-            Self::Rider,
-            Self::CLion,
-            Self::ClionNova,
-            Self::RustRover,
-            Self::WebStorm,
-            Self::RubyMine,
-            Self::DataGrip,
-            Self::DataSpell,
-            Self::Fleet,
-            Self::Aqua,
-            Self::Writerside,
-            Self::DotMemory,
-            Self::DotTrace,
-            Self::MPS,
-
-            Self::Space,
-            Self::Gateway,
-        ]
+        Self::list()
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
-        match self {
-            Self::IntelliJIdeaUltimate => Some(PossibleValue::new("intellij-idea-ultimate")),
-            Self::IntelliJIdeaCommunity => Some(PossibleValue::new("intellij-idea-community")),
-            Self::PyCharmProfessional => Some(PossibleValue::new("pycharm-professional")),
-            Self::PyCharmCommunity => Some(PossibleValue::new("pycharm-community")),
-            Self::PhpStorm => Some(PossibleValue::new("phpstorm")),
-            Self::GoLand => Some(PossibleValue::new("goland")),
-            Self::Rider => Some(PossibleValue::new("rider")),
-            Self::CLion => Some(PossibleValue::new("clion")),
-            Self::ClionNova => Some(PossibleValue::new("clion-nova")),
-            Self::RustRover => Some(PossibleValue::new("rustrover")),
-            Self::WebStorm => Some(PossibleValue::new("webstorm")),
-            Self::RubyMine => Some(PossibleValue::new("rubymine")),
-            Self::DataGrip => Some(PossibleValue::new("datagrip")),
-            Self::DataSpell => Some(PossibleValue::new("dataspell")),
-            Self::Fleet => Some(PossibleValue::new("fleet")),
-            Self::Aqua => Some(PossibleValue::new("aqua")),
-            Self::Writerside => Some(PossibleValue::new("writerside")),
-            Self::DotMemory => Some(PossibleValue::new("dotmemory")),
-            Self::DotTrace => Some(PossibleValue::new("dottrace")),
-            Self::MPS => Some(PossibleValue::new("mps")),
-
-            Self::Space => Some(PossibleValue::new("space")),
-            Self::Gateway => Some(PossibleValue::new("gateway")),
-        }
+        Some(PossibleValue::new(self.as_str()))
     }
 }

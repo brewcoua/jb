@@ -1,31 +1,32 @@
+pub mod kind;
+pub mod release;
+
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
-use crate::tools::release::{ReleaseType, ReleaseVersion};
-use crate::utils::parsing::{Download, Release};
-use crate::utils::{file, sys};
 
-pub mod release;
-pub mod install;
-pub mod list;
-pub mod kind;
+use super::util::parse::{Download, Release};
+use super::util::{file, sys};
+
+pub use kind::Kind;
+pub use release::{ReleaseType, ReleaseVersion};
 
 /// A JetBrains tool
 ///
 /// This struct represents a JetBrains tool, such as IntelliJ IDEA or PyCharm.
 /// It contains information about the tool, such as its name, version, and installation directory.
 /// However, it may not be installed yet.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tool {
-    kind: kind::Kind,
+    kind: Kind,
     version: Option<ReleaseVersion>,
     directory: Option<PathBuf>,
 }
 
 
 impl Tool {
-    pub fn new(kind: kind::Kind) -> Self {
+    pub fn new(kind: Kind) -> Self {
         Self {
             kind,
             version: None,
@@ -43,8 +44,8 @@ impl Tool {
     /// # Panics
     /// If the apps directory does not exist or cannot be read
     /// If the apps directory contains a file that is not a directory
-    pub fn list(directory: Option<PathBuf>) -> Result<Vec<Tool>, &'static str> {
-        let directory = directory.unwrap_or(Self::default_directory());
+    pub fn list(directory: Option<&PathBuf>) -> Result<Vec<Tool>, &'static str> {
+        let directory = directory.cloned().unwrap_or(Self::default_directory());
 
         let tools = kind::Kind::list();
         let mut installed_tools: Vec<Tool> = Vec::new();
@@ -109,8 +110,18 @@ impl Tool {
         self
     }
 
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+    pub fn version(&self) -> Option<ReleaseVersion> {
+        self.version
+    }
+    pub fn directory(&self) -> Option<&PathBuf> {
+        self.directory.as_ref()
+    }
+
     pub fn is_linked(&self) -> bool {
-        let directory = self.directory.unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -132,7 +143,7 @@ impl Tool {
     }
 
     pub fn link(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let directory = self.directory.unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -162,7 +173,7 @@ impl Tool {
     }
 
     pub fn as_path(&self) -> PathBuf {
-        let directory = self.directory.unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let apps_dir = directory.join("apps");
         apps_dir.join(format!("{}-{}", self.kind.as_str(), self.version.unwrap().to_string()))
     }
@@ -170,41 +181,47 @@ impl Tool {
     pub fn download_link(&self) -> Result<Download, Box<dyn std::error::Error>> {
         let latest = self.version.is_none() || self.version.unwrap().is_latest();
 
+        let release_type = if self.version.is_none() {
+            self.kind.default_type()
+        } else {
+            self.version.unwrap().release
+        };
+
         let url = format!(
             "https://data.services.jetbrains.com/products/releases?code={}&latest={}&type={}",
-            self.as_code(),
+            self.kind.as_code(),
             latest,
-            self.version.unwrap_or(ReleaseVersion::default()).release.as_str()
+            release_type.as_str()
         );
 
         let releases_by_code = reqwest::blocking::get(&url)?
-            .json::<serde_json::Value>()?;
-
-        let releases_by_code: HashMap<String, Vec<Release>> = releases_by_code
-            .deserialize::<HashMap<String, Vec<Release>>>()?;
+            .json::<HashMap<String, Vec<Release>>>()?;
 
         let releases = releases_by_code
-            .get(&self.as_code().to_string())?;
+            .get(&self.kind.as_code().to_string())
+            .ok_or("Failed to find releases for tool")?;
 
         return if latest {
             // Loop through releases till we find a compatible download
-            releases
+            Ok(releases
                 .iter()
-                .find(|release| release.download().is_some())?
+                .find(|release| release.download().is_ok())
+                .ok_or("Failed to find compatible download")?
                 .download()?
-                .clone()
+                .clone())
         } else {
-            releases
+            Ok(releases
                 .iter()
                 .filter(|release| release.version.compare_builds(&self.version.unwrap()) == Ordering::Equal)
-                .find(|release| release.release_type == self.version.unwrap().release)?
+                .find(|release| release.release_type == self.version.unwrap().release)
+                .ok_or("Failed to find compatible download")?
                 .download()?
-                .clone()
-        }
+                .clone())
+        };
     }
 
     pub fn install(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let directory = self.directory.unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
 
         log::debug!("Fetching release '{}' for {}", self.version.unwrap_or(ReleaseVersion::default()), self.kind.as_str());
@@ -255,6 +272,3 @@ impl Tool {
         Ok(())
     }
 }
-
-
-

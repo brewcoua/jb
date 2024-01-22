@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use serde::Deserialize;
-use crate::tools::release::{ReleaseType, ReleaseVersion};
+use crate::tool::release::{ReleaseType, ReleaseVersion};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Release {
@@ -30,6 +30,7 @@ pub struct DownloadRaw {
     pub checksum_link: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct Download {
     pub version: ReleaseVersion,
     pub link: String,
@@ -44,7 +45,7 @@ static ARCHITECTURES: &[&[&str]] = &[
 ];
 
 impl Release {
-    pub fn download(&self) -> Result<Download, &'static str> {
+    pub fn download(&self) -> Result<Download, String> {
         let platform = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
@@ -52,14 +53,18 @@ impl Release {
             "linux" => "linux",
             "macos" => "mac",
             "windows" => "windows",
-            _ => return Err(format!("Unsupported platform {}", platform).as_str()),
+            _ => return Err(format!("Unsupported platform {}", platform)),
         };
 
         // Find the list of architectures that match the given architecture
         let archs = ARCHITECTURES
             .iter()
-            .find(|archs| archs.contains(&arch.to_lowercase().as_str()))
-            .or_else(Err("Failed to find architectures matching the given architecture"))?;
+            .find(|archs| archs.contains(&arch.to_lowercase().as_str()));
+
+        if archs.is_none() {
+            return Err(format!("Failed to find architectures matching the given architecture {}", arch));
+        }
+        let archs = archs.unwrap();
 
         let arch_specific = archs
             .iter()
@@ -78,11 +83,17 @@ impl Release {
             _ => None,
         };
 
-        Ok(download_raw.map(|download| Download {
+        let result = download_raw.map(|download| Download {
             version: self.version.clone().with_release(self.release_type.clone()),
             link: download.link.clone(),
             size: download.size,
             checksum_link: download.checksum_link.clone(),
-        }).or_else(Err("Failed to find compatible download for platform"))?)
+        });
+
+        return if result.is_some() {
+            Ok(result.unwrap())
+        } else {
+            Err("Failed to find a download for the current platform".to_string())
+        }
     }
 }

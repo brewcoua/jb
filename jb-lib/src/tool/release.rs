@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
+use std::str::FromStr;
 use clap::builder::PossibleValue;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ReleaseType {
     Release,
     EAP,
@@ -27,6 +28,16 @@ impl ReleaseType {
     }
 }
 
+impl<'de> Deserialize<'de> for ReleaseType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        ReleaseType::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
 impl clap::ValueEnum for ReleaseType {
     fn value_variants<'a>() -> &'a [Self] {
         &[Self::Release, Self::EAP, Self::Preview]
@@ -41,7 +52,7 @@ impl clap::ValueEnum for ReleaseType {
     }
 }
 
-impl std::str::FromStr for ReleaseType {
+impl FromStr for ReleaseType {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -66,8 +77,8 @@ impl Ord for ReleaseType {
             (_, Self::EAP) => Ordering::Less,
 
             (Self::Preview, Self::Preview) => Ordering::Equal,
-            (Self::Preview, _) => Ordering::Greater,
-            (_, Self::Preview) => Ordering::Less,
+            //(Self::Preview, _) => Ordering::Greater,
+            //(_, Self::Preview) => Ordering::Less,
         }
     }
 }
@@ -78,7 +89,7 @@ impl PartialOrd for ReleaseType {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct ReleaseVersion {
     pub major: Option<u32>,
     pub minor: Option<u32>,
@@ -135,6 +146,16 @@ impl Default for ReleaseVersion {
     }
 }
 
+impl<'de> Deserialize<'de> for ReleaseVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        ReleaseVersion::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
 impl std::fmt::Display for ReleaseVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.major.is_none() && self.minor.is_none() && self.patch.is_none() {
@@ -159,7 +180,7 @@ impl std::fmt::Display for ReleaseVersion {
     }
 }
 
-impl std::str::FromStr for ReleaseVersion {
+impl FromStr for ReleaseVersion {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -172,7 +193,7 @@ impl std::str::FromStr for ReleaseVersion {
             return Ok(Self::new(None, None, None).with_release(release));
         }
 
-        let mut parts = first
+        let parts = first
             .split('.')
             .map(|part| {
                 if part.is_empty() {

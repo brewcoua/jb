@@ -1,12 +1,10 @@
 mod install;
-mod uninstall;
-mod refresh;
 mod list;
 
 use clap::{arg, Command};
 
 pub fn cli() -> Command {
-    Command::new("jb-cli")
+    Command::new("jb-tool")
         .version(env!("CARGO_PKG_VERSION"))
         .about("A simple CLI for JetBrains' IDEs and tools")
         .subcommand_required(true)
@@ -29,7 +27,6 @@ pub fn cli() -> Command {
                 .global(true)
         )
         .subcommand(install::command())
-        .subcommand(uninstall::command())
         .subcommand(list::command())
 }
 
@@ -37,7 +34,6 @@ pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) {
     if let Some((name, sub_matches)) = args {
         match name {
             "install" => install::dispatch(sub_matches),
-            "uninstall" => uninstall::dispatch(sub_matches),
             "list" => list::dispatch(sub_matches),
             _ => {
                 log::error!("Unknown subcommand {}", name);
