@@ -5,6 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
+use anyhow::{Context, Result};
 
 use super::util::parse::{Download, Release};
 use super::util::{file, sys};
@@ -44,7 +45,7 @@ impl Tool {
     /// # Panics
     /// If the apps directory does not exist or cannot be read
     /// If the apps directory contains a file that is not a directory
-    pub fn list(directory: Option<&PathBuf>) -> Result<Vec<Tool>, &'static str> {
+    pub fn list(directory: Option<&PathBuf>) -> Result<Vec<Tool>> {
         let directory = directory.cloned().unwrap_or(Self::default_directory());
 
         let tools = kind::Kind::list();
@@ -53,19 +54,22 @@ impl Tool {
         for tool in tools.iter() {
             let apps_dir = directory.join("apps");
             let tool_dirs = std::fs::read_dir(&apps_dir)
-                .expect("Failed to read apps directory")
+                .with_context(|| format!("Failed to read apps directory {}", apps_dir.display()))?
                 .filter_map(|entry| {
                     let entry = entry.expect("Failed to read entry");
                     let path = entry.path();
 
                     if path.is_dir() {
-                        let name = path.file_name().expect("Failed to get file name").to_str().expect("Failed to convert file name to string");
+                        let name = path.file_name()
+                            .with_context(|| format!("Failed to get file name for {:?}", path))?
+                            .to_str()
+                            .with_context(|| format!("Failed to convert file name to string for {:?}", path))?;
                         if name.starts_with(tool.as_str()) {
                             let folder = path
                                 .strip_prefix(&apps_dir)
-                                .expect("Failed to strip directory prefix")
+                                .with_context(|| format!("Failed to strip apps directory prefix from {:?}", path))?
                                 .to_str()
-                                .expect("Failed to convert tool name to string")
+                                .with_context(|| format!("Failed to convert path to string for {:?}", path))?
                                 .to_string();
                             Some(folder)
                         } else {
@@ -79,10 +83,10 @@ impl Tool {
 
             for tool_dir in tool_dirs {
                 // remove only the first part of the tool name (e.g. "idea" from "idea-2021.1.1-eap")
-                let tool_version = release::ReleaseVersion::from_str(
+                let tool_version = ReleaseVersion::from_str(
                     tool_dir
                         .strip_prefix(format!("{}-", tool.as_str()).as_str())
-                        .expect("Failed to strip tool name prefix")
+                        .with_context(|| format!("Failed to strip tool name prefix from {:?}", tool_dir))?
                 );
 
                 if tool_version.is_err() {
@@ -142,7 +146,7 @@ impl Tool {
             .starts_with(tool_dir)
     }
 
-    pub fn link(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn link(&self) -> Result<()> {
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
@@ -156,7 +160,8 @@ impl Tool {
         // Delete the icon symlink, regardless of whether it exists or not
         std::fs::remove_file(&icon_path).ok();
 
-        std::os::unix::fs::symlink(&src_path, &icon_path)?;
+        std::os::unix::fs::symlink(&src_path, &icon_path)
+            .with_context(|| format!("Failed to link {} to {}", self.kind.as_str(), src_path.display()))?;
         log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         // Create a symlink to the latest version
@@ -170,13 +175,14 @@ impl Tool {
         // Delete the binary symlink, regardless of whether it exists or not
         std::fs::remove_file(&binary_path).ok();
 
-        std::os::unix::fs::symlink(&src_path, &binary_path)?;
+        std::os::unix::fs::symlink(&src_path, &binary_path)
+            .with_context(|| format!("Failed to link {} to {}", self.kind.as_str(), src_path.display()))?;
         log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         Ok(())
     }
 
-    pub fn unlink(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn unlink(&self) -> Result<()> {
         if !self.is_linked() {
             return Err("Tool is not linked".into());
         }
@@ -198,10 +204,12 @@ impl Tool {
         let binary_path = sys::get_binary_dir()?.join(self.kind.as_str());
 
         // Delete the icon symlink
-        std::fs::remove_file(&icon_path)?;
+        std::fs::remove_file(&icon_path)
+            .with_context(|| format!("Failed to remove icon symlink {}", icon_path.display()))?;
 
         // Delete the binary symlink
-        std::fs::remove_file(&binary_path)?;
+        std::fs::remove_file(&binary_path)
+            .with_context(|| format!("Failed to remove binary symlink {}", binary_path.display()))?;
 
         if !installed_tools.is_empty() {
             // Link to the next version
@@ -211,10 +219,12 @@ impl Tool {
             log::debug!("Linking {} to {}", self.kind.as_str(), fallback_path.display());
 
             let src_path = fallback_path.join(format!("bin/{}.svg", self.kind.src_name()));
-            std::os::unix::fs::symlink(&src_path, &icon_path)?;
+            std::os::unix::fs::symlink(&src_path, &icon_path)
+                .with_context(|| format!("Failed to link {} to {}", self.kind.as_str(), src_path.display()))?;
 
             let src_path = fallback_path.join(format!("bin/{}.sh", self.kind.src_name()));
-            std::os::unix::fs::symlink(&src_path, &binary_path)?;
+            std::os::unix::fs::symlink(&src_path, &binary_path)
+                .with_context(|| format!("Failed to link {} to {}", self.kind.as_str(), src_path.display()))?;
         } else {
             log::debug!("No fallback version found for {}", self.kind.as_str());
         }
@@ -248,8 +258,10 @@ impl Tool {
             release_type.as_str()
         );
 
-        let releases_by_code = reqwest::blocking::get(&url)?
-            .json::<HashMap<String, Vec<Release>>>()?;
+        let releases_by_code = reqwest::blocking::get(&url)
+            .with_context(|| format!("Failed to fetch releases for {}", self.kind.as_str()))?
+            .json::<HashMap<String, Vec<Release>>>()
+            .with_context(|| format!("Failed to parse releases for {}", self.kind.as_str()))?;
 
         let releases = releases_by_code
             .get(&self.kind.as_code().to_string())
@@ -274,7 +286,7 @@ impl Tool {
         };
     }
 
-    pub fn install(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn install(&mut self) -> Result<()> {
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
 
@@ -292,8 +304,10 @@ impl Tool {
 
         log::debug!("Installing {} to {}", self.name(), tool_dir.display());
 
-        std::fs::create_dir_all(&tool_dir)?;
-        std::fs::create_dir_all(&icons_dir)?;
+        std::fs::create_dir_all(&tool_dir)
+            .with_context(|| format!("Failed to create tool directory {}", tool_dir.display()))?;
+        std::fs::create_dir_all(&icons_dir)
+            .with_context(|| format!("Failed to create icons directory {}", icons_dir.display()))?;
 
         let archive_name = download.link.split('/').last().expect("Failed to get download filename");
 
@@ -315,7 +329,8 @@ impl Tool {
         log::debug!("Extracted {} to {}", download_path.display(), tool_dir.display());
 
         // Clean up the temporary directory
-        std::fs::remove_dir_all(&temp_folder)?;
+        std::fs::remove_dir_all(&temp_folder)
+            .with_context(|| format!("Failed to remove temporary directory {}", temp_folder.display()))?;
         log::debug!("Removed temporary directory {}", temp_folder.display());
 
 
@@ -338,7 +353,8 @@ impl Tool {
             self.unlink()?;
         }
 
-        std::fs::remove_dir_all(&tool_dir)?;
+        std::fs::remove_dir_all(&tool_dir)
+            .with_context(|| format!("Failed to remove tool directory {}", tool_dir.display()))?;
 
         Ok(())
     }

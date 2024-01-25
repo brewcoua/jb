@@ -84,7 +84,7 @@ impl Ord for ReleaseType {
 }
 
 impl PartialOrd for ReleaseType {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }

@@ -3,11 +3,13 @@ use std::cmp::min;
 use std::fs::File;
 use std::io::Write;
 
+use anyhow::{bail, Context, Result};
 use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
 
-pub async fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<(), Box<dyn std::error::Error>> {
-    let response = reqwest::get(url).await?;
+pub async fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<()> {
+    let response = reqwest::get(url).await
+        .with_context(|| format!("Failed to download {}", url))?;
 
     let file_name = path.file_name().unwrap().to_str().unwrap();
 
@@ -17,13 +19,15 @@ pub async fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<(), B
         .progress_chars("#>-"));
     pb.set_message(format!("Downloading {file_name}"));
 
-    let mut file = File::create(path)?;
+    let mut file = File::create(path)
+        .with_context(|| format!("Failed to create {}", path.display()))?;
     let mut downloaded: u64 = 0;
     let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
-        let chunk = item?;
-        file.write_all(&chunk)?;
+        let chunk = item.with_context(|| format!("Failed to download chunk at {}", url))?;
+        file.write_all(&chunk)
+            .with_context(|| format!("Failed to write to {}", path.display()))?;
         let new = min(downloaded + (chunk.len() as u64), size);
         downloaded = new;
         pb.set_position(new);
@@ -44,7 +48,7 @@ pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Resu
         .output()?;
 
     if !output.status.success() {
-        return Err(format!("Failed to extract archive {}: {}", path.display(), String::from_utf8_lossy(&output.stderr)).as_str())?;
+        bail!("Failed to extract archive {}", path.display());
     }
 
     Ok(())

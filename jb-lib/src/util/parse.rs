@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::Deserialize;
+use anyhow::{bail, Result};
 use crate::tool::release::{ReleaseType, ReleaseVersion};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -45,7 +46,7 @@ static ARCHITECTURES: &[&[&str]] = &[
 ];
 
 impl Release {
-    pub fn download(&self) -> Result<Download, String> {
+    pub fn download(&self) -> Result<Download> {
         let platform = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
@@ -53,7 +54,7 @@ impl Release {
             "linux" => "linux",
             "macos" => "mac",
             "windows" => "windows",
-            _ => return Err(format!("Unsupported platform {}", platform)),
+            _ => bail!("Unsupported platform {}", platform)
         };
 
         // Find the list of architectures that match the given architecture
@@ -62,7 +63,7 @@ impl Release {
             .find(|archs| archs.contains(&arch.to_lowercase().as_str()));
 
         if archs.is_none() {
-            return Err(format!("Failed to find architectures matching the given architecture {}", arch));
+            bail!("Unsupported architecture {}", arch);
         }
         let archs = archs.unwrap();
 
@@ -93,7 +94,7 @@ impl Release {
         return if result.is_some() {
             Ok(result.unwrap())
         } else {
-            Err("Failed to find a download for the current platform".to_string())
+            bail!("No download found for platform {} and architecture {}", platform, arch);
         }
     }
 }
