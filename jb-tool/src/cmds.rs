@@ -8,7 +8,7 @@ use clap::{arg, Command};
 use anyhow::{bail, Result};
 
 pub fn cli() -> Command {
-    Command::new("jb-tool")
+    Command::new("jb")
         .version(env!("CARGO_PKG_VERSION"))
         .about("A tool to install and manage JetBrains' IDEs and tools")
         .subcommand_required(true)
