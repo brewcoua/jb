@@ -5,7 +5,7 @@ use colored::Colorize;
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")
-        .about("Uninstall a tool, removing the linked version or a specific version")
+        .about("Uninstall a JetBrains tool")
         .arg(
             arg!(tool: <TOOL> "The tool to uninstall")
                 .required(true)

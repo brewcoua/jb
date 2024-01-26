@@ -3,7 +3,7 @@ use jb_tool::tools::{Kind, release::ReleaseType, install::ToolInstaller};
 
 pub(crate) fn command() -> Command {
     Command::new("refresh")
-        .about("Update a tool to the latest version or install it if it is not installed")
+        .about("Update a JetBrains tool to the latest version"
         .arg(
             arg!(tool: <TOOL> "The tool to install")
                 .required(true)

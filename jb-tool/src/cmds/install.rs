@@ -5,7 +5,7 @@ use colored::Colorize;
 
 pub(crate) fn command() -> Command {
     Command::new("install")
-        .about("Install any of JetBrains' IDEs and tools")
+        .about("Install a JetBrains tool")
         .arg(
             arg!(tool: <TOOL> "The tool to install")
                 .required(true)
@@ -50,8 +50,20 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     log::info!("Installed {} to {}", tool.kind().as_str().bright_green(), tool.as_path().display().to_string().bright_green());
 
     if args.get_flag("clean") {
-        // TODO: Clean up old versions (to be done after uninstall method is implemented)
-        todo!();
+        // Clean up old versions
+        log::info!("Cleaning up old versions of {}", tool.kind().as_str().bright_green());
+
+        let installed_tools = Tool::list(directory)?
+            .into_iter()
+            .filter(|t| t.kind() == tool.kind() && t.version() != tool.version())
+            .collect::<Vec<Tool>>();
+
+        for tool in installed_tools {
+            tool.uninstall()?;
+            log::info!("Uninstalled {}", tool.as_path().display().to_string().bright_green());
+        }
+
+        log::info!("Cleaned up old versions of {}", tool.kind().as_str().bright_green());
     }
 
     Ok(())

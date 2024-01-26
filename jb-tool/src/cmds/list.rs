@@ -5,7 +5,7 @@ use anyhow::Result;
 
 pub(crate) fn command() -> Command {
     Command::new("list")
-        .about("List all installed tools and their versions")
+        .about("List installed JetBrains tools")
         .arg(
             arg!(-d --directory <PATH>)
                 .help("The directory to list tools from")

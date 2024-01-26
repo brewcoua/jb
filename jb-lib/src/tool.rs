@@ -190,8 +190,7 @@ impl Tool {
         // Try to find an alternative version to link
         let mut installed_tools = Self::list(self.directory.as_ref())?
             .into_iter()
-            .filter(|installed_tool| installed_tool.kind == self.kind)
-            .filter(|installed_tool| installed_tool.version != self.version)
+            .filter(|installed_tool| installed_tool.kind == self.kind && installed_tool.version != self.version)
             .collect::<Vec<_>>();
 
         installed_tools.sort_by_key(|installed_tool| installed_tool.version);

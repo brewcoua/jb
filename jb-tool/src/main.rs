@@ -1,6 +1,6 @@
 use std::backtrace::BacktraceStatus;
 use std::io::Write;
-use env_logger::{Builder, WriteStyle};
+use env_logger::Builder;
 use colored::Colorize;
 
 mod cmds;
@@ -32,18 +32,11 @@ fn setup_logger(matches: &clap::ArgMatches) {
     } else {
         log::LevelFilter::Info
     };
-    let write_style = match matches.get_one::<String>("color").map(|s| s.as_str()) {
-        Some("always") => WriteStyle::Always,
-        Some("never") => WriteStyle::Never,
-        Some("auto") => WriteStyle::Auto,
-        _ => WriteStyle::Auto,
-    };
 
     Builder::new()
         .filter(None, log_level)
         .format_timestamp(None)
         .format_module_path(false)
-        .write_style(write_style)
         .format(|buf, record| {
             let mut output = record.args().to_string();
             match record.level() {

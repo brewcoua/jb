@@ -2,6 +2,7 @@ mod install;
 mod uninstall;
 mod list;
 mod link;
+mod unlink;
 
 use clap::{arg, Command};
 use anyhow::{bail, Result};
@@ -9,7 +10,7 @@ use anyhow::{bail, Result};
 pub fn cli() -> Command {
     Command::new("jb-tool")
         .version(env!("CARGO_PKG_VERSION"))
-        .about("A simple CLI for JetBrains' IDEs and tools")
+        .about("A tool to install and manage JetBrains' IDEs and tools")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
@@ -19,20 +20,11 @@ pub fn cli() -> Command {
                 .required(false)
                 .global(true)
         )
-        .arg(
-            arg!(--color <WHEN>)
-                .help("When to use color in output")
-                .value_parser(["always", "never", "auto"])
-                .num_args(0..=1)
-                .require_equals(true)
-                .default_value("auto")
-                .default_missing_value("always")
-                .global(true)
-        )
         .subcommand(install::command())
         .subcommand(uninstall::command())
         .subcommand(list::command())
         .subcommand(link::command())
+        .subcommand(unlink::command())
 }
 
 pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
@@ -42,6 +34,7 @@ pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "uninstall" => uninstall::dispatch(sub_matches),
             "list" => list::dispatch(sub_matches),
             "link" => link::dispatch(sub_matches),
+            "unlink" => unlink::dispatch(sub_matches),
             _ => bail!("Unknown subcommand {}", name)
         }
     } else {
