@@ -19,10 +19,11 @@ pub use release::{ReleaseType, ReleaseVersion};
 /// It contains information about the tool, such as its name, version, and installation directory.
 /// However, it may not be installed yet.
 #[derive(Debug, Clone, PartialEq)]
+#[readonly::make]
 pub struct Tool {
-    kind: Kind,
-    version: Option<ReleaseVersion>,
-    directory: Option<PathBuf>,
+    pub kind: Kind,
+    pub version: Option<ReleaseVersion>,
+    pub directory: Option<PathBuf>,
 }
 
 
@@ -45,8 +46,8 @@ impl Tool {
     /// # Panics
     /// If the apps directory does not exist or cannot be read
     /// If the apps directory contains a file that is not a directory
-    pub fn list(directory: Option<&PathBuf>) -> Result<Vec<Tool>> {
-        let directory = directory.cloned().unwrap_or(Self::default_directory());
+    pub fn list(directory: Option<PathBuf>) -> Result<Vec<Tool>> {
+        let directory = directory.unwrap_or(Self::default_directory());
 
         let tools = kind::Kind::list();
         let mut installed_tools: Vec<Tool> = Vec::new();
@@ -110,16 +111,6 @@ impl Tool {
     pub fn with_directory(mut self, directory: PathBuf) -> Self {
         self.directory = Some(directory);
         self
-    }
-
-    pub fn kind(&self) -> Kind {
-        self.kind
-    }
-    pub fn version(&self) -> Option<ReleaseVersion> {
-        self.version
-    }
-    pub fn directory(&self) -> Option<&PathBuf> {
-        self.directory.as_ref()
     }
 
     pub fn is_linked(&self) -> bool {
@@ -188,7 +179,7 @@ impl Tool {
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
 
         // Try to find an alternative version to link
-        let mut installed_tools = Self::list(self.directory.as_ref())?
+        let mut installed_tools = Self::list(self.directory.clone())?
             .into_iter()
             .filter(|installed_tool| installed_tool.kind == self.kind && installed_tool.version != self.version)
             .collect::<Vec<_>>();

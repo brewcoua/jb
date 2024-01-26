@@ -1,4 +1,3 @@
-use std::backtrace::BacktraceStatus;
 use std::io::Write;
 use env_logger::Builder;
 use colored::Colorize;
@@ -14,13 +13,7 @@ fn main() {
     match cmds::dispatch(matches.subcommand()) {
         Ok(_) => {}
         Err(e) => {
-            log::error!("{}", e);
-
-            let backtrace = e.backtrace();
-            if let BacktraceStatus::Captured = backtrace.status() {
-                log::error!("{}", backtrace);
-            }
-
+            log::error!("{:?}", e);
             std::process::exit(1);
         }
     }

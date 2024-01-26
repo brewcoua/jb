@@ -38,15 +38,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     tool = match version {
         Some(v) => tool.with_version(v.clone()),
         None => {
-            let installed_tools = Tool::list(tool.directory().clone())?;
+            let installed_tools = Tool::list(tool.directory.clone())?;
 
             let installed_tools = installed_tools
                 .into_iter()
-                .filter(|t| t.kind() == tool.kind())
+                .filter(|t| t.kind == tool.kind)
                 .collect::<Vec<Tool>>();
 
             if installed_tools.len() == 0 {
-                bail!("Could not find any installed versions of {}", tool.kind().as_str());
+                bail!("Could not find any installed versions of {}", tool.kind.as_str());
             } else if installed_tools.len() == 1 {
                 // No need to search for linked version
                 installed_tools[0].clone()
@@ -56,7 +56,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                     .find(|t| t.is_linked());
 
                 if linked_tool.is_none() {
-                    bail!("Found multiple installed versions of {} but none are linked", tool.kind().as_str());
+                    bail!("Found multiple installed versions of {} but none are linked", tool.kind.as_str());
                 } else {
                     linked_tool.unwrap().clone()
                 }
@@ -66,7 +66,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     tool.uninstall()?;
 
-    log::info!("Uninstalled {} from {}", tool.kind().as_str().bright_green(), tool.as_path().display().to_string().bright_green());
+    log::info!("Uninstalled {} from {}", tool.kind.as_str().bright_green(), tool.as_path().display().to_string().bright_green());
 
     Ok(())
 }

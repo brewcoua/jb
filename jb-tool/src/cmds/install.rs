@@ -47,15 +47,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     tool.install()?;
 
-    log::info!("Installed {} to {}", tool.kind().as_str().bright_green(), tool.as_path().display().to_string().bright_green());
+    log::info!("Installed {} to {}", tool.kind.as_str().bright_green(), tool.as_path().display().to_string().bright_green());
 
     if args.get_flag("clean") {
         // Clean up old versions
-        log::info!("Cleaning up old versions of {}", tool.kind().as_str().bright_green());
+        log::info!("Cleaning up old versions of {}", tool.kind.as_str().bright_green());
 
-        let installed_tools = Tool::list(directory)?
+        let installed_tools = Tool::list(directory.cloned())?
             .into_iter()
-            .filter(|t| t.kind() == tool.kind() && t.version() != tool.version())
+            .filter(|t| t.kind == tool.kind && t.version != tool.version)
             .collect::<Vec<Tool>>();
 
         for tool in installed_tools {
@@ -63,7 +63,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             log::info!("Uninstalled {}", tool.as_path().display().to_string().bright_green());
         }
 
-        log::info!("Cleaned up old versions of {}", tool.kind().as_str().bright_green());
+        log::info!("Cleaned up old versions of {}", tool.kind.as_str().bright_green());
     }
 
     Ok(())

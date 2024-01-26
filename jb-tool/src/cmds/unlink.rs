@@ -1,6 +1,7 @@
 use clap::{arg, value_parser, Command};
 use jb_lib::tool::{Tool, Kind, ReleaseVersion};
 use anyhow::Result;
+use colored::Colorize;
 
 pub(crate) fn command() -> Command {
     Command::new("unlink")
@@ -37,7 +38,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     tool.unlink()?;
 
-    log::info!("Unlinked {} to {}", tool.kind().as_str(), tool.as_path().display());
+    log::info!("Unlinked {} to {}", tool.kind.as_str().bright_green(), tool.as_path().display().to_string().bright_green());
 
     Ok(())
 }

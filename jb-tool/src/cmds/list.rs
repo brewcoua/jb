@@ -18,7 +18,7 @@ pub(crate) fn command() -> Command {
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let directory = args.get_one::<std::path::PathBuf>("directory");
 
-    let installed_tools = Tool::list(directory)?;
+    let installed_tools = Tool::list(directory.cloned())?;
 
     println!(
         "{:<1} {:<20} {:<20} {:<20}",
@@ -32,13 +32,13 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let cross = char::from_u32(0x2718).unwrap().to_string();
 
     for tool in installed_tools {
-        let version = tool.version().unwrap_or(ReleaseVersion::default());
+        let version = tool.version.unwrap_or(ReleaseVersion::default());
 
         if tool.is_linked() {
             println!(
                 "{:<1} {:<20} {:<20} {:<20}",
                 checkmark.green(),
-                tool.kind().pretty(),
+                tool.kind.pretty(),
                 version.to_string(),
                 version.release.pretty(),
             );
@@ -48,7 +48,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 format!(
                     "{:<1} {:<20} {:<20} {:<20}",
                     cross.red(),
-                    tool.kind().pretty(),
+                    tool.kind.pretty(),
                     version.to_string(),
                     version.release.pretty(),
                 ).dimmed()
