@@ -1,11 +1,11 @@
 use std::path::PathBuf;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 
 pub fn mktemp_dir() -> Result<PathBuf> {
     let output = std::process::Command::new("mktemp")
         .arg("-d")
         .output()
-        .or_else(|err| Err(format!("Failed to create temporary directory: {err}")))?;
+        .with_context(|| "Failed to create temporary directory")?;
 
     if !output.status.success() {
         bail!("Failed to create temporary directory: {}", String::from_utf8_lossy(&output.stderr));
@@ -18,7 +18,7 @@ pub fn get_binary_dir() -> Result<PathBuf> {
     let output = std::process::Command::new("systemd-path")
         .arg("user-binaries")
         .output()
-        .or_else(|err| Err(format!("Failed to get user binary directory: {err}")))?;
+        .with_context(|| "Failed to get user binary directory")?;
 
     if !output.status.success() {
         bail!("Failed to get user binary directory: {}", String::from_utf8_lossy(&output.stderr));

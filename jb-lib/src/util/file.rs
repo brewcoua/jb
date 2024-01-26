@@ -37,7 +37,7 @@ pub async fn download_file(url: &str, path: &PathBuf, size: u64) -> Result<()> {
     Ok(())
 }
 
-pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Result<(), Box<dyn std::error::Error>> {
+pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Result<()> {
     let output = std::process::Command::new("tar")
         .arg("--strip-components")
         .arg(strip.to_string())

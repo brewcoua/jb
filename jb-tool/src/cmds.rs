@@ -4,6 +4,7 @@ mod list;
 mod link;
 
 use clap::{arg, Command};
+use anyhow::{bail, Result};
 
 pub fn cli() -> Command {
     Command::new("jb-tool")
@@ -34,19 +35,16 @@ pub fn cli() -> Command {
         .subcommand(link::command())
 }
 
-pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) {
+pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
     if let Some((name, sub_matches)) = args {
         match name {
             "install" => install::dispatch(sub_matches),
             "uninstall" => uninstall::dispatch(sub_matches),
             "list" => list::dispatch(sub_matches),
             "link" => link::dispatch(sub_matches),
-            _ => {
-                log::error!("Unknown subcommand {}", name);
-                std::process::exit(1);
-            }
+            _ => bail!("Unknown subcommand {}", name)
         }
+    } else {
+        bail!("No subcommand provided")
     }
-
-    std::process::exit(0);
 }

@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 
 use super::util::parse::{Download, Release};
 use super::util::{file, sys};
@@ -60,16 +60,14 @@ impl Tool {
                     let path = entry.path();
 
                     if path.is_dir() {
-                        let name = path.file_name()
-                            .with_context(|| format!("Failed to get file name for {:?}", path))?
-                            .to_str()
-                            .with_context(|| format!("Failed to convert file name to string for {:?}", path))?;
+                        let name = path.file_name()?
+                            .to_str()?;
                         if name.starts_with(tool.as_str()) {
                             let folder = path
                                 .strip_prefix(&apps_dir)
-                                .with_context(|| format!("Failed to strip apps directory prefix from {:?}", path))?
+                                .expect("Failed to strip apps directory")
                                 .to_str()
-                                .with_context(|| format!("Failed to convert path to string for {:?}", path))?
+                                .expect("Failed to convert path to string")
                                 .to_string();
                             Some(folder)
                         } else {
@@ -184,7 +182,7 @@ impl Tool {
 
     pub fn unlink(&self) -> Result<()> {
         if !self.is_linked() {
-            return Err("Tool is not linked".into());
+            bail!("{} is not linked", self.kind.as_str());
         }
 
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
@@ -242,7 +240,7 @@ impl Tool {
         apps_dir.join(self.name())
     }
 
-    pub fn download_link(&self) -> Result<Download, Box<dyn std::error::Error>> {
+    pub fn download_link(&self) -> Result<Download> {
         let latest = self.version.is_none() || self.version.unwrap().is_latest();
 
         let release_type = if self.version.is_none() {
@@ -259,20 +257,20 @@ impl Tool {
         );
 
         let releases_by_code = reqwest::blocking::get(&url)
-            .with_context(|| format!("Failed to fetch releases for {}", self.kind.as_str()))?
+            .with_context(|| format!("Failed to fetch releases for {}, with URL {}", self.kind.as_str(), &url))?
             .json::<HashMap<String, Vec<Release>>>()
-            .with_context(|| format!("Failed to parse releases for {}", self.kind.as_str()))?;
+            .with_context(|| format!("Failed to parse releases for {}, with URL {}", self.kind.as_str(), &url))?;
 
         let releases = releases_by_code
             .get(&self.kind.as_code().to_string())
-            .ok_or("Failed to find releases for tool")?;
+            .ok_or(anyhow!("Failed to find releases for {}", self.kind.as_str()))?;
 
         return if latest {
             // Loop through releases till we find a compatible download
             Ok(releases
                 .iter()
                 .find(|release| release.download().is_ok())
-                .ok_or("Failed to find compatible download")?
+                .ok_or(anyhow!("Failed to find compatible download"))?
                 .download()?
                 .clone())
         } else {
@@ -280,7 +278,7 @@ impl Tool {
                 .iter()
                 .filter(|release| release.version.compare_builds(&self.version.unwrap()) == Ordering::Equal)
                 .find(|release| release.release_type == self.version.unwrap().release)
-                .ok_or("Failed to find compatible download")?
+                .ok_or(anyhow!("Failed to find compatible download"))?
                 .download()?
                 .clone())
         };
@@ -299,7 +297,7 @@ impl Tool {
         let tool_dir = self.as_path();
 
         if tool_dir.exists() {
-            return Err(format!("{} is already installed to its latest version ({})", self.kind.as_str(), download.version).into());
+            bail!("{} is already installed to its latest version ({})", self.kind.as_str(), download.version);
         }
 
         log::debug!("Installing {} to {}", self.name(), tool_dir.display());
@@ -341,11 +339,11 @@ impl Tool {
         Ok(())
     }
 
-    pub fn uninstall(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn uninstall(&self) -> Result<()> {
         let tool_dir = self.as_path();
 
         if !tool_dir.exists() {
-            return Err(format!("{} is not installed", self.name()).into());
+            bail!("{} is not installed", self.name());
         }
 
         if self.is_linked() {

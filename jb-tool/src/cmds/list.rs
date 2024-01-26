@@ -1,6 +1,7 @@
 use colored::Colorize;
 use clap::{arg, value_parser, Command};
 use jb_lib::tool::{Tool, ReleaseVersion};
+use anyhow::Result;
 
 pub(crate) fn command() -> Command {
     Command::new("list")
@@ -14,17 +15,10 @@ pub(crate) fn command() -> Command {
 
 
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let directory = args.get_one::<std::path::PathBuf>("directory");
 
-    let result = Tool::list(directory);
-
-    if let Err(e) = result {
-        log::error!("Failed to list tools:\n{}", e);
-        std::process::exit(1);
-    }
-
-    let installed_tools = result.unwrap();
+    let installed_tools = Tool::list(directory)?;
 
     println!(
         "{:<20} {:<20} {:<20}",
@@ -55,4 +49,6 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
             );
         }
     }
+
+    Ok(())
 }

@@ -1,5 +1,7 @@
 use clap::{arg, value_parser, Command};
 use jb_lib::tool::{Tool, Kind, ReleaseVersion};
+use anyhow::{bail, Result};
+use colored::Colorize;
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")
@@ -21,7 +23,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind: Kind = args.get_one::<Kind>("tool")
         .expect("Could not find argument tool")
         .clone();
@@ -36,20 +38,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
     tool = match version {
         Some(v) => tool.with_version(v.clone()),
         None => {
-            let installed_tools = Tool::list(tool.directory().clone());
-            if let Err(e) = installed_tools {
-                log::error!("Failed to list installed tools:\n{}", e);
-                std::process::exit(1);
-            }
+            let installed_tools = Tool::list(tool.directory().clone())?;
 
-            let installed_tools = installed_tools.unwrap()
+            let installed_tools = installed_tools
                 .into_iter()
                 .filter(|t| t.kind() == tool.kind())
                 .collect::<Vec<Tool>>();
 
             if installed_tools.len() == 0 {
-                log::error!("No installed versions of {} found", tool.kind().as_str());
-                std::process::exit(1);
+                bail!("Could not find any installed versions of {}", tool.kind().as_str());
             } else if installed_tools.len() == 1 {
                 // No need to search for linked version
                 installed_tools[0].clone()
@@ -59,8 +56,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
                     .find(|t| t.is_linked());
 
                 if linked_tool.is_none() {
-                    log::error!("Could not find linked version of {}", tool.kind().as_str());
-                    std::process::exit(1);
+                    bail!("Found multiple installed versions of {} but none are linked", tool.kind().as_str());
                 } else {
                     linked_tool.unwrap().clone()
                 }
@@ -68,11 +64,9 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
         }
     };
 
-    match tool.uninstall() {
-        Ok(_) => log::info!("Uninstalled {} from {}", tool.kind().as_str(), tool.as_path().display()),
-        Err(e) => {
-            log::error!("Failed to uninstall tool:\n{}", e);
-            std::process::exit(1);
-        }
-    }
+    tool.uninstall()?;
+
+    log::info!("Uninstalled {} from {}", tool.kind().as_str().bright_green(), tool.as_path().display().to_string().bright_green());
+
+    Ok(())
 }

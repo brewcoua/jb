@@ -13,7 +13,7 @@ pub struct Release {
     #[serde(rename = "notesLink")]
     pub notes_link: Option<String>,
     #[serde(rename = "licenseRequired")]
-    pub license_required: bool,
+    pub license_required: Option<bool>,
 
     pub version: ReleaseVersion,
     #[serde(rename = "majorVersion")]

@@ -1,5 +1,6 @@
 use clap::{arg, value_parser, Command};
 use jb_lib::tool::{Tool, Kind, ReleaseVersion};
+use anyhow::Result;
 
 pub(crate) fn command() -> Command {
     Command::new("link")
@@ -23,7 +24,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind = args.get_one::<Kind>("tool")
         .expect("Could not find argument tool")
         .clone();
@@ -34,15 +35,9 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
     let tool = Tool::new(tool_kind)
         .with_version(version);
 
-    let result = tool.link();
+    tool.link()?;
 
-    match result {
-        Ok(_) => {
-            log::info!("Linked {} to {}", tool.kind().as_str(), tool.as_path().display());
-        },
-        Err(e) => {
-            log::error!("Failed to link tool:\n{}", e);
-            std::process::exit(1);
-        }
-    }
+    log::info!("Linked {} to {}", tool.kind().as_str(), tool.as_path().display());
+
+    Ok(())
 }

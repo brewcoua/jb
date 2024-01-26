@@ -1,5 +1,7 @@
 use clap::{arg, value_parser, Command};
 use jb_lib::tool::{Tool, Kind, ReleaseVersion};
+use anyhow::Result;
+use colored::Colorize;
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -28,7 +30,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind: &Kind = args.get_one::<Kind>("tool").expect("Could not find argument tool");
     let version: Option<&ReleaseVersion> = args.get_one::<ReleaseVersion>("build");
     let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
@@ -43,17 +45,14 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) {
         tool = tool.with_directory(directory.unwrap().clone());
     }
 
-    let result = tool.install();
+    tool.install()?;
 
-    if let Err(e) = result {
-        log::error!("Failed to install tool:\n{}", e);
-        std::process::exit(1);
-    }
-
-    log::info!("Installed {} to {}", tool.kind().as_str(), tool.as_path().display());
+    log::info!("Installed {} to {}", tool.kind().as_str().bright_green(), tool.as_path().display().to_string().bright_green());
 
     if args.get_flag("clean") {
         // TODO: Clean up old versions (to be done after uninstall method is implemented)
         todo!();
     }
+
+    Ok(())
 }
