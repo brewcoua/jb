@@ -51,6 +51,7 @@
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>colored::Colorize;
 <span class="kw">use </span>env_logger::Builder;
 <span class="kw">use </span>std::io::Write;
@@ -95,10 +96,11 @@
 
             <span class="macro">writeln!</span>(
                 buf,
-                <span class="string">&quot;{}{}{} {}&quot;</span>,
-                <span class="string">&quot;[&quot;</span>.dimmed().bold(),
-                <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_NAME&quot;</span>).dimmed().bold(),
-                <span class="string">&quot;]&quot;</span>.dimmed().bold(),
+                <span class="string">&quot;{} {}&quot;</span>,
+                <span class="macro">format!</span>(
+                    <span class="string">&quot;[{}]&quot;</span>,
+                    <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_NAME&quot;</span>)
+                ).dimmed().bold(),
                 output
             )
         })
