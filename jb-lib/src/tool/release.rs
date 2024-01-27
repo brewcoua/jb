@@ -168,7 +168,7 @@ impl std::fmt::Display for ReleaseVersion {
 
         let mut version = vec![self.major, self.minor, self.patch]
             .into_iter()
-            .filter_map(|version| version)
+            .flatten()
             .map(|version| version.to_string())
             .collect::<Vec<_>>()
             .join(".");
@@ -210,7 +210,7 @@ impl FromStr for ReleaseVersion {
             return Err("Failed to parse version: too many version numbers");
         }
 
-        if parts.get(0).is_none() {
+        if parts.first().is_none() {
             return Err("Failed to parse version: major version is required if no release_type is specified");
         }
 
@@ -226,7 +226,7 @@ impl FromStr for ReleaseVersion {
             .transpose()?;
 
         Ok(Self {
-            major: parts.get(0).cloned().flatten(),
+            major: parts.first().cloned().flatten(),
             minor: parts.get(1).cloned().flatten(),
             patch: parts.get(2).cloned().flatten(),
             release: release.unwrap_or(ReleaseType::Release),

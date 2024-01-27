@@ -37,11 +37,11 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     // Get all folders matching the tool name in the given directory (directory/apps/tool-*)
 
-    let mut tool = Tool::new(tool_kind.clone());
-    if !version.is_none() {
-        tool = tool.with_version(version.unwrap().clone());
+    let mut tool = Tool::new(*tool_kind);
+    if version.is_some() {
+        tool = tool.with_version(*version.unwrap());
     }
-    if !directory.is_none() {
+    if directory.is_some() {
         tool = tool.with_directory(directory.unwrap().clone());
     }
 

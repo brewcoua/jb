@@ -24,19 +24,18 @@ pub(crate) fn command() -> Command {
 }
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
-    let tool_kind: Kind = args.get_one::<Kind>("tool")
-        .expect("Could not find argument tool")
-        .clone();
+    let tool_kind = args.get_one::<Kind>("tool")
+        .expect("Could not find argument tool");
     let directory = args.get_one::<std::path::PathBuf>("directory");
     let version = args.get_one::<ReleaseVersion>("build");
 
-    let mut tool = Tool::new(tool_kind);
-    if !directory.is_none() {
+    let mut tool = Tool::new(*tool_kind);
+    if directory.is_some() {
         tool = tool.with_directory(directory.unwrap().clone());
     }
 
     tool = match version {
-        Some(v) => tool.with_version(v.clone()),
+        Some(v) => tool.with_version(*v),
         None => {
             let installed_tools = Tool::list(tool.directory.clone())?;
 
@@ -45,7 +44,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 .filter(|t| t.kind == tool.kind)
                 .collect::<Vec<Tool>>();
 
-            if installed_tools.len() == 0 {
+            if installed_tools.is_empty() {
                 bail!("Could not find any installed versions of {}", tool.kind.as_str());
             } else if installed_tools.len() == 1 {
                 // No need to search for linked version
@@ -55,10 +54,9 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 let linked_tool = installed_tools.iter()
                     .find(|t| t.is_linked());
 
-                if linked_tool.is_none() {
-                    bail!("Found multiple installed versions of {} but none are linked", tool.kind.as_str());
-                } else {
-                    linked_tool.unwrap().clone()
+                match linked_tool {
+                    Some(t) => t.clone(),
+                    None => bail!("Found multiple installed versions of {} but none are linked", tool.kind.as_str())
                 }
             }
         }

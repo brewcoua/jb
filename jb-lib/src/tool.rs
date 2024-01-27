@@ -93,7 +93,7 @@ impl Tool {
                 }
 
                 installed_tools.push(
-                    Tool::new(tool.clone())
+                    Tool::new(*tool)
                         .with_version(tool_version.unwrap())
                         .with_directory(directory.clone())
                 );
@@ -221,7 +221,7 @@ impl Tool {
     }
 
     pub fn name(&self) -> String {
-        format!("{}-{}", self.kind.as_str(), self.version.unwrap_or(ReleaseVersion::default()).to_string())
+        format!("{}-{}", self.kind.as_str(), self.version.unwrap_or_default())
     }
 
     pub fn as_path(&self) -> PathBuf {
@@ -255,7 +255,7 @@ impl Tool {
             .get(&self.kind.as_code().to_string())
             .ok_or(anyhow!("Failed to find releases for {}", self.kind.as_str()))?;
 
-        return if latest {
+        if latest {
             // Loop through releases till we find a compatible download
             Ok(releases
                 .iter()
@@ -271,18 +271,18 @@ impl Tool {
                 .ok_or(anyhow!("Failed to find compatible download"))?
                 .download()?
                 .clone())
-        };
+        }
     }
 
     pub fn install(&mut self) -> Result<()> {
         let directory = self.directory.clone().unwrap_or(Self::default_directory());
         let icons_dir = directory.join("icons");
 
-        log::debug!("Fetching release '{}' for {}", self.version.unwrap_or(ReleaseVersion::default()), self.kind.as_str());
+        log::debug!("Fetching release '{}' for {}", self.version.unwrap_or_default(), self.kind.as_str());
         let download = self.download_link()?;
         log::debug!("Found download for {} with version {}", self.kind.as_str(), download.version);
 
-        self.version = Some(download.version.clone());
+        self.version = Some(download.version);
 
         let tool_dir = self.as_path();
 
@@ -303,7 +303,7 @@ impl Tool {
 
         log::debug!("Created temporary directory {}", temp_folder.display());
 
-        let download_path = temp_folder.join(&archive_name);
+        let download_path = temp_folder.join(archive_name);
 
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()

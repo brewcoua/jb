@@ -27,14 +27,12 @@ pub(crate) fn command() -> Command {
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind = args.get_one::<Kind>("tool")
-        .expect("Could not find argument tool")
-        .clone();
+        .expect("Could not find argument tool");
     let version = args.get_one::<ReleaseVersion>("version")
-        .expect("Could not find argument version")
-        .clone();
+        .expect("Could not find argument version");
 
-    let tool = Tool::new(tool_kind)
-        .with_version(version);
+    let tool = Tool::new(*tool_kind)
+        .with_version(*version);
 
     tool.link()?;
 

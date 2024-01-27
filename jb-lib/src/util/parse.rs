@@ -73,8 +73,7 @@ impl Release {
             .chain(archs.iter().map(|arch| format!("{}-{}", platform, arch)))
             .chain(archs.iter().map(|arch| format!("{}{}", platform, arch)))
             .find(|arch| self.downloads.keys().any(|key| key.eq_ignore_ascii_case(arch)))
-            .map(|arch| self.downloads.get(arch.as_str()))
-            .flatten();
+            .and_then(|arch| self.downloads.get(arch.as_str()));
 
         let platform_specific = self.downloads.get(platform);
 
@@ -85,16 +84,15 @@ impl Release {
         };
 
         let result = download_raw.map(|download| Download {
-            version: self.version.clone().with_release(self.release_type.clone()),
+            version: self.version.with_release(self.release_type),
             link: download.link.clone(),
             size: download.size,
             checksum_link: download.checksum_link.clone(),
         });
 
-        return if result.is_some() {
-            Ok(result.unwrap())
-        } else {
-            bail!("No download found for platform {} and architecture {}", platform, arch);
+        match result {
+            Some(download) => Ok(download),
+            None => bail!("No download found for platform {} and architecture {}", platform, arch)
         }
     }
 }
