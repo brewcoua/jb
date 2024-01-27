@@ -71,7 +71,7 @@ impl Tool {
     /// This function returns a list of all installed `JetBrains` tools.
     ///
     /// # Examples
-    /// ```rust
+    /// ```rust,no_run
     /// use jb_lib::tool::Tool;
     /// let tools = Tool::list(None).unwrap();
     /// ```
@@ -172,7 +172,7 @@ impl Tool {
     /// This function checks if the tool is the one linked to the icon directory.
     ///
     /// # Examples
-    /// ```rust
+    /// ```rust,no_run
     /// use jb_lib::tool::{Tool, Kind};
     /// let tool = Tool::new(Kind::RustRover)
     ///   .with_version("2021.2.1".parse().unwrap());
@@ -211,7 +211,7 @@ impl Tool {
     /// It may also return an error if it fails to create the icon or binary symlink.
     ///
     /// # Examples
-    /// ```rust
+    /// ```rust,no_run
     /// use jb_lib::tool::{Tool, Kind};
     /// let tool = Tool::new(Kind::RustRover)
     ///  .with_version("2021.2.1".parse().unwrap());
@@ -283,7 +283,7 @@ impl Tool {
     /// It may also return an error if it fails to remove the icon or binary symlink, as well as if it fails to create the link to the alternative version (if any).
     ///
     /// # Examples
-    /// ```rust
+    /// ```rust,no_run
     /// use jb_lib::tool::{Tool, Kind};
     /// let tool = Tool::new(Kind::RustRover)
     ///   .with_version("2021.2.1".parse().unwrap());
