@@ -1,16 +1,31 @@
-use std::cmp::Ordering;
-use std::str::FromStr;
+//! Release version parsing and comparison
+
+use anyhow::{anyhow, Result};
 use clap::builder::PossibleValue;
 use serde::Deserialize;
+use std::cmp::Ordering;
+use std::str::FromStr;
 
+/// Release type
+///
+/// `JetBrains` has three release types:
+/// - Release
+/// - EAP
+/// - Public Preview
+///
+/// This enum represents those release types.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ReleaseType {
+pub enum Type {
     Release,
     EAP,
     Preview,
 }
 
-impl ReleaseType {
+impl Type {
+    /// Get the release type as a string (e.g. "release", "eap", "preview").
+    ///
+    /// This is fully static and does not require any allocations.
+    #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
             Self::Release => "release",
@@ -19,6 +34,10 @@ impl ReleaseType {
         }
     }
 
+    /// Get the release type as a pretty string (e.g. "Release", "EAP", "Public Preview")
+    ///
+    /// This is fully static and does not require any allocations.
+    #[must_use]
     pub fn pretty(&self) -> &str {
         match self {
             Self::Release => "Release",
@@ -28,17 +47,17 @@ impl ReleaseType {
     }
 }
 
-impl<'de> Deserialize<'de> for ReleaseType {
+impl<'de> Deserialize<'de> for Type {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        ReleaseType::from_str(&s).map_err(serde::de::Error::custom)
+        Type::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
-impl clap::ValueEnum for ReleaseType {
+impl clap::ValueEnum for Type {
     fn value_variants<'a>() -> &'a [Self] {
         &[Self::Release, Self::EAP, Self::Preview]
     }
@@ -52,7 +71,7 @@ impl clap::ValueEnum for ReleaseType {
     }
 }
 
-impl FromStr for ReleaseType {
+impl FromStr for Type {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -65,105 +84,182 @@ impl FromStr for ReleaseType {
     }
 }
 
-impl Ord for ReleaseType {
+impl Ord for Type {
     fn cmp(&self, other: &Self) -> Ordering {
+        if self == other {
+            return Ordering::Equal;
+        }
+
         match (self, other) {
-            (Self::Release, Self::Release) => Ordering::Equal,
             (Self::Release, _) => Ordering::Greater,
             (_, Self::Release) => Ordering::Less,
 
-            (Self::EAP, Self::EAP) => Ordering::Equal,
             (Self::EAP, _) => Ordering::Greater,
             (_, Self::EAP) => Ordering::Less,
 
-            (Self::Preview, Self::Preview) => Ordering::Equal,
-            //(Self::Preview, _) => Ordering::Greater,
-            //(_, Self::Preview) => Ordering::Less,
+            (Self::Preview, _) => Ordering::Greater,
         }
     }
 }
 
-impl PartialOrd for ReleaseType {
+impl PartialOrd for Type {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
+/// Release version
+///
+/// This struct represents a release version, including the release type.
+///
+/// It can be parsed from a string, and can be compared to other release versions.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct ReleaseVersion {
+pub struct Version {
     pub major: Option<u32>,
     pub minor: Option<u32>,
     pub patch: Option<u32>,
-    pub release: ReleaseType,
+    pub release: Type,
 }
 
-impl ReleaseVersion {
+impl Version {
+    #[must_use]
     pub fn new(major: Option<u32>, minor: Option<u32>, patch: Option<u32>) -> Self {
-        Self { major, minor, patch, release: ReleaseType::Release }
+        Self {
+            major,
+            minor,
+            patch,
+            release: Type::Release,
+        }
     }
 
-    pub fn with_release(self, release: ReleaseType) -> Self {
+    /// Set the release type
+    ///
+    /// This returns a new `ReleaseVersion` with the release type set to the specified value.
+    ///
+    /// # Example
+    /// ```rust
+    /// use jb_lib::tool::{Type, Version};
+    ///
+    /// let version = Version::new(Some(2021), Some(2), Some(3));
+    /// assert_eq!(version.release, Type::Release);
+    ///
+    /// let version = version.with_release(Type::EAP);
+    /// assert_eq!(version.release, Type::EAP);
+    /// ```
+    #[must_use]
+    pub fn with_release(self, release: Type) -> Self {
         Self { release, ..self }
     }
 
+    /// Check if this version is the latest version
+    ///
+    /// This returns `true` if the version represents the latest version, and `false` otherwise.
+    /// This only checks if all fields are `None`, and does not check the release type.
+    ///
+    /// # Example
+    /// ```rust
+    /// use jb_lib::tool::Version;
+    ///
+    /// let version = Version::new(None, None, None);
+    /// assert!(version.is_latest());
+    /// ```
+    #[must_use]
     pub fn is_latest(&self) -> bool {
         self.major.is_none() && self.minor.is_none() && self.patch.is_none()
     }
 
-    pub fn compare_builds(&self, other: &Self) -> Ordering {
-        // Compare without checking release type
+    /// Compare this version to another version, ignoring the release type
+    ///
+    /// This returns an `Ordering` representing the comparison between the two versions.
+    /// This does not check the release type, and only compares the version numbers.
+    ///
+    /// # Errors
+    /// This returns an error if any of the version numbers are missing when comparing.
+    /// This should never happen, as the version numbers are always set when parsing or an early return is made.
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::cmp::Ordering;
+    /// use jb_lib::tool::Version;
+    ///
+    /// let version = Version::new(Some(2021), Some(2), Some(3));
+    /// let other = Version::new(Some(2021), Some(2), Some(4));
+    /// assert_eq!(version.compare_builds(&other).unwrap(), Ordering::Less);
+    /// ```
+    pub fn compare_builds(&self, other: &Self) -> Result<Ordering> {
         if self.major.is_none() || other.major.is_none() {
-            return Ordering::Equal;
+            return Ok(Ordering::Equal);
         }
 
-        let major = self.major.unwrap().cmp(&other.major.unwrap());
+        let major = self
+            .major
+            .ok_or(anyhow!(
+                "Failed to compare builds: major version is missing"
+            ))?
+            .cmp(&other.major.ok_or(anyhow!(
+                "Failed to compare builds: major version is missing"
+            ))?);
 
         if major != Ordering::Equal {
-            return major;
+            return Ok(major);
         }
 
         if self.minor.is_none() || other.minor.is_none() {
-            return Ordering::Equal;
+            return Ok(Ordering::Equal);
         }
 
-        let minor = self.minor.unwrap().cmp(&other.minor.unwrap());
+        let minor = self
+            .minor
+            .ok_or(anyhow!(
+                "Failed to compare builds: minor version is missing"
+            ))?
+            .cmp(&other.minor.ok_or(anyhow!(
+                "Failed to compare builds: minor version is missing"
+            ))?);
 
         if minor != Ordering::Equal {
-            return minor;
+            return Ok(minor);
         }
 
         if self.patch.is_none() || other.patch.is_none() {
-            return Ordering::Equal;
+            return Ok(Ordering::Equal);
         }
 
-        self.patch.unwrap().cmp(&other.patch.unwrap())
+        Ok(self
+            .patch
+            .ok_or(anyhow!(
+                "Failed to compare builds: patch version is missing"
+            ))?
+            .cmp(&other.patch.ok_or(anyhow!(
+                "Failed to compare builds: patch version is missing"
+            ))?))
     }
 }
 
-impl Default for ReleaseVersion {
+impl Default for Version {
     fn default() -> Self {
         Self::new(None, None, None)
     }
 }
 
-impl<'de> Deserialize<'de> for ReleaseVersion {
+impl<'de> Deserialize<'de> for Version {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        ReleaseVersion::from_str(&s).map_err(serde::de::Error::custom)
+        Version::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
-impl std::fmt::Display for ReleaseVersion {
+impl std::fmt::Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.major.is_none() && self.minor.is_none() && self.patch.is_none() {
-            return if self.release == ReleaseType::Release {
+            return if self.release == Type::Release {
                 write!(f, "latest")
             } else {
                 write!(f, "{}", self.release.as_str())
-            }
+            };
         }
 
         let mut version = vec![self.major, self.minor, self.patch]
@@ -173,14 +269,14 @@ impl std::fmt::Display for ReleaseVersion {
             .collect::<Vec<_>>()
             .join(".");
 
-        if self.release != ReleaseType::Release {
+        if self.release != Type::Release {
             version.push_str(&format!("-{}", self.release.as_str()));
         }
-        write!(f, "{}", version)
+        write!(f, "{version}")
     }
 }
 
-impl FromStr for ReleaseVersion {
+impl FromStr for Version {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -189,7 +285,7 @@ impl FromStr for ReleaseVersion {
         let first = base.next().ok_or("Failed to parse version")?;
 
         // Check if it's a release type
-        if let Ok(release) = ReleaseType::from_str(first) {
+        if let Ok(release) = Type::from_str(first) {
             return Ok(Self::new(None, None, None).with_release(release));
         }
 
@@ -218,18 +314,18 @@ impl FromStr for ReleaseVersion {
         let release = base
             .next()
             .map(|release| match release {
-                "release" => Ok(ReleaseType::Release),
-                "eap" => Ok(ReleaseType::EAP),
-                "preview" => Ok(ReleaseType::Preview),
+                "release" => Ok(Type::Release),
+                "eap" => Ok(Type::EAP),
+                "preview" => Ok(Type::Preview),
                 _ => Err("Failed to parse release type"),
             })
             .transpose()?;
 
         Ok(Self {
-            major: parts.first().cloned().flatten(),
-            minor: parts.get(1).cloned().flatten(),
-            patch: parts.get(2).cloned().flatten(),
-            release: release.unwrap_or(ReleaseType::Release),
+            major: parts.first().copied().flatten(),
+            minor: parts.get(1).copied().flatten(),
+            patch: parts.get(2).copied().flatten(),
+            release: release.unwrap_or(Type::Release),
         })
     }
 }

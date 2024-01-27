@@ -1,6 +1,13 @@
-use clap::builder::PossibleValue;
-use super::release::ReleaseType;
+//! The tool kind.
+//!
+//! The tool kind represents the tool among the `JetBrains` products.
 
+use super::release::Type;
+use clap::builder::PossibleValue;
+
+/// Tool kind
+///
+/// This enum does not contain any information. It only represents which kind of tool it is.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Kind {
     IntelliJIdeaUltimate,
@@ -29,6 +36,11 @@ pub enum Kind {
 }
 
 impl Kind {
+    /// Returns a list of all tool kinds.
+    ///
+    /// This is used for display purposes and to loop over all tool kinds.
+    /// The list is static and does not require any allocations.
+    #[must_use]
     pub fn list() -> &'static [Self] {
         &[
             Self::IntelliJIdeaUltimate,
@@ -56,7 +68,10 @@ impl Kind {
         ]
     }
 
-
+    /// Returns the code for this tool kind.
+    ///
+    /// This is used to fetch the releases for this tool from the `JetBrains` website.
+    #[must_use]
     pub fn as_code(&self) -> &str {
         match self {
             Self::IntelliJIdeaUltimate => "IIU",
@@ -85,6 +100,10 @@ impl Kind {
         }
     }
 
+    /// Returns the string representation of this tool kind.
+    ///
+    /// This is used to determine the directory name for the tool as well as the arguments for the CLI.
+    #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::IntelliJIdeaUltimate => "idea-ultimate",
@@ -113,6 +132,10 @@ impl Kind {
         }
     }
 
+    /// Returns the pretty name for this tool kind.
+    ///
+    /// This is used for display purposes.
+    #[must_use]
     pub fn pretty(&self) -> &'static str {
         match self {
             Self::IntelliJIdeaUltimate => "IntelliJ IDEA Ultimate",
@@ -141,40 +164,30 @@ impl Kind {
         }
     }
 
+    /// Returns the source name for this tool kind.
+    ///
+    /// This is used to determine the binary name for the tool, as some tools may have the same binary name while being different tools. (e.g. `idea` for `IntelliJ IDEA Ultimate` and `IntelliJ IDEA Community`)
+    #[must_use]
     pub fn src_name(&self) -> &str {
         match self {
-            Self::IntelliJIdeaUltimate => "idea",
-            Self::IntelliJIdeaCommunity => "idea",
+            Self::IntelliJIdeaUltimate | Self::IntelliJIdeaCommunity => "idea",
+            Self::PyCharmCommunity | Self::PyCharmProfessional => "pycharm",
             Self::ClionNova => "clion",
             _ => self.as_str(),
         }
     }
 
-    pub fn default_type(&self) -> ReleaseType {
+    /// Returns the default release type for this tool kind.
+    ///
+    /// This is used for tools that are not yet officially released.
+    ///
+    /// For example, the default release type for `Kind::Fleet` is `Type::Preview`.
+    #[must_use]
+    pub fn default_type(&self) -> Type {
         match self {
-            Self::IntelliJIdeaUltimate => ReleaseType::Release,
-            Self::IntelliJIdeaCommunity => ReleaseType::Release,
-            Self::PyCharmProfessional => ReleaseType::Release,
-            Self::PyCharmCommunity => ReleaseType::Release,
-            Self::PhpStorm => ReleaseType::Release,
-            Self::GoLand => ReleaseType::Release,
-            Self::Rider => ReleaseType::Release,
-            Self::CLion => ReleaseType::Release,
-            Self::ClionNova => ReleaseType::EAP,
-            Self::RustRover => ReleaseType::EAP,
-            Self::WebStorm => ReleaseType::Release,
-            Self::RubyMine => ReleaseType::Release,
-            Self::DataGrip => ReleaseType::Release,
-            Self::DataSpell => ReleaseType::Release,
-            Self::Fleet => ReleaseType::Preview,
-            Self::Aqua => ReleaseType::Preview,
-            Self::Writerside => ReleaseType::EAP,
-            Self::DotMemory => ReleaseType::Release,
-            Self::DotTrace => ReleaseType::Release,
-            Self::MPS => ReleaseType::Release,
-
-            Self::Space => ReleaseType::Release,
-            Self::Gateway => ReleaseType::Release,
+            Self::Fleet | Self::Aqua => Type::Preview,
+            Self::Writerside | Self::ClionNova | Self::RustRover => Type::EAP,
+            _ => Type::Release,
         }
     }
 }

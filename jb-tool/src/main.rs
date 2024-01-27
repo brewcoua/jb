@@ -1,6 +1,6 @@
-use std::io::Write;
-use env_logger::Builder;
 use colored::Colorize;
+use env_logger::Builder;
+use std::io::Write;
 
 mod cmds;
 
@@ -11,7 +11,7 @@ fn main() {
     setup_logger(&matches);
 
     match cmds::dispatch(matches.subcommand()) {
-        Ok(_) => {}
+        Ok(()) => {}
         Err(e) => {
             log::error!("{:?}", e);
             std::process::exit(1);

@@ -1,7 +1,7 @@
-use colored::Colorize;
-use clap::{arg, value_parser, Command};
-use jb_lib::tool::{Tool, ReleaseVersion};
 use anyhow::Result;
+use clap::{arg, value_parser, Command};
+use colored::Colorize;
+use jb_lib::tool::{Tool, Version};
 
 pub(crate) fn command() -> Command {
     Command::new("list")
@@ -9,11 +9,9 @@ pub(crate) fn command() -> Command {
         .arg(
             arg!(-d --directory <PATH>)
                 .help("The directory to list tools from")
-                .value_parser(value_parser!(std::path::PathBuf))
+                .value_parser(value_parser!(std::path::PathBuf)),
         )
 }
-
-
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let directory = args.get_one::<std::path::PathBuf>("directory");
@@ -32,7 +30,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let cross = char::from_u32(0x2718).unwrap().to_string();
 
     for tool in installed_tools {
-        let version = tool.version.unwrap_or(ReleaseVersion::default());
+        let version = tool.version.unwrap_or(Version::default());
 
         if tool.is_linked() {
             println!(
@@ -51,7 +49,8 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                     tool.kind.pretty(),
                     version.to_string(),
                     version.release.pretty(),
-                ).dimmed()
+                )
+                .dimmed()
             );
         }
     }

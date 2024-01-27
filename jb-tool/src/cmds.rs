@@ -1,11 +1,11 @@
 mod install;
-mod uninstall;
-mod list;
 mod link;
+mod list;
+mod uninstall;
 mod unlink;
 
-use clap::{arg, Command};
 use anyhow::{bail, Result};
+use clap::{arg, Command};
 
 pub fn cli() -> Command {
     Command::new("jb")
@@ -15,10 +15,10 @@ pub fn cli() -> Command {
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .arg(
-            arg!(-v --verbose)
+            arg!(-v - -verbose)
                 .help("Enable verbose logging")
                 .required(false)
-                .global(true)
+                .global(true),
         )
         .subcommand(install::command())
         .subcommand(uninstall::command())
@@ -35,7 +35,7 @@ pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "list" => list::dispatch(sub_matches),
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),
-            _ => bail!("Unknown subcommand {}", name)
+            _ => bail!("Unknown subcommand {}", name),
         }
     } else {
         bail!("No subcommand provided")

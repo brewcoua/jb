@@ -1,21 +1,21 @@
-use std::collections::HashMap;
-use serde::Deserialize;
+use crate::tool::release::{Type, Version};
 use anyhow::{bail, Result};
-use crate::tool::release::{ReleaseType, ReleaseVersion};
+use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Release {
     pub date: String,
 
     #[serde(rename = "type")]
-    pub release_type: ReleaseType,
+    pub rtype: Type,
 
     #[serde(rename = "notesLink")]
     pub notes_link: Option<String>,
     #[serde(rename = "licenseRequired")]
     pub license_required: Option<bool>,
 
-    pub version: ReleaseVersion,
+    pub version: Version,
     #[serde(rename = "majorVersion")]
     pub major_version: String,
     pub build: String,
@@ -33,7 +33,7 @@ pub struct DownloadRaw {
 
 #[derive(Debug, Clone)]
 pub struct Download {
-    pub version: ReleaseVersion,
+    pub version: Version,
     pub link: String,
     pub size: u64,
     pub checksum_link: String,
@@ -54,7 +54,7 @@ impl Release {
             "linux" => "linux",
             "macos" => "mac",
             "windows" => "windows",
-            _ => bail!("Unsupported platform {}", platform)
+            _ => bail!("Unsupported platform {}", platform),
         };
 
         // Find the list of architectures that match the given architecture
@@ -69,10 +69,14 @@ impl Release {
 
         let arch_specific = archs
             .iter()
-            .map(|arch| format!("{}_{}", platform, arch))
-            .chain(archs.iter().map(|arch| format!("{}-{}", platform, arch)))
-            .chain(archs.iter().map(|arch| format!("{}{}", platform, arch)))
-            .find(|arch| self.downloads.keys().any(|key| key.eq_ignore_ascii_case(arch)))
+            .map(|arch| format!("{platform}_{arch}"))
+            .chain(archs.iter().map(|arch| format!("{platform}-{arch}")))
+            .chain(archs.iter().map(|arch| format!("{platform}{arch}")))
+            .find(|arch| {
+                self.downloads
+                    .keys()
+                    .any(|key| key.eq_ignore_ascii_case(arch))
+            })
             .and_then(|arch| self.downloads.get(arch.as_str()));
 
         let platform_specific = self.downloads.get(platform);
@@ -84,7 +88,7 @@ impl Release {
         };
 
         let result = download_raw.map(|download| Download {
-            version: self.version.with_release(self.release_type),
+            version: self.version.with_release(self.rtype),
             link: download.link.clone(),
             size: download.size,
             checksum_link: download.checksum_link.clone(),
@@ -92,7 +96,11 @@ impl Release {
 
         match result {
             Some(download) => Ok(download),
-            None => bail!("No download found for platform {} and architecture {}", platform, arch)
+            None => bail!(
+                "No download found for platform {} and architecture {}",
+                platform,
+                arch
+            ),
         }
     }
 }
