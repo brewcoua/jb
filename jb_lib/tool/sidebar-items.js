@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["kind","release"],"struct":["Tool"]};
