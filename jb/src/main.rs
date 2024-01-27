@@ -44,7 +44,7 @@ fn setup_logger(matches: &clap::ArgMatches) {
                 buf,
                 "{}{}{} {}",
                 "[".dimmed().bold(),
-                "jb-tool".green().bold(),
+                env!("CARGO_PKG_NAME").dimmed().bold(),
                 "]".dimmed().bold(),
                 output
             )

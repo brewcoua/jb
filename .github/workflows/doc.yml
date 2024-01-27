@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "github-pages"
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -20,9 +20,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      RUSTFLAGS: -Dwarnings
-      CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -39,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: target/doc
+          path: ./target/doc
 
   deploy:
     name: Deploy

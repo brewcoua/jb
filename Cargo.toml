@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "jb-lib",
-    "jb-tool",
+    "jb",
 ]
 
 resolver = "2"
