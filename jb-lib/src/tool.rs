@@ -13,6 +13,7 @@ use std::str::FromStr;
 
 use super::util::parse::{Download, Release};
 use super::util::{file, sys};
+use super::env::Variable;
 
 pub use kind::Kind;
 pub use release::{Type, Version};
@@ -54,18 +55,6 @@ impl Tool {
         }
     }
 
-    /// The default installation directory for `JetBrains` tools.
-    ///
-    /// This may be overridden by setting the `JB_TOOLS_DIR` environment variable
-    /// The default is `$HOME/.local/share/JetBrains`
-    ///
-    /// # Panics
-    /// This function may panic if it fails to get the `HOME` environment variable.
-    #[must_use]
-    pub fn default_directory() -> PathBuf {
-        PathBuf::from(std::env::var("HOME").unwrap()).join(".local/share/JetBrains")
-    }
-
     /// List all installed `JetBrains` tools.
     ///
     /// This function returns a list of all installed `JetBrains` tools.
@@ -82,7 +71,7 @@ impl Tool {
     /// # Panics
     /// This function may panic if it fails to strip the tool name prefix from the tool directory or convert the path to a string.
     pub fn list(directory: Option<PathBuf>) -> Result<Vec<Tool>> {
-        let directory = directory.unwrap_or(Self::default_directory());
+        let directory = directory.unwrap_or(Variable::get(Variable::ToolsDirectory));
 
         let tools = kind::Kind::list();
         let mut installed_tools: Vec<Tool> = Vec::new();
@@ -183,7 +172,7 @@ impl Tool {
     /// ```
     #[must_use]
     pub fn is_linked(&self) -> bool {
-        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -222,7 +211,7 @@ impl Tool {
     /// }
     /// ```
     pub fn link(&self) -> Result<()> {
-        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -297,7 +286,7 @@ impl Tool {
             bail!("{} is not linked", self.kind.as_str());
         }
 
-        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
 
         // Try to find an alternative version to link
         let mut installed_tools = Self::list(self.directory.clone())?
@@ -397,7 +386,7 @@ impl Tool {
     /// ```
     #[must_use]
     pub fn as_path(&self) -> PathBuf {
-        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         let apps_dir = directory.join("apps");
         apps_dir.join(self.name())
     }
@@ -510,7 +499,7 @@ impl Tool {
     /// }
     /// ```
     pub fn install(&mut self) -> Result<()> {
-        let directory = self.directory.clone().unwrap_or(Self::default_directory());
+        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
 
         log::debug!(

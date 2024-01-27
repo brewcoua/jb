@@ -42,10 +42,11 @@ fn setup_logger(matches: &clap::ArgMatches) {
 
             writeln!(
                 buf,
-                "{}{}{} {}",
-                "[".dimmed().bold(),
-                env!("CARGO_PKG_NAME").dimmed().bold(),
-                "]".dimmed().bold(),
+                "{} {}",
+                format!(
+                    "[{}]",
+                    env!("CARGO_PKG_NAME")
+                ).dimmed().bold(),
                 output
             )
         })
