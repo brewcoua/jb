@@ -1,51 +1,49 @@
 use std::cmp::min;
-use std::fs::File;
-use std::io::Write;
 use std::path::PathBuf;
+
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
+use tokio::task::block_in_place;
 
 use anyhow::{bail, Context, Result};
 use futures_util::StreamExt;
-use indicatif::{ProgressBar, ProgressStyle};
 
 /// Download a file from a URL to a path.
 ///
-/// This function will download the file at the given URL to the given path.
-/// It will also display a progress bar while downloading.
-///
-/// It will run asynchronously, so it needs to be awaited.
+/// This function will download the file at the given URL to the given path, using a stream as to avoid loading the entire file into memory.
 ///
 /// # Errors
 /// This function will return an error if the file could not be downloaded (e.g. the URL is invalid).
 /// This function will also return an error if the file could not be created or written to.
-pub async fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
-    let response = reqwest::get(url)
-        .await
-        .with_context(|| format!("Failed to download {url}"))?;
+pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
+    block_in_place(|| {
+        tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async move {
+                let response = reqwest::get(url)
+                    .await
+                    .with_context(|| format!("Failed to download {url}"))?;
 
-    let file_name = path.file_name().unwrap().to_str().unwrap();
+                let mut file = File::create(path)
+                    .await
+                    .with_context(|| format!("Failed to create {}", path.display()))?;
 
-    let pb = ProgressBar::new(size);
-    pb.set_style(ProgressStyle::default_bar()
-        .template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")?
-        .progress_chars("#>-"));
-    pb.set_message(format!("Downloading {file_name}"));
+                let mut downloaded_size: u64 = 0;
+                let mut stream = response.bytes_stream();
 
-    let mut file =
-        File::create(path).with_context(|| format!("Failed to create {}", path.display()))?;
-    let mut downloaded: u64 = 0;
-    let mut stream = response.bytes_stream();
+                while let Some(chunk) = stream.next().await {
+                    let chunk =
+                        chunk.with_context(|| format!("Failed to download chunk at {url}"))?;
+                    file.write_all(&chunk)
+                        .await
+                        .with_context(|| format!("Failed to write to {}", path.display()))?;
+                    let new = min(downloaded_size + (chunk.len() as u64), size);
+                    downloaded_size = new;
+                }
 
-    while let Some(item) = stream.next().await {
-        let chunk = item.with_context(|| format!("Failed to download chunk at {url}"))?;
-        file.write_all(&chunk)
-            .with_context(|| format!("Failed to write to {}", path.display()))?;
-        let new = min(downloaded + (chunk.len() as u64), size);
-        downloaded = new;
-        pb.set_position(new);
-    }
-
-    pb.finish_with_message(format!("Downloaded {file_name}"));
-    Ok(())
+                Ok(())
+            })
+    })
 }
 
 /// Extract an archive to a destination.

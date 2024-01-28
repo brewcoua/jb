@@ -11,9 +11,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::env::Variable;
 use super::util::parse::{Download, Release};
 use super::util::{file, sys};
-use super::env::Variable;
+
+use super::{debug, debug_span, info_span};
 
 pub use kind::Kind;
 pub use release::{Type, Version};
@@ -73,7 +75,7 @@ impl Tool {
     pub fn list(directory: Option<PathBuf>) -> Result<Vec<Tool>> {
         let directory = directory.unwrap_or(Variable::get(Variable::ToolsDirectory));
 
-        let tools = kind::Kind::list();
+        let tools = Kind::list();
         let mut installed_tools: Vec<Tool> = Vec::new();
 
         for tool in tools {
@@ -172,7 +174,10 @@ impl Tool {
     /// ```
     #[must_use]
     pub fn is_linked(&self) -> bool {
-        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        let directory = self
+            .directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -211,7 +216,10 @@ impl Tool {
     /// }
     /// ```
     pub fn link(&self) -> Result<()> {
-        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        let directory = self
+            .directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
         let tool_dir = self.as_path();
 
@@ -223,7 +231,7 @@ impl Tool {
         let icon_path = icons_dir.join(self.kind.as_str());
         let src_path = tool_dir.join(format!("bin/{}.svg", self.kind.src_name()));
 
-        log::debug!("Linking {} to {}", self.kind.as_str(), src_path.display());
+        let span = debug_span!("Linking {} to {}", self.kind.as_str(), src_path.display());
 
         // Delete the icon symlink, regardless of whether it exists or not
         std::fs::remove_file(&icon_path).ok();
@@ -235,7 +243,7 @@ impl Tool {
                 src_path.display()
             )
         })?;
-        log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
+        debug_span!((span) "Linked {} to {}", self.kind.as_str(), src_path.display());
 
         // Create a symlink to the latest version
         let binary_folder = sys::get_binary_dir()?;
@@ -243,7 +251,7 @@ impl Tool {
 
         let src_path = tool_dir.join(format!("bin/{}.sh", self.kind.src_name()));
 
-        log::debug!("Linking {} to {}", self.kind.as_str(), src_path.display());
+        let span = debug_span!("Linking {} to {}", self.kind.as_str(), src_path.display());
 
         // Delete the binary symlink, regardless of whether it exists or not
         std::fs::remove_file(&binary_path).ok();
@@ -255,7 +263,7 @@ impl Tool {
                 src_path.display()
             )
         })?;
-        log::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
+        debug_span!((span) "Linked {} to {}", self.kind.as_str(), src_path.display());
 
         Ok(())
     }
@@ -286,7 +294,10 @@ impl Tool {
             bail!("{} is not linked", self.kind.as_str());
         }
 
-        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        let directory = self
+            .directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
 
         // Try to find an alternative version to link
         let mut installed_tools = Self::list(self.directory.clone())?
@@ -313,7 +324,7 @@ impl Tool {
         })?;
 
         if installed_tools.is_empty() {
-            log::debug!("No fallback version found for {}", self.kind.as_str());
+            debug!("No fallback version found for {}", self.kind.as_str());
         } else {
             // Link to the next version
             let fallback_tool = installed_tools.last().ok_or(anyhow!(
@@ -322,7 +333,7 @@ impl Tool {
             ))?;
             let fallback_path = fallback_tool.as_path();
 
-            log::debug!(
+            let span = debug_span!(
                 "Linking {} to {}",
                 self.kind.as_str(),
                 fallback_path.display()
@@ -345,6 +356,8 @@ impl Tool {
                     src_path.display()
                 )
             })?;
+
+            debug_span!((span) "Linked {} to {}", self.kind.as_str(), fallback_path.display());
         }
 
         Ok(())
@@ -386,7 +399,10 @@ impl Tool {
     /// ```
     #[must_use]
     pub fn as_path(&self) -> PathBuf {
-        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        let directory = self
+            .directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let apps_dir = directory.join("apps");
         apps_dir.join(self.name())
     }
@@ -407,7 +423,7 @@ impl Tool {
     ///
     /// println!("Download link: {}", tool.download_link().unwrap().link);
     /// ```
-    pub async fn download_link(&self) -> Result<Download> {
+    pub fn download_link(&self) -> Result<Download> {
         let latest = match self.version {
             Some(version) => version.is_latest(),
             None => true,
@@ -424,7 +440,7 @@ impl Tool {
             release_type.as_str()
         );
 
-        let releases_by_code = reqwest::get(&url).await
+        let releases_by_code = reqwest::blocking::get(&url)
             .with_context(|| {
                 format!(
                     "Failed to fetch releases for {}, with URL {}",
@@ -432,7 +448,7 @@ impl Tool {
                     &url
                 )
             })?
-            .json::<HashMap<String, Vec<Release>>>().await
+            .json::<HashMap<String, Vec<Release>>>()
             .with_context(|| {
                 format!(
                     "Failed to parse releases for {}, with URL {}",
@@ -498,17 +514,22 @@ impl Tool {
     ///   Err(e) => println!("Failed to install Rust Rover: {}", e),
     /// }
     /// ```
-    pub async fn install(&mut self) -> Result<()> {
-        let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+    pub fn install(&mut self) -> Result<()> {
+        let directory = self
+            .directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
 
-        log::debug!(
+        let span = debug_span!(
             "Fetching release '{}' for {}",
             self.version.unwrap_or_default(),
             self.kind.as_str()
         );
-        let download = self.download_link().await?;
-        log::debug!(
+        let download = self.download_link()?;
+
+        debug_span!(
+            (span)
             "Found download for {} with version {}",
             self.kind.as_str(),
             download.version
@@ -526,12 +547,7 @@ impl Tool {
             );
         }
 
-        log::debug!("Installing {} to {}", self.name(), tool_dir.display());
-
-        std::fs::create_dir_all(&tool_dir)
-            .with_context(|| format!("Failed to create tool directory {}", tool_dir.display()))?;
-        std::fs::create_dir_all(&icons_dir)
-            .with_context(|| format!("Failed to create icons directory {}", icons_dir.display()))?;
+        debug!("Installing {} to {}", self.name(), tool_dir.display());
 
         let archive_name = download
             .link
@@ -541,21 +557,27 @@ impl Tool {
 
         let temp_folder = sys::mktemp_dir()?;
 
-        log::debug!("Created temporary directory {}", temp_folder.display());
+        debug!("Created temporary directory {}", temp_folder.display());
 
         let download_path = temp_folder.join(archive_name);
 
-        file::download(
-            &download.link,
-            &download_path,
-            download.size,
-        ).await?;
+        let span = info_span!("Downloading {} to {}", download.link, download_path.display());
 
-        log::debug!("Extracting archive to {}", tool_dir.display());
+        file::download(&download.link, &download_path, download.size)?;
+
+        info_span!((span) "Downloaded {} to {}", download.link, download_path.display());
+
+        std::fs::create_dir_all(&tool_dir)
+            .with_context(|| format!("Failed to create tool directory {}", tool_dir.display()))?;
+        std::fs::create_dir_all(&icons_dir)
+            .with_context(|| format!("Failed to create icons directory {}", icons_dir.display()))?;
+
+        let span = info_span!("Extracting archive to {}", tool_dir.display());
 
         file::extract_archive(&download_path, &tool_dir, 1)?;
 
-        log::debug!(
+        info_span!(
+            (span)
             "Extracted {} to {}",
             download_path.display(),
             tool_dir.display()
@@ -568,11 +590,11 @@ impl Tool {
                 temp_folder.display()
             )
         })?;
-        log::debug!("Removed temporary directory {}", temp_folder.display());
+        debug!("Removed temporary directory {}", temp_folder.display());
 
         // Symlink the tool
         self.link()?;
-        log::debug!("Symlinked {} to {}", self.name(), tool_dir.display());
+        debug!("Symlinked {} to {}", self.name(), tool_dir.display());
 
         Ok(())
     }
@@ -598,7 +620,7 @@ impl Tool {
     ///   Err(e) => println!("Failed to uninstall Rust Rover: {}", e),
     /// }
     /// ```
-    pub async fn uninstall(&self) -> Result<()> {
+    pub fn uninstall(&self) -> Result<()> {
         let tool_dir = self.as_path();
 
         if !tool_dir.exists() {
@@ -606,8 +628,9 @@ impl Tool {
         }
 
         if self.is_linked() {
-            log::debug!("Unlinking {}", self.name());
+            let span = debug_span!("Unlinking {}", self.name());
             self.unlink()?;
+            debug_span!((span) "Unlinked {}", self.name());
         }
 
         std::fs::remove_dir_all(&tool_dir)

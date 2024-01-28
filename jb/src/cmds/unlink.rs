@@ -1,7 +1,6 @@
-use anyhow::Result;
 use clap::{arg, value_parser, Command};
 use colored::Colorize;
-use jb_lib::tool::{Kind, Tool, Version};
+use jb_lib::{tool::{Kind, Tool, Version},error::{Batch,Result}};
 
 pub(crate) fn command() -> Command {
     Command::new("unlink")
@@ -25,7 +24,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind = args
         .get_one::<Kind>("tool")
         .expect("Could not find argument tool");
@@ -35,7 +34,17 @@ pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     let tool = Tool::new(*tool_kind).with_version(*version);
 
-    tool.unlink()?;
+    match tool.unlink() {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(Batch::from(
+                err.context(format!(
+                    "Could not unlink {}",
+                    tool.as_path().display()
+                )),
+            ));
+        }
+    }
 
     log::info!(
         "Unlinked {} to {}",

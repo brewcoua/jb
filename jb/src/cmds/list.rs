@@ -1,7 +1,6 @@
-use anyhow::Result;
 use clap::{arg, value_parser, Command};
 use colored::Colorize;
-use jb_lib::tool::{Tool, Version};
+use jb_lib::{tool::{Tool, Version}, error::{Batch, Result}};
 
 pub(crate) fn command() -> Command {
     Command::new("list")
@@ -13,10 +12,18 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let directory = args.get_one::<std::path::PathBuf>("directory");
 
-    let installed_tools = Tool::list(directory.cloned())?;
+    let installed_tools = match Tool::list(directory.cloned()) {
+        Ok(tools) => tools,
+        Err(err) => {
+            return Err(Batch::from(
+                err
+                    .context("Could not list installed tools")
+            ));
+        }
+    };
 
     println!(
         "{:<1} {:<20} {:<20} {:<20}",
@@ -50,7 +57,7 @@ pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                     version.to_string(),
                     version.release.pretty(),
                 )
-                .dimmed()
+                    .dimmed()
             );
         }
     }

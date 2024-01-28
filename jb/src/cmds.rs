@@ -4,8 +4,9 @@ mod list;
 mod uninstall;
 mod unlink;
 
-use anyhow::{bail, Result};
+use anyhow::anyhow;
 use clap::{arg, Command};
+use jb_lib::error::{Batch, Result};
 
 pub fn cli() -> Command {
     Command::new("jb")
@@ -30,14 +31,14 @@ pub fn cli() -> Command {
 pub(super) async fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
     if let Some((name, sub_matches)) = args {
         match name {
-            "install" => install::dispatch(sub_matches).await,
-            "uninstall" => uninstall::dispatch(sub_matches).await,
-            "list" => list::dispatch(sub_matches).await,
-            "link" => link::dispatch(sub_matches).await,
-            "unlink" => unlink::dispatch(sub_matches).await,
-            _ => bail!("Unknown subcommand {}", name),
+            "install" => install::dispatch(sub_matches),
+            "uninstall" => uninstall::dispatch(sub_matches),
+            "list" => list::dispatch(sub_matches),
+            "link" => link::dispatch(sub_matches),
+            "unlink" => unlink::dispatch(sub_matches),
+            _ => Err(Batch::from(anyhow!("Unknown subcommand {} provided", name))),
         }
     } else {
-        bail!("No subcommand provided")
+        Err(Batch::from(anyhow!("No subcommand provided")))
     }
 }

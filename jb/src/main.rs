@@ -14,14 +14,16 @@ async fn main() {
     match cmds::dispatch(matches.subcommand()).await {
         Ok(()) => {}
         Err(e) => {
-            log::error!("{:?}", e);
+            log::error!("{e}");
             std::process::exit(1);
         }
     }
 }
 
 fn setup_logger(matches: &clap::ArgMatches) {
-    let log_level = if matches.get_flag("verbose") {
+    let verbose = matches.get_flag("verbose");
+    let log_level = if verbose {
+        std::env::set_var("JB_VERBOSE", "true");
         log::LevelFilter::Debug
     } else {
         log::LevelFilter::Info

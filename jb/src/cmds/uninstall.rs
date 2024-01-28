@@ -1,7 +1,7 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow};
 use clap::{arg, value_parser, Command};
 use colored::Colorize;
-use jb_lib::tool::{Kind, Tool, Version};
+use jb_lib::{tool::{Kind, Tool, Version}, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")
@@ -23,7 +23,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind = args
         .get_one::<Kind>("tool")
         .expect("Could not find argument tool");
@@ -38,7 +38,17 @@ pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     tool = if let Some(v) = version {
         tool.with_version(*v)
     } else {
-        let installed_tools = Tool::list(tool.directory.clone())?;
+        let installed_tools = match Tool::list(tool.directory.clone()) {
+            Ok(tools) => tools,
+            Err(e) => {
+                return Err(
+                    Batch::from(
+                        e.context(format!("Could not list installed versions of {}", tool.kind.as_str()))
+                    )
+                );
+            }
+        };
+
 
         let installed_tools = installed_tools
             .into_iter()
@@ -46,10 +56,10 @@ pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             .collect::<Vec<Tool>>();
 
         if installed_tools.is_empty() {
-            bail!(
+            return Err(Batch::from(anyhow!(
                 "Could not find any installed versions of {}",
                 tool.kind.as_str()
-            );
+            )));
         } else if installed_tools.len() == 1 {
             // No need to search for linked version
             installed_tools[0].clone()
@@ -59,15 +69,24 @@ pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
             match linked_tool {
                 Some(t) => t.clone(),
-                None => bail!(
-                    "Found multiple installed versions of {} but none are linked",
+                None => Err(Batch::from(anyhow!(
+                    "Could not find a linked version of {}",
                     tool.kind.as_str()
-                ),
+                )))?,
             }
         }
     };
 
-    tool.uninstall().await?;
+    match tool.uninstall() {
+        Ok(()) => {}
+        Err(e) => {
+            return Err(
+                Batch::from(
+                    e.context(format!("Could not uninstall {}", tool.as_path().display()))
+                )
+            );
+        }
+    }
 
     log::info!(
         "Uninstalled {} from {}",

@@ -1,9 +1,8 @@
-use anyhow::Result;
+use std::sync::{Arc, Mutex};
+use std::thread;
+
 use clap::{arg, value_parser, Command};
-use clap::parser::ValuesRef;
-use colored::Colorize;
-use tokio::task::JoinSet;
-use jb_lib::tool::{Kind, Tool, Version};
+use jb_lib::{tool::{Kind, Tool, Version}, error::{Result, Batch}, info_span, set_task, debug};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -33,90 +32,81 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kinds = args
         .get_many::<Kind>("tool")
         .expect("Could not find argument tools");
     let version: Option<&Version> = args.get_one::<Version>("build");
     let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
 
-    install(
-        tool_kinds,
-        version.cloned(),
-        directory.cloned(),
-        args.get_flag("clean"),
-    ).await?;
+    let clean: Arc<Mutex<bool>> = Arc::new(Mutex::new(args.get_flag("clean")));
 
-    Ok(())
-}
-
-async fn install(
-    tool_kinds: ValuesRef<'_, Kind>,
-    version: Option<Version>,
-    directory: Option<std::path::PathBuf>,
-    clean: bool,
-) -> Result<()> {
-    let mut set: JoinSet<Result<()>> = JoinSet::new();
-
-    // Loop through all tools and concurrently install them
-    for tool_kind in tool_kinds {
-        let mut tool = Tool::new(*tool_kind);
-        if version.is_some() {
-            tool = tool.with_version(version.unwrap());
-        }
-        if directory.is_some() {
-            tool = tool.with_directory(directory.clone().unwrap());
-        }
-
-        set.spawn(async move {
-            tool.install().await?;
-
-            log::info!(
-                "Installed {} to {}",
-                tool.kind.as_str().bright_green(),
-                tool.as_path().display().to_string().bright_green()
-            );
-
-            if clean {
-                // Clean up old versions
-                log::info!(
-                    "Cleaning up old versions of {}",
-                    tool.kind.as_str().bright_green()
-                );
-
-                let installed_tools = Tool::list(tool.directory.clone())?
-                    .into_iter()
-                    .filter(|t| t.kind == tool.kind && t.version != tool.version)
-                    .collect::<Vec<Tool>>();
-
-                for tool in installed_tools {
-                    tool.uninstall().await?;
-                    log::info!(
-                        "Uninstalled {}",
-                        tool.as_path().display().to_string().bright_green()
-                    );
-                }
-
-                log::info!(
-                    "Cleaned up old versions of {}",
-                    tool.kind.as_str().bright_green()
-                );
+    let handles: Vec<_> = tool_kinds
+        .map(|tool_kind| {
+            let mut tool = Tool::new(*tool_kind);
+            if version.is_some() {
+                tool = tool.with_version(version.unwrap().clone());
+            }
+            if directory.is_some() {
+                tool = tool.with_directory(directory.unwrap().clone());
             }
 
-            Ok(())
-        });
-    }
+            let clean = Arc::clone(&clean);
 
-    let mut error_count = 0;
-    while let Some(result) = set.join_next().await {
-        if let Err(e) = result {
-            log::error!("{:?}", e);
-            error_count += 1;
+            thread::spawn(move || {
+                set_task!(format!("install:{}", tool.kind.as_str()).as_str());
+
+                let span = info_span!("Installing {}", tool.kind.as_str());
+
+                tool.install()?;
+
+                info_span!((span) "Installed {} to {}", tool.kind.as_str(), tool.as_path().display().to_string());
+
+                if *clean.lock().unwrap() {
+                    // Clean up old versions
+                    let span = info_span!(
+                        "Cleaning up old versions of {}",
+                        tool.kind.as_str()
+                    );
+
+                    let installed_tools = Tool::list(tool.directory.clone())?
+                        .into_iter()
+                        .filter(|t| t.kind == tool.kind && t.version != tool.version)
+                        .collect::<Vec<Tool>>();
+
+                    for tool in installed_tools {
+                        tool.uninstall()?;
+                        debug!(
+                            "Uninstalled {}",
+                            tool.as_path().display().to_string()
+                        );
+                    }
+
+                    info_span!((span) "Cleaned up old versions of {}", tool.kind.as_str());
+                }
+
+                Ok(())
+            })
+        }).collect();
+
+    let mut error_batch = Batch::new();
+
+    for handle in handles {
+        let result = handle.join();
+        match result {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => error_batch.add(e),
+            Err(e) => error_batch.add(
+                e.downcast::<anyhow::Error>()
+                    .expect("Could not cast thread error to anyhow::Error")
+                    .context("Could not join thread"),
+            ),
         }
     }
 
-    if error_count > 0 {
-        anyhow::bail!("{} errors occurred while installing", error_count);
+    if error_batch.is_empty() {
+        Ok(())
+    } else {
+        Err(error_batch)
     }
-    Ok(())
 }
