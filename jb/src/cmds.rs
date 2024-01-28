@@ -27,14 +27,14 @@ pub fn cli() -> Command {
         .subcommand(unlink::command())
 }
 
-pub fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
+pub(super) async fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
     if let Some((name, sub_matches)) = args {
         match name {
-            "install" => install::dispatch(sub_matches),
-            "uninstall" => uninstall::dispatch(sub_matches),
-            "list" => list::dispatch(sub_matches),
-            "link" => link::dispatch(sub_matches),
-            "unlink" => unlink::dispatch(sub_matches),
+            "install" => install::dispatch(sub_matches).await,
+            "uninstall" => uninstall::dispatch(sub_matches).await,
+            "list" => list::dispatch(sub_matches).await,
+            "link" => link::dispatch(sub_matches).await,
+            "unlink" => unlink::dispatch(sub_matches).await,
             _ => bail!("Unknown subcommand {}", name),
         }
     } else {

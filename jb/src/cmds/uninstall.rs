@@ -23,7 +23,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool_kind = args
         .get_one::<Kind>("tool")
         .expect("Could not find argument tool");
@@ -67,7 +67,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         }
     };
 
-    tool.uninstall()?;
+    tool.uninstall().await?;
 
     log::info!(
         "Uninstalled {} from {}",

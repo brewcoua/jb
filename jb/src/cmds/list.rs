@@ -13,7 +13,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
+pub(crate) async fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let directory = args.get_one::<std::path::PathBuf>("directory");
 
     let installed_tools = Tool::list(directory.cloned())?;

@@ -407,7 +407,7 @@ impl Tool {
     ///
     /// println!("Download link: {}", tool.download_link().unwrap().link);
     /// ```
-    pub fn download_link(&self) -> Result<Download> {
+    pub async fn download_link(&self) -> Result<Download> {
         let latest = match self.version {
             Some(version) => version.is_latest(),
             None => true,
@@ -424,7 +424,7 @@ impl Tool {
             release_type.as_str()
         );
 
-        let releases_by_code = reqwest::blocking::get(&url)
+        let releases_by_code = reqwest::get(&url).await
             .with_context(|| {
                 format!(
                     "Failed to fetch releases for {}, with URL {}",
@@ -432,7 +432,7 @@ impl Tool {
                     &url
                 )
             })?
-            .json::<HashMap<String, Vec<Release>>>()
+            .json::<HashMap<String, Vec<Release>>>().await
             .with_context(|| {
                 format!(
                     "Failed to parse releases for {}, with URL {}",
@@ -498,7 +498,7 @@ impl Tool {
     ///   Err(e) => println!("Failed to install Rust Rover: {}", e),
     /// }
     /// ```
-    pub fn install(&mut self) -> Result<()> {
+    pub async fn install(&mut self) -> Result<()> {
         let directory = self.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
 
@@ -507,7 +507,7 @@ impl Tool {
             self.version.unwrap_or_default(),
             self.kind.as_str()
         );
-        let download = self.download_link()?;
+        let download = self.download_link().await?;
         log::debug!(
             "Found download for {} with version {}",
             self.kind.as_str(),
@@ -545,14 +545,11 @@ impl Tool {
 
         let download_path = temp_folder.join(archive_name);
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        rt.block_on(file::download(
+        file::download(
             &download.link,
             &download_path,
             download.size,
-        ))?;
+        ).await?;
 
         log::debug!("Extracting archive to {}", tool_dir.display());
 
@@ -601,7 +598,7 @@ impl Tool {
     ///   Err(e) => println!("Failed to uninstall Rust Rover: {}", e),
     /// }
     /// ```
-    pub fn uninstall(&self) -> Result<()> {
+    pub async fn uninstall(&self) -> Result<()> {
         let tool_dir = self.as_path();
 
         if !tool_dir.exists() {

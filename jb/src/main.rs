@@ -4,13 +4,14 @@ use std::io::Write;
 
 mod cmds;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = cmds::cli();
     let matches = cli.get_matches();
 
     setup_logger(&matches);
 
-    match cmds::dispatch(matches.subcommand()) {
+    match cmds::dispatch(matches.subcommand()).await {
         Ok(()) => {}
         Err(e) => {
             log::error!("{:?}", e);

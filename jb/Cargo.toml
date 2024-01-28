@@ -10,3 +10,7 @@ colored = "2.1"
 env_logger = "0.11"
 log = "0.4"
 anyhow = "1.0"
+
+[dependencies.tokio]
+version = "1.35"
+features = ["full"]
