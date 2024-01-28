@@ -53,6 +53,8 @@
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
 <a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>colored::Colorize;
 <span class="kw">use </span>env_logger::Builder;
 <span class="kw">use </span>std::io::Write;
@@ -69,14 +71,16 @@
     <span class="kw">match </span>cmds::dispatch(matches.subcommand()).<span class="kw">await </span>{
         <span class="prelude-val">Ok</span>(()) =&gt; {}
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
+            <span class="macro">log::error!</span>(<span class="string">&quot;{e}&quot;</span>);
             std::process::exit(<span class="number">1</span>);
         }
     }
 }
 
 <span class="kw">fn </span>setup_logger(matches: <span class="kw-2">&amp;</span>clap::ArgMatches) {
-    <span class="kw">let </span>log_level = <span class="kw">if </span>matches.get_flag(<span class="string">&quot;verbose&quot;</span>) {
+    <span class="kw">let </span>verbose = matches.get_flag(<span class="string">&quot;verbose&quot;</span>);
+    <span class="kw">let </span>log_level = <span class="kw">if </span>verbose {
+        std::env::set_var(<span class="string">&quot;JB_VERBOSE&quot;</span>, <span class="string">&quot;true&quot;</span>);
         log::LevelFilter::Debug
     } <span class="kw">else </span>{
         log::LevelFilter::Info

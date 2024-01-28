@@ -72,56 +72,52 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::min;
-<span class="kw">use </span>std::fs::File;
-<span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::path::PathBuf;
+
+<span class="kw">use </span>tokio::fs::File;
+<span class="kw">use </span>tokio::io::AsyncWriteExt;
+<span class="kw">use </span>tokio::task::block_in_place;
 
 <span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>futures_util::StreamExt;
-<span class="kw">use </span>indicatif::{ProgressBar, ProgressStyle};
 
 <span class="doccomment">/// Download a file from a URL to a path.
 ///
-/// This function will download the file at the given URL to the given path.
-/// It will also display a progress bar while downloading.
-///
-/// It will run asynchronously, so it needs to be awaited.
+/// This function will download the file at the given URL to the given path, using a stream as to avoid loading the entire file into memory.
 ///
 /// # Errors
 /// This function will return an error if the file could not be downloaded (e.g. the URL is invalid).
 /// This function will also return an error if the file could not be created or written to.
-</span><span class="kw">pub async fn </span>download(url: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>PathBuf, size: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>response = reqwest::get(url)
-        .<span class="kw">await
-        </span>.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to download {url}&quot;</span>))<span class="question-mark">?</span>;
+</span><span class="kw">pub fn </span>download(url: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>PathBuf, size: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    block_in_place(|| {
+        tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(<span class="kw">async move </span>{
+                <span class="kw">let </span>response = reqwest::get(url)
+                    .<span class="kw">await
+                    </span>.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to download {url}&quot;</span>))<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>file_name = path.file_name().unwrap().to_str().unwrap();
+                <span class="kw">let </span><span class="kw-2">mut </span>file = File::create(path)
+                    .<span class="kw">await
+                    </span>.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create {}&quot;</span>, path.display()))<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>pb = ProgressBar::new(size);
-    pb.set_style(ProgressStyle::default_bar()
-        .template(<span class="string">&quot;{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})&quot;</span>)<span class="question-mark">?
-        </span>.progress_chars(<span class="string">&quot;#&gt;-&quot;</span>));
-    pb.set_message(<span class="macro">format!</span>(<span class="string">&quot;Downloading {file_name}&quot;</span>));
+                <span class="kw">let </span><span class="kw-2">mut </span>downloaded_size: u64 = <span class="number">0</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>stream = response.bytes_stream();
 
-    <span class="kw">let </span><span class="kw-2">mut </span>file =
-        File::create(path).with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create {}&quot;</span>, path.display()))<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>downloaded: u64 = <span class="number">0</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>stream = response.bytes_stream();
+                <span class="kw">while let </span><span class="prelude-val">Some</span>(chunk) = stream.next().<span class="kw">await </span>{
+                    <span class="kw">let </span>chunk =
+                        chunk.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to download chunk at {url}&quot;</span>))<span class="question-mark">?</span>;
+                    file.write_all(<span class="kw-2">&amp;</span>chunk)
+                        .<span class="kw">await
+                        </span>.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to write to {}&quot;</span>, path.display()))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>new = min(downloaded_size + (chunk.len() <span class="kw">as </span>u64), size);
+                    downloaded_size = new;
+                }
 
-    <span class="kw">while let </span><span class="prelude-val">Some</span>(item) = stream.next().<span class="kw">await </span>{
-        <span class="kw">let </span>chunk = item.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to download chunk at {url}&quot;</span>))<span class="question-mark">?</span>;
-        file.write_all(<span class="kw-2">&amp;</span>chunk)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to write to {}&quot;</span>, path.display()))<span class="question-mark">?</span>;
-        <span class="kw">let </span>new = min(downloaded + (chunk.len() <span class="kw">as </span>u64), size);
-        downloaded = new;
-        pb.set_position(new);
-    }
-
-    pb.finish_with_message(<span class="macro">format!</span>(<span class="string">&quot;Downloaded {file_name}&quot;</span>));
-    <span class="prelude-val">Ok</span>(())
+                <span class="prelude-val">Ok</span>(())
+            })
+    })
 }
 
 <span class="doccomment">/// Extract an archive to a destination.

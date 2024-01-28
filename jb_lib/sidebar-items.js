@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["tool"]};
+window.SIDEBAR_ITEMS = {"macro":["debug","debug_span","error","error_span","info","info_span","log","log_span","set_task","trace","trace_span","warn","warn_span"],"mod":["error","log","tool"]};

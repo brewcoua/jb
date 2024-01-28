@@ -57,10 +57,16 @@
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>clap::{arg, value_parser, Command};
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>clap::{arg, value_parser, Command};
 <span class="kw">use </span>colored::Colorize;
-<span class="kw">use </span>jb_lib::tool::{Tool, Version};
+<span class="kw">use </span>jb_lib::{tool::{Tool, Version}, error::{Batch, <span class="prelude-ty">Result</span>}};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>command() -&gt; Command {
     Command::new(<span class="string">&quot;list&quot;</span>)
@@ -72,10 +78,18 @@
         )
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>directory = args.get_one::&lt;std::path::PathBuf&gt;(<span class="string">&quot;directory&quot;</span>);
 
-    <span class="kw">let </span>installed_tools = Tool::list(directory.cloned())<span class="question-mark">?</span>;
+    <span class="kw">let </span>installed_tools = <span class="kw">match </span>Tool::list(directory.cloned()) {
+        <span class="prelude-val">Ok</span>(tools) =&gt; tools,
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Batch::from(
+                err
+                    .context(<span class="string">&quot;Could not list installed tools&quot;</span>)
+            ));
+        }
+    };
 
     <span class="macro">println!</span>(
         <span class="string">&quot;{:&lt;1} {:&lt;20} {:&lt;20} {:&lt;20}&quot;</span>,
@@ -109,7 +123,7 @@
                     version.to_string(),
                     version.release.pretty(),
                 )
-                .dimmed()
+                    .dimmed()
             );
         }
     }

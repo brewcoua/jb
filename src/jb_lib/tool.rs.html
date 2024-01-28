@@ -616,6 +616,29 @@
 <a href="#616" id="616">616</a>
 <a href="#617" id="617">617</a>
 <a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool management
 //!
 //! This module contains functions and structs for managing `JetBrains` tools.
@@ -629,9 +652,11 @@
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::str::FromStr;
 
+<span class="kw">use </span><span class="kw">super</span>::env::Variable;
 <span class="kw">use </span><span class="kw">super</span>::util::parse::{Download, Release};
 <span class="kw">use </span><span class="kw">super</span>::util::{file, sys};
-<span class="kw">use </span><span class="kw">super</span>::env::Variable;
+
+<span class="kw">use super</span>::{debug, debug_span, info_span};
 
 <span class="kw">pub use </span>kind::Kind;
 <span class="kw">pub use </span>release::{Type, Version};
@@ -691,7 +716,7 @@
     </span><span class="kw">pub fn </span>list(directory: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Tool&gt;&gt; {
         <span class="kw">let </span>directory = directory.unwrap_or(Variable::get(Variable::ToolsDirectory));
 
-        <span class="kw">let </span>tools = kind::Kind::list();
+        <span class="kw">let </span>tools = Kind::list();
         <span class="kw">let </span><span class="kw-2">mut </span>installed_tools: Vec&lt;Tool&gt; = Vec::new();
 
         <span class="kw">for </span>tool <span class="kw">in </span>tools {
@@ -790,7 +815,10 @@
     /// ```
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        <span class="kw">let </span>directory = <span class="self">self
+            </span>.directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>icons_dir = directory.join(<span class="string">&quot;icons&quot;</span>);
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
@@ -829,7 +857,10 @@
     /// }
     /// ```
     </span><span class="kw">pub fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        <span class="kw">let </span>directory = <span class="self">self
+            </span>.directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>icons_dir = directory.join(<span class="string">&quot;icons&quot;</span>);
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
@@ -841,7 +872,7 @@
         </span><span class="kw">let </span>icon_path = icons_dir.join(<span class="self">self</span>.kind.as_str());
         <span class="kw">let </span>src_path = tool_dir.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.svg&quot;</span>, <span class="self">self</span>.kind.src_name()));
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Linking {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
+        <span class="kw">let </span>span = <span class="macro">debug_span!</span>(<span class="string">&quot;Linking {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
 
         <span class="comment">// Delete the icon symlink, regardless of whether it exists or not
         </span>std::fs::remove_file(<span class="kw-2">&amp;</span>icon_path).ok();
@@ -853,7 +884,7 @@
                 src_path.display()
             )
         })<span class="question-mark">?</span>;
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Linked {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
+        <span class="macro">debug_span!</span>((span) <span class="string">&quot;Linked {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
 
         <span class="comment">// Create a symlink to the latest version
         </span><span class="kw">let </span>binary_folder = sys::get_binary_dir()<span class="question-mark">?</span>;
@@ -861,7 +892,7 @@
 
         <span class="kw">let </span>src_path = tool_dir.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.sh&quot;</span>, <span class="self">self</span>.kind.src_name()));
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Linking {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
+        <span class="kw">let </span>span = <span class="macro">debug_span!</span>(<span class="string">&quot;Linking {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
 
         <span class="comment">// Delete the binary symlink, regardless of whether it exists or not
         </span>std::fs::remove_file(<span class="kw-2">&amp;</span>binary_path).ok();
@@ -873,7 +904,7 @@
                 src_path.display()
             )
         })<span class="question-mark">?</span>;
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Linked {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
+        <span class="macro">debug_span!</span>((span) <span class="string">&quot;Linked {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), src_path.display());
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -904,7 +935,10 @@
             <span class="macro">bail!</span>(<span class="string">&quot;{} is not linked&quot;</span>, <span class="self">self</span>.kind.as_str());
         }
 
-        <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        <span class="kw">let </span>directory = <span class="self">self
+            </span>.directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
 
         <span class="comment">// Try to find an alternative version to link
         </span><span class="kw">let </span><span class="kw-2">mut </span>installed_tools = <span class="self">Self</span>::list(<span class="self">self</span>.directory.clone())<span class="question-mark">?
@@ -931,7 +965,7 @@
         })<span class="question-mark">?</span>;
 
         <span class="kw">if </span>installed_tools.is_empty() {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;No fallback version found for {}&quot;</span>, <span class="self">self</span>.kind.as_str());
+            <span class="macro">debug!</span>(<span class="string">&quot;No fallback version found for {}&quot;</span>, <span class="self">self</span>.kind.as_str());
         } <span class="kw">else </span>{
             <span class="comment">// Link to the next version
             </span><span class="kw">let </span>fallback_tool = installed_tools.last().ok_or(<span class="macro">anyhow!</span>(
@@ -940,7 +974,7 @@
             ))<span class="question-mark">?</span>;
             <span class="kw">let </span>fallback_path = fallback_tool.as_path();
 
-            <span class="macro">log::debug!</span>(
+            <span class="kw">let </span>span = <span class="macro">debug_span!</span>(
                 <span class="string">&quot;Linking {} to {}&quot;</span>,
                 <span class="self">self</span>.kind.as_str(),
                 fallback_path.display()
@@ -963,6 +997,8 @@
                     src_path.display()
                 )
             })<span class="question-mark">?</span>;
+
+            <span class="macro">debug_span!</span>((span) <span class="string">&quot;Linked {} to {}&quot;</span>, <span class="self">self</span>.kind.as_str(), fallback_path.display());
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1004,7 +1040,10 @@
     /// ```
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PathBuf {
-        <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+        <span class="kw">let </span>directory = <span class="self">self
+            </span>.directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>apps_dir = directory.join(<span class="string">&quot;apps&quot;</span>);
         apps_dir.join(<span class="self">self</span>.name())
     }
@@ -1025,7 +1064,7 @@
     ///
     /// println!(&quot;Download link: {}&quot;, tool.download_link().unwrap().link);
     /// ```
-    </span><span class="kw">pub async fn </span>download_link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Download&gt; {
+    </span><span class="kw">pub fn </span>download_link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Download&gt; {
         <span class="kw">let </span>latest = <span class="kw">match </span><span class="self">self</span>.version {
             <span class="prelude-val">Some</span>(version) =&gt; version.is_latest(),
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">true</span>,
@@ -1042,16 +1081,16 @@
             release_type.as_str()
         );
 
-        <span class="kw">let </span>releases_by_code = reqwest::get(<span class="kw-2">&amp;</span>url).<span class="kw">await
-            </span>.with_context(|| {
+        <span class="kw">let </span>releases_by_code = reqwest::blocking::get(<span class="kw-2">&amp;</span>url)
+            .with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Failed to fetch releases for {}, with URL {}&quot;</span>,
                     <span class="self">self</span>.kind.as_str(),
                     <span class="kw-2">&amp;</span>url
                 )
             })<span class="question-mark">?
-            </span>.json::&lt;HashMap&lt;String, Vec&lt;Release&gt;&gt;&gt;().<span class="kw">await
-            </span>.with_context(|| {
+            </span>.json::&lt;HashMap&lt;String, Vec&lt;Release&gt;&gt;&gt;()
+            .with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Failed to parse releases for {}, with URL {}&quot;</span>,
                     <span class="self">self</span>.kind.as_str(),
@@ -1116,17 +1155,22 @@
     ///   Err(e) =&gt; println!(&quot;Failed to install Rust Rover: {}&quot;, e),
     /// }
     /// ```
-    </span><span class="kw">pub async fn </span>install(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
+    </span><span class="kw">pub fn </span>install(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>directory = <span class="self">self
+            </span>.directory
+            .clone()
+            .unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>icons_dir = directory.join(<span class="string">&quot;icons&quot;</span>);
 
-        <span class="macro">log::debug!</span>(
+        <span class="kw">let </span>span = <span class="macro">debug_span!</span>(
             <span class="string">&quot;Fetching release &#39;{}&#39; for {}&quot;</span>,
             <span class="self">self</span>.version.unwrap_or_default(),
             <span class="self">self</span>.kind.as_str()
         );
-        <span class="kw">let </span>download = <span class="self">self</span>.download_link().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">log::debug!</span>(
+        <span class="kw">let </span>download = <span class="self">self</span>.download_link()<span class="question-mark">?</span>;
+
+        <span class="macro">debug_span!</span>(
+            (span)
             <span class="string">&quot;Found download for {} with version {}&quot;</span>,
             <span class="self">self</span>.kind.as_str(),
             download.version
@@ -1144,12 +1188,7 @@
             );
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Installing {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
-
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>tool_dir)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>icons_dir)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create icons directory {}&quot;</span>, icons_dir.display()))<span class="question-mark">?</span>;
+        <span class="macro">debug!</span>(<span class="string">&quot;Installing {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
 
         <span class="kw">let </span>archive_name = download
             .link
@@ -1159,21 +1198,27 @@
 
         <span class="kw">let </span>temp_folder = sys::mktemp_dir()<span class="question-mark">?</span>;
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Created temporary directory {}&quot;</span>, temp_folder.display());
+        <span class="macro">debug!</span>(<span class="string">&quot;Created temporary directory {}&quot;</span>, temp_folder.display());
 
         <span class="kw">let </span>download_path = temp_folder.join(archive_name);
 
-        file::download(
-            <span class="kw-2">&amp;</span>download.link,
-            <span class="kw-2">&amp;</span>download_path,
-            download.size,
-        ).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">&quot;Downloading {} to {}&quot;</span>, download.link, download_path.display());
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Extracting archive to {}&quot;</span>, tool_dir.display());
+        file::download(<span class="kw-2">&amp;</span>download.link, <span class="kw-2">&amp;</span>download_path, download.size)<span class="question-mark">?</span>;
+
+        <span class="macro">info_span!</span>((span) <span class="string">&quot;Downloaded {} to {}&quot;</span>, download.link, download_path.display());
+
+        std::fs::create_dir_all(<span class="kw-2">&amp;</span>tool_dir)
+            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;
+        std::fs::create_dir_all(<span class="kw-2">&amp;</span>icons_dir)
+            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create icons directory {}&quot;</span>, icons_dir.display()))<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">&quot;Extracting archive to {}&quot;</span>, tool_dir.display());
 
         file::extract_archive(<span class="kw-2">&amp;</span>download_path, <span class="kw-2">&amp;</span>tool_dir, <span class="number">1</span>)<span class="question-mark">?</span>;
 
-        <span class="macro">log::debug!</span>(
+        <span class="macro">info_span!</span>(
+            (span)
             <span class="string">&quot;Extracted {} to {}&quot;</span>,
             download_path.display(),
             tool_dir.display()
@@ -1186,11 +1231,11 @@
                 temp_folder.display()
             )
         })<span class="question-mark">?</span>;
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Removed temporary directory {}&quot;</span>, temp_folder.display());
+        <span class="macro">debug!</span>(<span class="string">&quot;Removed temporary directory {}&quot;</span>, temp_folder.display());
 
         <span class="comment">// Symlink the tool
         </span><span class="self">self</span>.link()<span class="question-mark">?</span>;
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Symlinked {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
+        <span class="macro">debug!</span>(<span class="string">&quot;Symlinked {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1216,7 +1261,7 @@
     ///   Err(e) =&gt; println!(&quot;Failed to uninstall Rust Rover: {}&quot;, e),
     /// }
     /// ```
-    </span><span class="kw">pub async fn </span>uninstall(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub fn </span>uninstall(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
         <span class="kw">if </span>!tool_dir.exists() {
@@ -1224,8 +1269,9 @@
         }
 
         <span class="kw">if </span><span class="self">self</span>.is_linked() {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Unlinking {}&quot;</span>, <span class="self">self</span>.name());
+            <span class="kw">let </span>span = <span class="macro">debug_span!</span>(<span class="string">&quot;Unlinking {}&quot;</span>, <span class="self">self</span>.name());
             <span class="self">self</span>.unlink()<span class="question-mark">?</span>;
+            <span class="macro">debug_span!</span>((span) <span class="string">&quot;Unlinked {}&quot;</span>, <span class="self">self</span>.name());
         }
 
         std::fs::remove_dir_all(<span class="kw-2">&amp;</span>tool_dir)

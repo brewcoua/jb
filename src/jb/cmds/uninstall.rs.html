@@ -77,10 +77,29 @@
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{anyhow};
 <span class="kw">use </span>clap::{arg, value_parser, Command};
 <span class="kw">use </span>colored::Colorize;
-<span class="kw">use </span>jb_lib::tool::{Kind, Tool, Version};
+<span class="kw">use </span>jb_lib::{tool::{Kind, Tool, Version}, error::{<span class="prelude-ty">Result</span>, Batch}};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>command() -&gt; Command {
     Command::new(<span class="string">&quot;uninstall&quot;</span>)
@@ -102,7 +121,7 @@
         )
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>tool_kind = args
         .get_one::&lt;Kind&gt;(<span class="string">&quot;tool&quot;</span>)
         .expect(<span class="string">&quot;Could not find argument tool&quot;</span>);
@@ -117,7 +136,17 @@
     tool = <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = version {
         tool.with_version(<span class="kw-2">*</span>v)
     } <span class="kw">else </span>{
-        <span class="kw">let </span>installed_tools = Tool::list(tool.directory.clone())<span class="question-mark">?</span>;
+        <span class="kw">let </span>installed_tools = <span class="kw">match </span>Tool::list(tool.directory.clone()) {
+            <span class="prelude-val">Ok</span>(tools) =&gt; tools,
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(
+                    Batch::from(
+                        e.context(<span class="macro">format!</span>(<span class="string">&quot;Could not list installed versions of {}&quot;</span>, tool.kind.as_str()))
+                    )
+                );
+            }
+        };
+
 
         <span class="kw">let </span>installed_tools = installed_tools
             .into_iter()
@@ -125,10 +154,10 @@
             .collect::&lt;Vec&lt;Tool&gt;&gt;();
 
         <span class="kw">if </span>installed_tools.is_empty() {
-            <span class="macro">bail!</span>(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Batch::from(<span class="macro">anyhow!</span>(
                 <span class="string">&quot;Could not find any installed versions of {}&quot;</span>,
                 tool.kind.as_str()
-            );
+            )));
         } <span class="kw">else if </span>installed_tools.len() == <span class="number">1 </span>{
             <span class="comment">// No need to search for linked version
             </span>installed_tools[<span class="number">0</span>].clone()
@@ -138,15 +167,24 @@
 
             <span class="kw">match </span>linked_tool {
                 <span class="prelude-val">Some</span>(t) =&gt; t.clone(),
-                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(
-                    <span class="string">&quot;Found multiple installed versions of {} but none are linked&quot;</span>,
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Batch::from(<span class="macro">anyhow!</span>(
+                    <span class="string">&quot;Could not find a linked version of {}&quot;</span>,
                     tool.kind.as_str()
-                ),
+                )))<span class="question-mark">?</span>,
             }
         }
     };
 
-    tool.uninstall().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">match </span>tool.uninstall() {
+        <span class="prelude-val">Ok</span>(()) =&gt; {}
+        <span class="prelude-val">Err</span>(e) =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
+                Batch::from(
+                    e.context(<span class="macro">format!</span>(<span class="string">&quot;Could not uninstall {}&quot;</span>, tool.as_path().display()))
+                )
+            );
+        }
+    }
 
     <span class="macro">log::info!</span>(
         <span class="string">&quot;Uninstalled {} from {}&quot;</span>,

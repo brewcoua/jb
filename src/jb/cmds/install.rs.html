@@ -110,22 +110,11 @@
 <a href="#110" id="110">110</a>
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::{Arc, Mutex};
+<span class="kw">use </span>std::thread;
+
 <span class="kw">use </span>clap::{arg, value_parser, Command};
-<span class="kw">use </span>clap::parser::ValuesRef;
-<span class="kw">use </span>colored::Colorize;
-<span class="kw">use </span>tokio::task::JoinSet;
-<span class="kw">use </span>jb_lib::tool::{Kind, Tool, Version};
+<span class="kw">use </span>jb_lib::{tool::{Kind, Tool, Version}, error::{<span class="prelude-ty">Result</span>, Batch}, info_span, set_task, debug};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>command() -&gt; Command {
     Command::new(<span class="string">&quot;install&quot;</span>)
@@ -155,91 +144,82 @@
         )
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>tool_kinds = args
         .get_many::&lt;Kind&gt;(<span class="string">&quot;tool&quot;</span>)
         .expect(<span class="string">&quot;Could not find argument tools&quot;</span>);
     <span class="kw">let </span>version: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Version&gt; = args.get_one::&lt;Version&gt;(<span class="string">&quot;build&quot;</span>);
     <span class="kw">let </span>directory: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::PathBuf&gt; = args.get_one::&lt;std::path::PathBuf&gt;(<span class="string">&quot;directory&quot;</span>);
 
-    install(
-        tool_kinds,
-        version.cloned(),
-        directory.cloned(),
-        args.get_flag(<span class="string">&quot;clean&quot;</span>),
-    ).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">let </span>clean: Arc&lt;Mutex&lt;bool&gt;&gt; = Arc::new(Mutex::new(args.get_flag(<span class="string">&quot;clean&quot;</span>)));
 
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="kw">async fn </span>install(
-    tool_kinds: ValuesRef&lt;<span class="lifetime">&#39;_</span>, Kind&gt;,
-    version: <span class="prelude-ty">Option</span>&lt;Version&gt;,
-    directory: <span class="prelude-ty">Option</span>&lt;std::path::PathBuf&gt;,
-    clean: bool,
-) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>set: JoinSet&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; = JoinSet::new();
-
-    <span class="comment">// Loop through all tools and concurrently install them
-    </span><span class="kw">for </span>tool_kind <span class="kw">in </span>tool_kinds {
-        <span class="kw">let </span><span class="kw-2">mut </span>tool = Tool::new(<span class="kw-2">*</span>tool_kind);
-        <span class="kw">if </span>version.is_some() {
-            tool = tool.with_version(version.unwrap());
-        }
-        <span class="kw">if </span>directory.is_some() {
-            tool = tool.with_directory(directory.clone().unwrap());
-        }
-
-        set.spawn(<span class="kw">async move </span>{
-            tool.install().<span class="kw">await</span><span class="question-mark">?</span>;
-
-            <span class="macro">log::info!</span>(
-                <span class="string">&quot;Installed {} to {}&quot;</span>,
-                tool.kind.as_str().bright_green(),
-                tool.as_path().display().to_string().bright_green()
-            );
-
-            <span class="kw">if </span>clean {
-                <span class="comment">// Clean up old versions
-                </span><span class="macro">log::info!</span>(
-                    <span class="string">&quot;Cleaning up old versions of {}&quot;</span>,
-                    tool.kind.as_str().bright_green()
-                );
-
-                <span class="kw">let </span>installed_tools = Tool::list(tool.directory.clone())<span class="question-mark">?
-                    </span>.into_iter()
-                    .filter(|t| t.kind == tool.kind &amp;&amp; t.version != tool.version)
-                    .collect::&lt;Vec&lt;Tool&gt;&gt;();
-
-                <span class="kw">for </span>tool <span class="kw">in </span>installed_tools {
-                    tool.uninstall().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="macro">log::info!</span>(
-                        <span class="string">&quot;Uninstalled {}&quot;</span>,
-                        tool.as_path().display().to_string().bright_green()
-                    );
-                }
-
-                <span class="macro">log::info!</span>(
-                    <span class="string">&quot;Cleaned up old versions of {}&quot;</span>,
-                    tool.kind.as_str().bright_green()
-                );
+    <span class="kw">let </span>handles: Vec&lt;<span class="kw">_</span>&gt; = tool_kinds
+        .map(|tool_kind| {
+            <span class="kw">let </span><span class="kw-2">mut </span>tool = Tool::new(<span class="kw-2">*</span>tool_kind);
+            <span class="kw">if </span>version.is_some() {
+                tool = tool.with_version(version.unwrap().clone());
+            }
+            <span class="kw">if </span>directory.is_some() {
+                tool = tool.with_directory(directory.unwrap().clone());
             }
 
-            <span class="prelude-val">Ok</span>(())
-        });
-    }
+            <span class="kw">let </span>clean = Arc::clone(<span class="kw-2">&amp;</span>clean);
 
-    <span class="kw">let </span><span class="kw-2">mut </span>error_count = <span class="number">0</span>;
-    <span class="kw">while let </span><span class="prelude-val">Some</span>(result) = set.join_next().<span class="kw">await </span>{
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-            <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, e);
-            error_count += <span class="number">1</span>;
+            thread::spawn(<span class="kw">move </span>|| {
+                <span class="macro">set_task!</span>(<span class="macro">format!</span>(<span class="string">&quot;install:{}&quot;</span>, tool.kind.as_str()).as_str());
+
+                <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">&quot;Installing {}&quot;</span>, tool.kind.as_str());
+
+                tool.install()<span class="question-mark">?</span>;
+
+                <span class="macro">info_span!</span>((span) <span class="string">&quot;Installed {} to {}&quot;</span>, tool.kind.as_str(), tool.as_path().display().to_string());
+
+                <span class="kw">if </span><span class="kw-2">*</span>clean.lock().unwrap() {
+                    <span class="comment">// Clean up old versions
+                    </span><span class="kw">let </span>span = <span class="macro">info_span!</span>(
+                        <span class="string">&quot;Cleaning up old versions of {}&quot;</span>,
+                        tool.kind.as_str()
+                    );
+
+                    <span class="kw">let </span>installed_tools = Tool::list(tool.directory.clone())<span class="question-mark">?
+                        </span>.into_iter()
+                        .filter(|t| t.kind == tool.kind &amp;&amp; t.version != tool.version)
+                        .collect::&lt;Vec&lt;Tool&gt;&gt;();
+
+                    <span class="kw">for </span>tool <span class="kw">in </span>installed_tools {
+                        tool.uninstall()<span class="question-mark">?</span>;
+                        <span class="macro">debug!</span>(
+                            <span class="string">&quot;Uninstalled {}&quot;</span>,
+                            tool.as_path().display().to_string()
+                        );
+                    }
+
+                    <span class="macro">info_span!</span>((span) <span class="string">&quot;Cleaned up old versions of {}&quot;</span>, tool.kind.as_str());
+                }
+
+                <span class="prelude-val">Ok</span>(())
+            })
+        }).collect();
+
+    <span class="kw">let </span><span class="kw-2">mut </span>error_batch = Batch::new();
+
+    <span class="kw">for </span>handle <span class="kw">in </span>handles {
+        <span class="kw">let </span>result = handle.join();
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(())) =&gt; {}
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(e)) =&gt; error_batch.add(e),
+            <span class="prelude-val">Err</span>(e) =&gt; error_batch.add(
+                e.downcast::&lt;anyhow::Error&gt;()
+                    .expect(<span class="string">&quot;Could not cast thread error to anyhow::Error&quot;</span>)
+                    .context(<span class="string">&quot;Could not join thread&quot;</span>),
+            ),
         }
     }
 
-    <span class="kw">if </span>error_count &gt; <span class="number">0 </span>{
-        <span class="macro">anyhow::bail!</span>(<span class="string">&quot;{} errors occurred while installing&quot;</span>, error_count);
+    <span class="kw">if </span>error_batch.is_empty() {
+        <span class="prelude-val">Ok</span>(())
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(error_batch)
     }
-    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>
