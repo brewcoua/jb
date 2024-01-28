@@ -70,14 +70,14 @@
         .subcommand(unlink::command())
 }
 
-<span class="kw">pub fn </span>dispatch(args: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>clap::ArgMatches)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>dispatch(args: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>clap::ArgMatches)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>((name, sub_matches)) = args {
         <span class="kw">match </span>name {
-            <span class="string">&quot;install&quot; </span>=&gt; install::dispatch(sub_matches),
-            <span class="string">&quot;uninstall&quot; </span>=&gt; uninstall::dispatch(sub_matches),
-            <span class="string">&quot;list&quot; </span>=&gt; list::dispatch(sub_matches),
-            <span class="string">&quot;link&quot; </span>=&gt; link::dispatch(sub_matches),
-            <span class="string">&quot;unlink&quot; </span>=&gt; unlink::dispatch(sub_matches),
+            <span class="string">&quot;install&quot; </span>=&gt; install::dispatch(sub_matches).<span class="kw">await</span>,
+            <span class="string">&quot;uninstall&quot; </span>=&gt; uninstall::dispatch(sub_matches).<span class="kw">await</span>,
+            <span class="string">&quot;list&quot; </span>=&gt; list::dispatch(sub_matches).<span class="kw">await</span>,
+            <span class="string">&quot;link&quot; </span>=&gt; link::dispatch(sub_matches).<span class="kw">await</span>,
+            <span class="string">&quot;unlink&quot; </span>=&gt; unlink::dispatch(sub_matches).<span class="kw">await</span>,
             <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Unknown subcommand {}&quot;</span>, name),
         }
     } <span class="kw">else </span>{

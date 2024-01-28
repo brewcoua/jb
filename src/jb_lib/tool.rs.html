@@ -616,9 +616,6 @@
 <a href="#616" id="616">616</a>
 <a href="#617" id="617">617</a>
 <a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool management
 //!
 //! This module contains functions and structs for managing `JetBrains` tools.
@@ -1028,7 +1025,7 @@
     ///
     /// println!(&quot;Download link: {}&quot;, tool.download_link().unwrap().link);
     /// ```
-    </span><span class="kw">pub fn </span>download_link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Download&gt; {
+    </span><span class="kw">pub async fn </span>download_link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Download&gt; {
         <span class="kw">let </span>latest = <span class="kw">match </span><span class="self">self</span>.version {
             <span class="prelude-val">Some</span>(version) =&gt; version.is_latest(),
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">true</span>,
@@ -1045,16 +1042,16 @@
             release_type.as_str()
         );
 
-        <span class="kw">let </span>releases_by_code = reqwest::blocking::get(<span class="kw-2">&amp;</span>url)
-            .with_context(|| {
+        <span class="kw">let </span>releases_by_code = reqwest::get(<span class="kw-2">&amp;</span>url).<span class="kw">await
+            </span>.with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Failed to fetch releases for {}, with URL {}&quot;</span>,
                     <span class="self">self</span>.kind.as_str(),
                     <span class="kw-2">&amp;</span>url
                 )
             })<span class="question-mark">?
-            </span>.json::&lt;HashMap&lt;String, Vec&lt;Release&gt;&gt;&gt;()
-            .with_context(|| {
+            </span>.json::&lt;HashMap&lt;String, Vec&lt;Release&gt;&gt;&gt;().<span class="kw">await
+            </span>.with_context(|| {
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Failed to parse releases for {}, with URL {}&quot;</span>,
                     <span class="self">self</span>.kind.as_str(),
@@ -1119,7 +1116,7 @@
     ///   Err(e) =&gt; println!(&quot;Failed to install Rust Rover: {}&quot;, e),
     /// }
     /// ```
-    </span><span class="kw">pub fn </span>install(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub async fn </span>install(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>directory = <span class="self">self</span>.directory.clone().unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>icons_dir = directory.join(<span class="string">&quot;icons&quot;</span>);
 
@@ -1128,7 +1125,7 @@
             <span class="self">self</span>.version.unwrap_or_default(),
             <span class="self">self</span>.kind.as_str()
         );
-        <span class="kw">let </span>download = <span class="self">self</span>.download_link()<span class="question-mark">?</span>;
+        <span class="kw">let </span>download = <span class="self">self</span>.download_link().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="macro">log::debug!</span>(
             <span class="string">&quot;Found download for {} with version {}&quot;</span>,
             <span class="self">self</span>.kind.as_str(),
@@ -1166,14 +1163,11 @@
 
         <span class="kw">let </span>download_path = temp_folder.join(archive_name);
 
-        <span class="kw">let </span>rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()<span class="question-mark">?</span>;
-        rt.block_on(file::download(
+        file::download(
             <span class="kw-2">&amp;</span>download.link,
             <span class="kw-2">&amp;</span>download_path,
             download.size,
-        ))<span class="question-mark">?</span>;
+        ).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="macro">log::debug!</span>(<span class="string">&quot;Extracting archive to {}&quot;</span>, tool_dir.display());
 
@@ -1222,7 +1216,7 @@
     ///   Err(e) =&gt; println!(&quot;Failed to uninstall Rust Rover: {}&quot;, e),
     /// }
     /// ```
-    </span><span class="kw">pub fn </span>uninstall(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub async fn </span>uninstall(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
         <span class="kw">if </span>!tool_dir.exists() {

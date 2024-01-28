@@ -72,7 +72,7 @@
         )
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>tool_kind = args
         .get_one::&lt;Kind&gt;(<span class="string">&quot;tool&quot;</span>)
         .expect(<span class="string">&quot;Could not find argument tool&quot;</span>);

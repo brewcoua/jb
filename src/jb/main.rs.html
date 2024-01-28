@@ -52,19 +52,21 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>colored::Colorize;
 <span class="kw">use </span>env_logger::Builder;
 <span class="kw">use </span>std::io::Write;
 
 <span class="kw">mod </span>cmds;
 
-<span class="kw">fn </span>main() {
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
     <span class="kw">let </span>cli = cmds::cli();
     <span class="kw">let </span>matches = cli.get_matches();
 
     setup_logger(<span class="kw-2">&amp;</span>matches);
 
-    <span class="kw">match </span>cmds::dispatch(matches.subcommand()) {
+    <span class="kw">match </span>cmds::dispatch(matches.subcommand()).<span class="kw">await </span>{
         <span class="prelude-val">Ok</span>(()) =&gt; {}
         <span class="prelude-val">Err</span>(e) =&gt; {
             <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, e);

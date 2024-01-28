@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["command","dispatch"]};
+window.SIDEBAR_ITEMS = {"fn":["command","dispatch","install"]};
