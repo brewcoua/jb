@@ -301,6 +301,12 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Logging utilities
 //!
 //! Used for logging in concurrent environments. Each thread can set its own task name, and log messages will be prefixed with the task name.
@@ -454,14 +460,20 @@
         <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
 
         <span class="kw">let </span>level_name = <span class="kw">match </span>level {
-            Level::Error =&gt; <span class="string">&quot;ERROR&quot;</span>.bright_red(),
-            Level::Warn =&gt; <span class="string">&quot;WARN&quot;</span>.bright_yellow(),
-            Level::Info =&gt; <span class="string">&quot;INFO&quot;</span>.bright_green(),
-            Level::Debug =&gt; <span class="string">&quot;DEBUG&quot;</span>.bright_blue(),
-            Level::Trace =&gt; <span class="string">&quot;TRACE&quot;</span>.bright_magenta(),
+            Level::Error =&gt; <span class="string">&quot;ERROR&quot;</span>.bright_red().bold(),
+            Level::Warn =&gt; <span class="string">&quot;WARN&quot;</span>.bright_yellow().bold(),
+            Level::Info =&gt; <span class="string">&quot;INFO&quot;</span>.bright_green().bold(),
+            Level::Debug =&gt; <span class="string">&quot;DEBUG&quot;</span>.bright_blue().bold(),
+            Level::Trace =&gt; <span class="string">&quot;TRACE&quot;</span>.bright_magenta().bold(),
         };
 
-        output.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;[{} {}]&quot;</span>, level_name, <span class="self">self</span>.name).dimmed().bold());
+        output.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            <span class="string">&quot;{}{:&lt;5} {}{}&quot;</span>,
+            <span class="string">&quot;[&quot;</span>.dimmed().bold(),
+            level_name,
+            <span class="self">self</span>.name.dimmed(),
+            <span class="string">&quot;]&quot;</span>.dimmed().bold(),
+        ));
 
         <span class="kw">let </span>content = <span class="kw">match </span>level {
             Level::Error =&gt; content.red(),
