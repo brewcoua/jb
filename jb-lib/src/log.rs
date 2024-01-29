@@ -151,14 +151,20 @@ impl Task {
         let mut output = String::new();
 
         let level_name = match level {
-            Level::Error => "ERROR".bright_red(),
-            Level::Warn => "WARN".bright_yellow(),
-            Level::Info => "INFO".bright_green(),
-            Level::Debug => "DEBUG".bright_blue(),
-            Level::Trace => "TRACE".bright_magenta(),
+            Level::Error => "ERROR".bright_red().bold(),
+            Level::Warn => "WARN".bright_yellow().bold(),
+            Level::Info => "INFO".bright_green().bold(),
+            Level::Debug => "DEBUG".bright_blue().bold(),
+            Level::Trace => "TRACE".bright_magenta().bold(),
         };
 
-        output.push_str(&format!("[{} {}]", level_name, self.name).dimmed().bold());
+        output.push_str(&format!(
+            "{}{:<5} {}{}",
+            "[".dimmed().bold(),
+            level_name,
+            self.name.dimmed(),
+            "]".dimmed().bold(),
+        ));
 
         let content = match level {
             Level::Error => content.red(),
