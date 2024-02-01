@@ -17,7 +17,7 @@ async fn main() {
     match cmds::dispatch(matches.subcommand()).await {
         Ok(()) => {}
         Err(e) => {
-            log::error!("{e}");
+            tracing::error!("{e}");
             std::process::exit(1);
         }
     }

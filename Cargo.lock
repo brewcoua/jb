@@ -522,7 +522,6 @@ dependencies = [
  "clap",
  "colored",
  "jb-lib",
- "log",
  "tokio",
  "tracing",
  "tracing-subscriber",

@@ -1,9 +1,11 @@
 [package]
 name = "jb-lib"
+description = "Library for the jb CLI tool"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/brewcoua/jb"
+readme = "../README.md"
 
 [dependencies]
 anyhow = "1.0"
