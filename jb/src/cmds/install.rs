@@ -1,8 +1,9 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
+use anyhow::anyhow;
 
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool::{Kind, Tool, Version}, error::{Result, Batch}, info_span, set_task, debug};
+use jb_lib::{tool::{Kind, Tool, Version}, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -39,7 +40,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let version: Option<&Version> = args.get_one::<Version>("build");
     let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
 
-    let clean: Arc<Mutex<bool>> = Arc::new(Mutex::new(args.get_flag("clean")));
+    let clean = Arc::new(args.get_flag("clean"));
 
     let handles: Vec<_> = tool_kinds
         .map(|tool_kind| {
@@ -54,20 +55,19 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             let clean = Arc::clone(&clean);
 
             thread::spawn(move || {
-                set_task!(format!("install:{}", tool.kind.as_str()).as_str());
-
-                let span = info_span!("Installing {}", tool.kind.as_str());
+                let span = tracing::info_span!("task", tool = tool.name());
+                let _guard = span.enter();
 
                 tool.install()?;
 
-                info_span!((span) "Installed {} to {}", tool.kind.as_str(), tool.as_path().display().to_string());
+                tracing::info!("Installed {}", tool.as_path().display().to_string());
 
-                if *clean.lock().unwrap() {
+                if *clean {
                     // Clean up old versions
-                    let span = info_span!(
-                        "Cleaning up old versions of {}",
-                        tool.kind.as_str()
-                    );
+                    let span = tracing::info_span!("cleanup", tool = tool.name());
+                    let _guard = span.enter();
+
+                    tracing::info!("Cleaning up old versions of {}", tool.kind.as_str());
 
                     let installed_tools = Tool::list(tool.directory.clone())?
                         .into_iter()
@@ -76,13 +76,13 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
                     for tool in installed_tools {
                         tool.uninstall()?;
-                        debug!(
+                        tracing::debug!(
                             "Uninstalled {}",
                             tool.as_path().display().to_string()
                         );
                     }
 
-                    info_span!((span) "Cleaned up old versions of {}", tool.kind.as_str());
+                    tracing::info!("Cleaned up old versions of {}", tool.kind.as_str());
                 }
 
                 Ok(())
@@ -96,11 +96,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         match result {
             Ok(Ok(())) => {}
             Ok(Err(e)) => error_batch.add(e),
-            Err(e) => error_batch.add(
-                e.downcast::<anyhow::Error>()
-                    .expect("Could not cast thread error to anyhow::Error")
-                    .context("Could not join thread"),
-            ),
+            Err(e) => error_batch.add(anyhow!("Thread panicked: {:?}", e)),
         }
     }
 

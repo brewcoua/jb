@@ -46,7 +46,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         }
     }
 
-    log::info!(
+    tracing::info!(
         "Unlinked {} to {}",
         tool.kind.as_str().bright_green(),
         tool.as_path().display().to_string().bright_green()

@@ -16,6 +16,11 @@ use futures_util::StreamExt;
 /// This function will return an error if the file could not be downloaded (e.g. the URL is invalid).
 /// This function will also return an error if the file could not be created or written to.
 pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
+    let span = tracing::info_span!("download", url = url);
+    let _guard = span.enter();
+
+    tracing::info!("Downloading {url} to {path}", url = url, path = path.display());
+
     block_in_place(|| {
         tokio::runtime::Runtime::new()
             .unwrap()
@@ -41,9 +46,13 @@ pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
                     downloaded_size = new;
                 }
 
-                Ok(())
+                Ok::<(), anyhow::Error>(())
             })
-    })
+    })?;
+
+    tracing::info!("Downloaded {url} to {path}", url = url, path = path.display());
+
+    Ok(())
 }
 
 /// Extract an archive to a destination.
@@ -57,6 +66,11 @@ pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
 /// - the `tar` command could not be found.
 /// - the `tar` command failed.
 pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Result<()> {
+    let span = tracing::info_span!("extract_archive", path = path.display().to_string());
+    let _guard = span.enter();
+
+    tracing::info!("Extracting {path} to {destination}", path = path.display(), destination = destination.display());
+
     let output = std::process::Command::new("tar")
         .arg("--strip-components")
         .arg(strip.to_string())
@@ -67,8 +81,11 @@ pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Resu
         .output()?;
 
     if !output.status.success() {
+        tracing::error!("Failed to extract archive {}", path.display());
         bail!("Failed to extract archive {}", path.display());
     }
+
+    tracing::info!("Extracted {path} to {destination}", path = path.display(), destination = destination.display());
 
     Ok(())
 }

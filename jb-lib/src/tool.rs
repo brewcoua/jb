@@ -15,8 +15,6 @@ use super::env::Variable;
 use super::util::parse::{Download, Release};
 use super::util::{file, sys};
 
-use super::{debug, debug_span, info_span};
-
 pub use kind::Kind;
 pub use release::{Type, Version};
 
@@ -216,6 +214,9 @@ impl Tool {
     /// }
     /// ```
     pub fn link(&self) -> Result<()> {
+        let span = tracing::debug_span!("link");
+        let _guard = span.enter();
+
         let directory = self
             .directory
             .clone()
@@ -224,6 +225,7 @@ impl Tool {
         let tool_dir = self.as_path();
 
         if self.is_linked() {
+            tracing::debug!("{} is already linked", self.kind.as_str());
             bail!("{} is already linked", self.kind.as_str());
         }
 
@@ -231,19 +233,11 @@ impl Tool {
         let icon_path = icons_dir.join(self.kind.as_str());
         let src_path = tool_dir.join(format!("bin/{}.svg", self.kind.src_name()));
 
-        let span = debug_span!("Linking {} to {}", self.kind.as_str(), src_path.display());
-
         // Delete the icon symlink, regardless of whether it exists or not
         std::fs::remove_file(&icon_path).ok();
 
-        std::os::unix::fs::symlink(&src_path, &icon_path).with_context(|| {
-            format!(
-                "Failed to link {} to {}",
-                self.kind.as_str(),
-                src_path.display()
-            )
-        })?;
-        debug_span!((span) "Linked {} to {}", self.kind.as_str(), src_path.display());
+        sys::symlink(&src_path, &icon_path)?;
+        tracing::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         // Create a symlink to the latest version
         let binary_folder = sys::get_binary_dir()?;
@@ -251,19 +245,11 @@ impl Tool {
 
         let src_path = tool_dir.join(format!("bin/{}.sh", self.kind.src_name()));
 
-        let span = debug_span!("Linking {} to {}", self.kind.as_str(), src_path.display());
-
         // Delete the binary symlink, regardless of whether it exists or not
         std::fs::remove_file(&binary_path).ok();
 
-        std::os::unix::fs::symlink(&src_path, &binary_path).with_context(|| {
-            format!(
-                "Failed to link {} to {}",
-                self.kind.as_str(),
-                src_path.display()
-            )
-        })?;
-        debug_span!((span) "Linked {} to {}", self.kind.as_str(), src_path.display());
+        sys::symlink(&src_path, &binary_path)?;
+        tracing::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
 
         Ok(())
     }
@@ -290,7 +276,11 @@ impl Tool {
     ///  Err(e) => println!("Failed to unlink Rust Rover: {}", e),
     /// }
     pub fn unlink(&self) -> Result<()> {
+        let span = tracing::debug_span!("unlink");
+        let _guard = span.enter();
+
         if !self.is_linked() {
+            tracing::debug!("{} is not linked", self.name());
             bail!("{} is not linked", self.kind.as_str());
         }
 
@@ -314,6 +304,8 @@ impl Tool {
         let icon_path = icons_dir.join(self.kind.as_str());
         let binary_path = sys::get_binary_dir()?.join(self.kind.as_str());
 
+        tracing::debug!("Unlinking {}", self.kind.as_str());
+
         // Delete the icon symlink
         std::fs::remove_file(&icon_path)
             .with_context(|| format!("Failed to remove icon symlink {}", icon_path.display()))?;
@@ -324,7 +316,7 @@ impl Tool {
         })?;
 
         if installed_tools.is_empty() {
-            debug!("No fallback version found for {}", self.kind.as_str());
+            tracing::debug!("No fallback version found for {}", self.kind.as_str());
         } else {
             // Link to the next version
             let fallback_tool = installed_tools.last().ok_or(anyhow!(
@@ -333,31 +325,15 @@ impl Tool {
             ))?;
             let fallback_path = fallback_tool.as_path();
 
-            let span = debug_span!(
-                "Linking {} to {}",
-                self.kind.as_str(),
-                fallback_path.display()
-            );
+            tracing::debug!("Linking {} to {}", self.kind.as_str(), fallback_path.display());
 
             let src_path = fallback_path.join(format!("bin/{}.svg", self.kind.src_name()));
-            std::os::unix::fs::symlink(&src_path, &icon_path).with_context(|| {
-                format!(
-                    "Failed to link {} to {}",
-                    self.kind.as_str(),
-                    src_path.display()
-                )
-            })?;
+            sys::symlink(&src_path, &icon_path)?;
 
             let src_path = fallback_path.join(format!("bin/{}.sh", self.kind.src_name()));
-            std::os::unix::fs::symlink(&src_path, &binary_path).with_context(|| {
-                format!(
-                    "Failed to link {} to {}",
-                    self.kind.as_str(),
-                    src_path.display()
-                )
-            })?;
+            sys::symlink(&src_path, &binary_path)?;
 
-            debug_span!((span) "Linked {} to {}", self.kind.as_str(), fallback_path.display());
+            tracing::debug!("Linked {} to {}", self.kind.as_str(), src_path.display());
         }
 
         Ok(())
@@ -515,31 +491,26 @@ impl Tool {
     /// }
     /// ```
     pub fn install(&mut self) -> Result<()> {
+        let span = tracing::debug_span!("install");
+        let _guard = span.enter();
+
         let directory = self
             .directory
             .clone()
             .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let icons_dir = directory.join("icons");
 
-        let span = debug_span!(
-            "Fetching release '{}' for {}",
-            self.version.unwrap_or_default(),
-            self.kind.as_str()
-        );
+        tracing::debug!("Fetching release for {}", self.kind.as_str());
         let download = self.download_link()?;
 
-        debug_span!(
-            (span)
-            "Found download for {} with version {}",
-            self.kind.as_str(),
-            download.version
-        );
+        tracing::debug!("Found release for {}, version {}", self.kind.as_str(), download.version);
 
         self.version = Some(download.version);
 
         let tool_dir = self.as_path();
 
         if tool_dir.exists() {
+            tracing::debug!("{} is already installed to its latest version ({})", self.kind.as_str(), download.version);
             bail!(
                 "{} is already installed to its latest version ({})",
                 self.kind.as_str(),
@@ -547,7 +518,7 @@ impl Tool {
             );
         }
 
-        debug!("Installing {} to {}", self.name(), tool_dir.display());
+        tracing::debug!("Installing {} to {}", self.name(), tool_dir.display());
 
         let archive_name = download
             .link
@@ -557,31 +528,18 @@ impl Tool {
 
         let temp_folder = sys::mktemp_dir()?;
 
-        debug!("Created temporary directory {}", temp_folder.display());
+        tracing::debug!("Created temporary directory {}", temp_folder.display());
 
         let download_path = temp_folder.join(archive_name);
 
-        let span = info_span!("Downloading {} to {}", download.link, download_path.display());
-
         file::download(&download.link, &download_path, download.size)?;
-
-        info_span!((span) "Downloaded {} to {}", download.link, download_path.display());
 
         std::fs::create_dir_all(&tool_dir)
             .with_context(|| format!("Failed to create tool directory {}", tool_dir.display()))?;
         std::fs::create_dir_all(&icons_dir)
             .with_context(|| format!("Failed to create icons directory {}", icons_dir.display()))?;
 
-        let span = info_span!("Extracting archive to {}", tool_dir.display());
-
         file::extract_archive(&download_path, &tool_dir, 1)?;
-
-        info_span!(
-            (span)
-            "Extracted {} to {}",
-            download_path.display(),
-            tool_dir.display()
-        );
 
         // Clean up the temporary directory
         std::fs::remove_dir_all(&temp_folder).with_context(|| {
@@ -590,11 +548,11 @@ impl Tool {
                 temp_folder.display()
             )
         })?;
-        debug!("Removed temporary directory {}", temp_folder.display());
+        tracing::debug!("Removed temporary directory {}", temp_folder.display());
 
         // Symlink the tool
         self.link()?;
-        debug!("Symlinked {} to {}", self.name(), tool_dir.display());
+        tracing::debug!("Symlinked {} to {}", self.name(), tool_dir.display());
 
         Ok(())
     }
@@ -621,16 +579,19 @@ impl Tool {
     /// }
     /// ```
     pub fn uninstall(&self) -> Result<()> {
+        let span = tracing::debug_span!("uninstall");
+        let _guard = span.enter();
+
         let tool_dir = self.as_path();
 
         if !tool_dir.exists() {
+            tracing::debug!("{} is not installed", self.name());
             bail!("{} is not installed", self.name());
         }
 
         if self.is_linked() {
-            let span = debug_span!("Unlinking {}", self.name());
             self.unlink()?;
-            debug_span!((span) "Unlinked {}", self.name());
+            tracing::debug!("Unlinked {} from {}", self.name(), tool_dir.display());
         }
 
         std::fs::remove_dir_all(&tool_dir)

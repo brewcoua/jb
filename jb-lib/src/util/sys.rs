@@ -48,3 +48,19 @@ pub fn get_binary_dir() -> Result<PathBuf> {
         String::from_utf8_lossy(&output.stdout).trim(),
     ))
 }
+
+/// Create a symlink from one path to another.
+///
+/// This function will create a symlink from one path to another.
+///
+/// # Errors
+/// This function will return an error if `std::os::unix::fs::symlink` fails to create the symlink.
+pub fn symlink(from: &PathBuf, to: &PathBuf) -> Result<()> {
+    std::os::unix::fs::symlink(from, to).with_context(|| {
+        format!(
+            "Failed to create symlink from {} to {}",
+            from.display(),
+            to.display()
+        )
+    })
+}

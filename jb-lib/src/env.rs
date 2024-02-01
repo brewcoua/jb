@@ -6,7 +6,6 @@ use std::path;
 #[derive(Debug, Clone, Copy)]
 pub enum Variable {
     Verbose,
-    LogLevel,
     ToolsDirectory,
 }
 
@@ -23,8 +22,7 @@ impl Variable {
         T: From<String> + Send + Sync,
     {
         let var = match self {
-            Variable::Verbose => env::var(self.env()),
-            Variable::LogLevel => env::var(self.env()),
+            Variable::Verbose => env::var("JB_VERBOSE"),
             Variable::ToolsDirectory => env::var(self.env()),
         };
 
@@ -40,7 +38,6 @@ impl Variable {
     {
         match self {
             Variable::Verbose => "false".to_string().into(),
-            Variable::LogLevel => "info".to_string().into(),
             Variable::ToolsDirectory => {
                 path::PathBuf::from(env::var("HOME").expect("HOME environment variable not set"))
                     .join(".local/share/JetBrains")
@@ -55,7 +52,6 @@ impl Variable {
     pub fn env(&self) -> &'static str {
         match self {
             Variable::Verbose => "JB_VERBOSE",
-            Variable::LogLevel => "JB_LOG",
             Variable::ToolsDirectory => "JB_TOOLS_DIR",
         }
     }
