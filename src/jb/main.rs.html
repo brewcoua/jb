@@ -50,14 +50,12 @@
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
-<a href="#53" id="53">53</a>
-<a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a>
-<a href="#56" id="56">56</a>
-<a href="#57" id="57">57</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>colored::Colorize;
-<span class="kw">use </span>env_logger::Builder;
-<span class="kw">use </span>std::io::Write;
+</pre></div><pre class="rust"><code><span class="kw">use </span>tracing_subscriber::EnvFilter;
+<span class="kw">use </span>tracing_subscriber::filter::LevelFilter;
+<span class="kw">use </span>tracing_subscriber::layer::SubscriberExt;
+<span class="kw">use </span>tracing_subscriber::util::SubscriberInitExt;
+
+<span class="kw">use </span>jb_lib::env::Variable;
 
 <span class="kw">mod </span>cmds;
 
@@ -79,37 +77,29 @@
 
 <span class="kw">fn </span>setup_logger(matches: <span class="kw-2">&amp;</span>clap::ArgMatches) {
     <span class="kw">let </span>verbose = matches.get_flag(<span class="string">&quot;verbose&quot;</span>);
-    <span class="kw">let </span>log_level = <span class="kw">if </span>verbose {
-        std::env::set_var(<span class="string">&quot;JB_VERBOSE&quot;</span>, <span class="string">&quot;true&quot;</span>);
-        log::LevelFilter::Debug
+    <span class="kw">let </span>env_verbose = Variable::get::&lt;String&gt;(Variable::Verbose).parse::&lt;bool&gt;().unwrap_or(<span class="bool-val">false</span>);
+
+    <span class="kw">let </span>log_level = <span class="kw">if </span>verbose || env_verbose {
+        LevelFilter::DEBUG
     } <span class="kw">else </span>{
-        log::LevelFilter::Info
+        LevelFilter::INFO
     };
 
-    Builder::new()
-        .filter(<span class="prelude-val">None</span>, log_level)
-        .format_timestamp(<span class="prelude-val">None</span>)
-        .format_module_path(<span class="bool-val">false</span>)
-        .format(|buf, record| {
-            <span class="kw">let </span><span class="kw-2">mut </span>output = record.args().to_string();
-            <span class="kw">match </span>record.level() {
-                log::Level::Error =&gt; output = output.red().to_string(),
-                log::Level::Warn =&gt; output = output.yellow().to_string(),
-                log::Level::Info =&gt; output = output.green().to_string(),
-                log::Level::Debug =&gt; output = output.blue().to_string(),
-                log::Level::Trace =&gt; output = output.magenta().to_string(),
-            }
+    <span class="kw">let </span>filter = EnvFilter::from_env(<span class="string">&quot;JB_LOG&quot;</span>) <span class="comment">// Ignore hyper and reqwest logs
+        </span>.add_directive(<span class="string">&quot;hyper=off&quot;</span>.parse().unwrap())
+        .add_directive(<span class="string">&quot;reqwest=off&quot;</span>.parse().unwrap())
+        .add_directive(log_level.into());
 
-            <span class="macro">writeln!</span>(
-                buf,
-                <span class="string">&quot;{} {}&quot;</span>,
-                <span class="macro">format!</span>(
-                    <span class="string">&quot;[{}]&quot;</span>,
-                    <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_NAME&quot;</span>)
-                ).dimmed().bold(),
-                output
-            )
-        })
+    <span class="kw">let </span>fmt = tracing_subscriber::fmt::layer()
+        .with_ansi(std::env::var(<span class="string">&quot;TERM&quot;</span>).ok() == <span class="prelude-val">Some</span>(<span class="string">&quot;xterm-256color&quot;</span>.to_string()))
+        <span class="comment">// Show spans but not targets
+        </span>.with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+        .with_target(<span class="bool-val">false</span>)
+        .with_level(<span class="bool-val">true</span>);
+
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(fmt)
         .init();
 }
 </code></pre></div></section></main></body></html>

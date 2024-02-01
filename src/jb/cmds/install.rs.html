@@ -106,15 +106,12 @@
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::{Arc, Mutex};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::thread;
+<span class="kw">use </span>anyhow::anyhow;
 
 <span class="kw">use </span>clap::{arg, value_parser, Command};
-<span class="kw">use </span>jb_lib::{tool::{Kind, Tool, Version}, error::{<span class="prelude-ty">Result</span>, Batch}, info_span, set_task, debug};
+<span class="kw">use </span>jb_lib::{tool::{Kind, Tool, Version}, error::{<span class="prelude-ty">Result</span>, Batch}};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>command() -&gt; Command {
     Command::new(<span class="string">&quot;install&quot;</span>)
@@ -151,7 +148,7 @@
     <span class="kw">let </span>version: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Version&gt; = args.get_one::&lt;Version&gt;(<span class="string">&quot;build&quot;</span>);
     <span class="kw">let </span>directory: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::PathBuf&gt; = args.get_one::&lt;std::path::PathBuf&gt;(<span class="string">&quot;directory&quot;</span>);
 
-    <span class="kw">let </span>clean: Arc&lt;Mutex&lt;bool&gt;&gt; = Arc::new(Mutex::new(args.get_flag(<span class="string">&quot;clean&quot;</span>)));
+    <span class="kw">let </span>clean = Arc::new(args.get_flag(<span class="string">&quot;clean&quot;</span>));
 
     <span class="kw">let </span>handles: Vec&lt;<span class="kw">_</span>&gt; = tool_kinds
         .map(|tool_kind| {
@@ -166,20 +163,19 @@
             <span class="kw">let </span>clean = Arc::clone(<span class="kw-2">&amp;</span>clean);
 
             thread::spawn(<span class="kw">move </span>|| {
-                <span class="macro">set_task!</span>(<span class="macro">format!</span>(<span class="string">&quot;install:{}&quot;</span>, tool.kind.as_str()).as_str());
-
-                <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">&quot;Installing {}&quot;</span>, tool.kind.as_str());
+                <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;task&quot;</span>, tool = tool.name());
+                <span class="kw">let </span>_guard = span.enter();
 
                 tool.install()<span class="question-mark">?</span>;
 
-                <span class="macro">info_span!</span>((span) <span class="string">&quot;Installed {} to {}&quot;</span>, tool.kind.as_str(), tool.as_path().display().to_string());
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;Installed {}&quot;</span>, tool.as_path().display().to_string());
 
-                <span class="kw">if </span><span class="kw-2">*</span>clean.lock().unwrap() {
+                <span class="kw">if </span><span class="kw-2">*</span>clean {
                     <span class="comment">// Clean up old versions
-                    </span><span class="kw">let </span>span = <span class="macro">info_span!</span>(
-                        <span class="string">&quot;Cleaning up old versions of {}&quot;</span>,
-                        tool.kind.as_str()
-                    );
+                    </span><span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;cleanup&quot;</span>, tool = tool.name());
+                    <span class="kw">let </span>_guard = span.enter();
+
+                    <span class="macro">tracing::info!</span>(<span class="string">&quot;Cleaning up old versions of {}&quot;</span>, tool.kind.as_str());
 
                     <span class="kw">let </span>installed_tools = Tool::list(tool.directory.clone())<span class="question-mark">?
                         </span>.into_iter()
@@ -188,13 +184,13 @@
 
                     <span class="kw">for </span>tool <span class="kw">in </span>installed_tools {
                         tool.uninstall()<span class="question-mark">?</span>;
-                        <span class="macro">debug!</span>(
+                        <span class="macro">tracing::debug!</span>(
                             <span class="string">&quot;Uninstalled {}&quot;</span>,
                             tool.as_path().display().to_string()
                         );
                     }
 
-                    <span class="macro">info_span!</span>((span) <span class="string">&quot;Cleaned up old versions of {}&quot;</span>, tool.kind.as_str());
+                    <span class="macro">tracing::info!</span>(<span class="string">&quot;Cleaned up old versions of {}&quot;</span>, tool.kind.as_str());
                 }
 
                 <span class="prelude-val">Ok</span>(())
@@ -208,11 +204,7 @@
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(())) =&gt; {}
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(e)) =&gt; error_batch.add(e),
-            <span class="prelude-val">Err</span>(e) =&gt; error_batch.add(
-                e.downcast::&lt;anyhow::Error&gt;()
-                    .expect(<span class="string">&quot;Could not cast thread error to anyhow::Error&quot;</span>)
-                    .context(<span class="string">&quot;Could not join thread&quot;</span>),
-            ),
+            <span class="prelude-val">Err</span>(e) =&gt; error_batch.add(<span class="macro">anyhow!</span>(<span class="string">&quot;Thread panicked: {:?}&quot;</span>, e)),
         }
     }
 
