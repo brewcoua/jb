@@ -600,6 +600,10 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool management
 //!
 //! This module contains functions and structs for managing `JetBrains` tools.
@@ -1134,7 +1138,11 @@
 
         <span class="kw">let </span>download_path = temp_folder.join(archive_name);
 
-        file::download(<span class="kw-2">&amp;</span>download.link, <span class="kw-2">&amp;</span>download_path, download.size)<span class="question-mark">?</span>;
+        file::download(<span class="kw-2">&amp;</span>download.link, <span class="kw-2">&amp;</span>download_path, <span class="prelude-val">Some</span>(download.size))<span class="question-mark">?</span>;
+        file::download(<span class="kw-2">&amp;</span>download.checksum_link, <span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+
+        <span class="comment">// Verify the checksum
+        </span>file::checksum(<span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="kw-2">&amp;</span>download_path)<span class="question-mark">?</span>;
 
         std::fs::create_dir_all(<span class="kw-2">&amp;</span>tool_dir)
             .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;

@@ -69,7 +69,7 @@
     <span class="kw">match </span>cmds::dispatch(matches.subcommand()).<span class="kw">await </span>{
         <span class="prelude-val">Ok</span>(()) =&gt; {}
         <span class="prelude-val">Err</span>(e) =&gt; {
-            <span class="macro">log::error!</span>(<span class="string">&quot;{e}&quot;</span>);
+            <span class="macro">tracing::error!</span>(<span class="string">&quot;{e}&quot;</span>);
             std::process::exit(<span class="number">1</span>);
         }
     }

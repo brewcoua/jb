@@ -89,6 +89,42 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::min;
 <span class="kw">use </span>std::path::PathBuf;
 
@@ -106,11 +142,11 @@
 /// # Errors
 /// This function will return an error if the file could not be downloaded (e.g. the URL is invalid).
 /// This function will also return an error if the file could not be created or written to.
-</span><span class="kw">pub fn </span>download(url: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>PathBuf, size: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;download&quot;</span>, url = url);
+</span><span class="kw">pub fn </span>download(url: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>PathBuf, size: <span class="prelude-ty">Option</span>&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;download&quot;</span>, url = url, path = path.display().to_string());
     <span class="kw">let </span>_guard = span.enter();
 
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;Downloading {url} to {path}&quot;</span>, url = url, path = path.display());
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Downloading&quot;</span>);
 
     block_in_place(|| {
         tokio::runtime::Runtime::new()
@@ -119,6 +155,8 @@
                 <span class="kw">let </span>response = reqwest::get(url)
                     .<span class="kw">await
                     </span>.with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to download {url}&quot;</span>))<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>size = size.unwrap_or_else(|| response.content_length().unwrap_or(<span class="number">0</span>));
 
                 <span class="kw">let </span><span class="kw-2">mut </span>file = File::create(path)
                     .<span class="kw">await
@@ -141,7 +179,7 @@
             })
     })<span class="question-mark">?</span>;
 
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;Downloaded {url} to {path}&quot;</span>, url = url, path = path.display());
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Downloaded&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -157,10 +195,10 @@
 /// - the `tar` command could not be found.
 /// - the `tar` command failed.
 </span><span class="kw">pub fn </span>extract_archive(path: <span class="kw-2">&amp;</span>PathBuf, destination: <span class="kw-2">&amp;</span>PathBuf, strip: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;extract_archive&quot;</span>, path = path.display().to_string());
+    <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;extract_archive&quot;</span>, path = path.display().to_string(), destination = destination.display().to_string());
     <span class="kw">let </span>_guard = span.enter();
 
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;Extracting {path} to {destination}&quot;</span>, path = path.display(), destination = destination.display());
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Extracting&quot;</span>);
 
     <span class="kw">let </span>output = std::process::Command::new(<span class="string">&quot;tar&quot;</span>)
         .arg(<span class="string">&quot;--strip-components&quot;</span>)
@@ -176,8 +214,41 @@
         <span class="macro">bail!</span>(<span class="string">&quot;Failed to extract archive {}&quot;</span>, path.display());
     }
 
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;Extracted {path} to {destination}&quot;</span>, path = path.display(), destination = destination.display());
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Extracted&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }
-</code></pre></div></section></main></body></html>
+
+<span class="doccomment">/// Check the integrity of a file using a checksum file.
+///
+/// This function will check the integrity of the given file using the given checksum file.
+///
+/// # Errors
+/// This function will return an error if:
+/// - the checksum could not be checked.
+/// - the `sha256sum` command could not be found.
+/// - the `sha256sum` command failed.
+/// - the checksum did not match.
+</span><span class="kw">pub fn </span>checksum(checksum: <span class="kw-2">&amp;</span>PathBuf, file: <span class="kw-2">&amp;</span>PathBuf) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;checksum&quot;</span>, checksum = checksum.display().to_string(), file = file.display().to_string());
+    <span class="kw">let </span>_guard = span.enter();
+
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Checking checksum&quot;</span>);
+
+    <span class="kw">let </span>cwd = checksum.parent().unwrap();
+
+    <span class="kw">let </span>output = std::process::Command::new(<span class="string">&quot;sha256sum&quot;</span>)
+        .arg(<span class="string">&quot;-c&quot;</span>)
+        .arg(checksum.file_name().unwrap())
+        .current_dir(cwd)
+        .output()<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>!output.status.success() {
+        <span class="macro">tracing::error!</span>(<span class="string">&quot;Checksum failed for {}:\n{}&quot;</span>, file.display(), String::from_utf8_lossy(<span class="kw-2">&amp;</span>output.stderr));
+        <span class="macro">bail!</span>(<span class="string">&quot;Checksum failed for {}:\n{}&quot;</span>, file.display(), String::from_utf8_lossy(<span class="kw-2">&amp;</span>output.stderr));
+    }
+
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Checksum passed&quot;</span>);
+
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div></section></main></body></html>
