@@ -88,7 +88,7 @@
     <span class="kw">let </span>tool = Tool::new(<span class="kw-2">*</span>tool_kind).with_version(<span class="kw-2">*</span>version);
 
     <span class="kw">match </span>tool.link() {
-        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {}
+        <span class="prelude-val">Ok</span>(()) =&gt; {}
         <span class="prelude-val">Err</span>(err) =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Batch::from(
                 err.context(<span class="string">&quot;Could not link tool&quot;</span>)

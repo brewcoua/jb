@@ -154,7 +154,7 @@
         .map(|tool_kind| {
             <span class="kw">let </span><span class="kw-2">mut </span>tool = Tool::new(<span class="kw-2">*</span>tool_kind);
             <span class="kw">if </span>version.is_some() {
-                tool = tool.with_version(version.unwrap().clone());
+                tool = tool.with_version(<span class="kw-2">*</span>version.unwrap());
             }
             <span class="kw">if </span>directory.is_some() {
                 tool = tool.with_directory(directory.unwrap().clone());

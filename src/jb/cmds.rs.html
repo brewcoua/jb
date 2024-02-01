@@ -72,7 +72,7 @@
         .subcommand(unlink::command())
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>dispatch(args: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>clap::ArgMatches)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>dispatch(args: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>str, <span class="kw-2">&amp;</span>clap::ArgMatches)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>((name, sub_matches)) = args {
         <span class="kw">match </span>name {
             <span class="string">&quot;install&quot; </span>=&gt; install::dispatch(sub_matches),

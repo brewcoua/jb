@@ -126,7 +126,7 @@
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::min;
-<span class="kw">use </span>std::path::PathBuf;
+<span class="kw">use </span>std::path::{Path, PathBuf};
 
 <span class="kw">use </span>tokio::fs::File;
 <span class="kw">use </span>tokio::io::AsyncWriteExt;
@@ -229,7 +229,7 @@
 /// - the `sha256sum` command could not be found.
 /// - the `sha256sum` command failed.
 /// - the checksum did not match.
-</span><span class="kw">pub fn </span>checksum(checksum: <span class="kw-2">&amp;</span>PathBuf, file: <span class="kw-2">&amp;</span>PathBuf) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>checksum(checksum: <span class="kw-2">&amp;</span>Path, file: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;checksum&quot;</span>, checksum = checksum.display().to_string(), file = file.display().to_string());
     <span class="kw">let </span>_guard = span.enter();
 
