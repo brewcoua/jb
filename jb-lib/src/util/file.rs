@@ -15,11 +15,11 @@ use futures_util::StreamExt;
 /// # Errors
 /// This function will return an error if the file could not be downloaded (e.g. the URL is invalid).
 /// This function will also return an error if the file could not be created or written to.
-pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
-    let span = tracing::info_span!("download", url = url);
+pub fn download(url: &str, path: &PathBuf, size: Option<u64>) -> Result<()> {
+    let span = tracing::info_span!("download", url = url, path = path.display().to_string());
     let _guard = span.enter();
 
-    tracing::info!("Downloading {url} to {path}", url = url, path = path.display());
+    tracing::info!("Downloading");
 
     block_in_place(|| {
         tokio::runtime::Runtime::new()
@@ -28,6 +28,8 @@ pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
                 let response = reqwest::get(url)
                     .await
                     .with_context(|| format!("Failed to download {url}"))?;
+
+                let size = size.unwrap_or_else(|| response.content_length().unwrap_or(0));
 
                 let mut file = File::create(path)
                     .await
@@ -50,7 +52,7 @@ pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
             })
     })?;
 
-    tracing::info!("Downloaded {url} to {path}", url = url, path = path.display());
+    tracing::info!("Downloaded");
 
     Ok(())
 }
@@ -66,10 +68,10 @@ pub fn download(url: &str, path: &PathBuf, size: u64) -> Result<()> {
 /// - the `tar` command could not be found.
 /// - the `tar` command failed.
 pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Result<()> {
-    let span = tracing::info_span!("extract_archive", path = path.display().to_string());
+    let span = tracing::info_span!("extract_archive", path = path.display().to_string(), destination = destination.display().to_string());
     let _guard = span.enter();
 
-    tracing::info!("Extracting {path} to {destination}", path = path.display(), destination = destination.display());
+    tracing::info!("Extracting");
 
     let output = std::process::Command::new("tar")
         .arg("--strip-components")
@@ -85,7 +87,41 @@ pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Resu
         bail!("Failed to extract archive {}", path.display());
     }
 
-    tracing::info!("Extracted {path} to {destination}", path = path.display(), destination = destination.display());
+    tracing::info!("Extracted");
+
+    Ok(())
+}
+
+/// Check the integrity of a file using a checksum file.
+///
+/// This function will check the integrity of the given file using the given checksum file.
+///
+/// # Errors
+/// This function will return an error if:
+/// - the checksum could not be checked.
+/// - the `sha256sum` command could not be found.
+/// - the `sha256sum` command failed.
+/// - the checksum did not match.
+pub fn checksum(checksum: &PathBuf, file: &PathBuf) -> Result<()> {
+    let span = tracing::debug_span!("checksum", checksum = checksum.display().to_string(), file = file.display().to_string());
+    let _guard = span.enter();
+
+    tracing::debug!("Checking checksum");
+
+    let cwd = checksum.parent().unwrap();
+
+    let output = std::process::Command::new("sha256sum")
+        .arg("-c")
+        .arg(checksum.file_name().unwrap())
+        .current_dir(cwd)
+        .output()?;
+
+    if !output.status.success() {
+        tracing::error!("Checksum failed for {}:\n{}", file.display(), String::from_utf8_lossy(&output.stderr));
+        bail!("Checksum failed for {}:\n{}", file.display(), String::from_utf8_lossy(&output.stderr));
+    }
+
+    tracing::debug!("Checksum passed");
 
     Ok(())
 }

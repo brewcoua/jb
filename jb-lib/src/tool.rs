@@ -532,7 +532,11 @@ impl Tool {
 
         let download_path = temp_folder.join(archive_name);
 
-        file::download(&download.link, &download_path, download.size)?;
+        file::download(&download.link, &download_path, Some(download.size))?;
+        file::download(&download.checksum_link, &download_path.with_extension("sha256"), None)?;
+
+        // Verify the checksum
+        file::checksum(&download_path.with_extension("sha256"), &download_path)?;
 
         std::fs::create_dir_all(&tool_dir)
             .with_context(|| format!("Failed to create tool directory {}", tool_dir.display()))?;
