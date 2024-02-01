@@ -28,7 +28,7 @@ pub fn cli() -> Command {
         .subcommand(unlink::command())
 }
 
-pub(super) async fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
+pub(super) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
     if let Some((name, sub_matches)) = args {
         match name {
             "install" => install::dispatch(sub_matches),

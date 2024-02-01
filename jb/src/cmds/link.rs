@@ -35,7 +35,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tool = Tool::new(*tool_kind).with_version(*version);
 
     match tool.link() {
-        Ok(_) => {}
+        Ok(()) => {}
         Err(err) => {
             return Err(Batch::from(
                 err.context("Could not link tool")

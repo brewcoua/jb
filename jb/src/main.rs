@@ -7,14 +7,13 @@ use jb_lib::env::Variable;
 
 mod cmds;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = cmds::cli();
     let matches = cli.get_matches();
 
     setup_logger(&matches);
 
-    match cmds::dispatch(matches.subcommand()).await {
+    match cmds::dispatch(matches.subcommand()) {
         Ok(()) => {}
         Err(e) => {
             tracing::error!("{e}");

@@ -10,13 +10,17 @@ pub enum Variable {
 }
 
 impl Variable {
+    /// Get the value of a variable.
+    #[must_use]
     pub fn get<T>(var: Variable) -> T
     where
         T: From<String> + Send + Sync,
     {
-        var.get_or(var.default::<T>()).into()
+        var.get_or(var.default::<T>())
     }
 
+    /// Get the value of a variable, or a default value if it is not set.
+    #[must_use]
     pub fn get_or<T>(&self, default: T) -> T
     where
         T: From<String> + Send + Sync,
@@ -28,10 +32,16 @@ impl Variable {
 
         match var {
             Ok(value) => value.into(),
-            Err(_) => default.into(),
+            Err(_) => default,
         }
     }
 
+    /// Get the default value for a variable.
+    ///
+    /// # Panics
+    /// If the default value cannot be determined.
+    /// For example, if the `HOME` environment variable is not set.
+    #[must_use]
     pub fn default<T>(&self) -> T
     where
         T: From<String> + Send + Sync,
@@ -49,6 +59,8 @@ impl Variable {
         }
     }
 
+    /// Get the name of the environment variable.
+    #[must_use]
     pub fn env(&self) -> &'static str {
         match self {
             Variable::Verbose => "JB_VERBOSE",

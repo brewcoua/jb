@@ -10,11 +10,13 @@ pub struct Batch {
 
 impl Batch {
     /// Create a new batch of errors
+    #[must_use]
     pub fn new() -> Self {
         Self { errors: Vec::new() }
     }
 
     /// Create a new batch of errors from a single error
+    #[must_use]
     pub fn from(error: Error) -> Self {
         let mut batch = Self::new();
         batch.add(error);
@@ -27,16 +29,19 @@ impl Batch {
     }
 
     /// Check if the batch is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.errors.is_empty()
     }
 
     /// Get the number of errors in the batch
+    #[must_use]
     pub fn len(&self) -> usize {
         self.errors.len()
     }
 
     /// Get the errors in the batch
+    #[must_use]
     pub fn errors(&self) -> &Vec<Error> {
         &self.errors
     }
@@ -51,8 +56,14 @@ impl Display for Batch {
             if self.errors.len() == 1 { "" } else { "s" }
         )?;
         for error in &self.errors {
-            writeln!(f, "{:?}", error)?;
+            writeln!(f, "{error:?}")?;
         }
         Ok(())
+    }
+}
+
+impl Default for Batch {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -102,7 +102,7 @@ pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> Resu
 /// - the `sha256sum` command could not be found.
 /// - the `sha256sum` command failed.
 /// - the checksum did not match.
-pub fn checksum(checksum: &PathBuf, file: &PathBuf) -> Result<()> {
+pub fn checksum(checksum: &Path, file: &Path) -> Result<()> {
     let span = tracing::debug_span!("checksum", checksum = checksum.display().to_string(), file = file.display().to_string());
     let _guard = span.enter();
 

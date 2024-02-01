@@ -46,7 +46,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         .map(|tool_kind| {
             let mut tool = Tool::new(*tool_kind);
             if version.is_some() {
-                tool = tool.with_version(version.unwrap().clone());
+                tool = tool.with_version(*version.unwrap());
             }
             if directory.is_some() {
                 tool = tool.with_directory(directory.unwrap().clone());
