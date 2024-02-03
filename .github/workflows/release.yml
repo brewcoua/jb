@@ -63,7 +63,7 @@ jobs:
 
       - name: Build
         run: |
-          export CC=${{ matrix.cc }}
+          cargo config --target ${{ matrix.arch }}-${{ matrix.distrib }} linker ${{ matrix.cc }}
           cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - name: Strip
