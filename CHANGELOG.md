@@ -3,7 +3,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.1.0](https://github.com/brewcoua/jb/compare/v1.0.1..1.1.0) - 2024-02-03
+## [1.1.1](https://github.com/brewcoua/jb/compare/v1.1.0..1.1.1) - 2024-02-03
+
+### Ci
+
+- **(build)** set artifact path - ([5aa368a](https://github.com/brewcoua/jb/commit/5aa368a3c2459a358de8b7372480378dc0e2a75a)) - Brewen Couaran
+- **(release)** fix bumped version check & update commit email - ([0129dba](https://github.com/brewcoua/jb/commit/0129dba5fce0dcede50ba64c30f0aa1c75583974)) - Brewen Couaran
+- **(release)** use built artifact instead of rebuilding - ([ee21309](https://github.com/brewcoua/jb/commit/ee2130919f580f89e0a0578dfcf6f4d86fe283a5)) - Brewen Couaran
+
+---
+## [1.1.0](https://github.com/brewcoua/jb/compare/v1.0.1..v1.1.0) - 2024-02-03
 
 ### Bug Fixes
 
@@ -27,6 +36,7 @@ All notable changes to this project will be documented in this file. See [conven
 - **(clippy)** fix all errors and warnings - ([67607e0](https://github.com/brewcoua/jb/commit/67607e0f85696f1eee73a5ec7918347f2fba5ce1)) - Brewen Couaran
 - bump dependencies - ([66fd3f7](https://github.com/brewcoua/jb/commit/66fd3f76bc006a1c5eebc7c8163dba4744ee8341)) - Brewen Couaran
 - bump dependencies - ([faa202e](https://github.com/brewcoua/jb/commit/faa202e366b074ecd048863655d570f61ab53a1b)) - Brewen Couaran
+- bump version to 1.1.0 - ([ca3dc1e](https://github.com/brewcoua/jb/commit/ca3dc1ea5f9f9d01d50425c8edf6f86ec39f803c)) - brewcoua
 
 ### Ci
 
