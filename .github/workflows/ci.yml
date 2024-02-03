@@ -89,6 +89,9 @@ jobs:
       bumped_version: ${{ steps.check_release.outputs.bumped_version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Install Git Cliff
         env:
           VERSION: 1.4.0
