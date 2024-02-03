@@ -77,19 +77,18 @@ jobs:
       - uses: dtolnay/install@cargo-outdated
       - run: cargo outdated --workspace --exit-code 1
 
-  release:
-    name: Release
+  check_release:
+    name: Check Release
     needs: [test, build, clippy, outdated]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     timeout-minutes: 45
-    permissions:
-      contents: write
+    outputs:
+      needed: ${{ steps.check_release.outputs.needed }}
+      latest_tag: ${{ steps.check_release.outputs.latest_tag }}
+      bumped_version: ${{ steps.check_release.outputs.bumped_version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # fetch all history for tags and changes
-
       - name: Install Git Cliff
         env:
           VERSION: 1.4.0
@@ -111,51 +110,18 @@ jobs:
           if [ "$BUMPED_VERSION" = "null" ]; then
             echo "needed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "previous_version=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
-            echo "version=$BUMPED_VERSION" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+            echo "bumped_version=$BUMPED_VERSION" >> "$GITHUB_OUTPUT"
             echo "needed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Set up Git
-        if: steps.check_release.outputs.needed == 'true'
-        run: |
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-
-      - name: Generate changelog, bump version and tag
-        if: steps.check_release.outputs.needed == 'true'
-        run: |
-          git cliff --bump --config .github/cliff.toml > CHANGELOG.md
-          sed -i "0,/^version =/s/^version =.*/version = \"${{ steps.check_release.outputs.version }}\"/" ./jb/Cargo.toml
-        
-          git add CHANGELOG.md jb/Cargo.toml
-          git commit -m "chore(version): bump version to ${{ steps.check_release.outputs.version }}"
-          git tag -a "v${{ steps.check_release.outputs.version }}" -m "Release v${{ steps.check_release.outputs.version }}"
-          git push --follow-tags
-
-      - name: Download binaries
-        if: steps.check_release.outputs.needed == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}
-          path: dist
-
-      - name: Strip and package binaries
-        if: steps.check_release.outputs.needed == 'true'
-        run: |
-          strip dist/${{ env.BINARY_NAME }}
-          tar -czf dist/${{ env.BINARY_NAME }}-${{ steps.check_release.outputs.version }}.tar.gz -C dist ${{ env.BINARY_NAME }}
-
-      - name: Generate release body
-        if: steps.check_release.outputs.needed == 'true'
-        run: |
-          git cliff ${{ steps.check_release.outputs.previous_version }}..v${{ steps.check_release.outputs.version }} --config .github/cliff.toml --strip all > RELEASE.md
-
-      - name: Release
-        if: steps.check_release.outputs.needed == 'true'
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "dist/${{ env.BINARY_NAME }}-*.tar.gz"
-          tag: v${{ steps.check_release.outputs.version }}
-          name: Release v${{ steps.check_release.outputs.version }}
-          bodyFile: RELEASE.md
+  release:
+    name: Release
+    needs: check_release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.check_release.outputs.needed == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      bumped_version: ${{ needs.check_release.outputs.bumped_version }}
+      latest_tag: ${{ needs.check_release.outputs.latest_tag }}
