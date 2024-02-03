@@ -30,21 +30,26 @@ jobs:
           - arch: x86_64
             distrib: unknown-linux-gnu
             toolchain: stable
+            cc: gcc
 
           - arch: x86_64
             distrib: unknown-linux-musl
             toolchain: stable
             dependencies: musl-tools
+            cc: musl-gcc
 
           - arch: aarch64
             distrib: unknown-linux-gnu
             toolchain: stable
             dependencies: gcc-aarch64-linux-gnu
+            cc: aarch64-linux-gnu-gcc
 
           - arch: arm
             distrib: unknown-linux-gnueabihf
             toolchain: stable
             dependencies: gcc-arm-linux-gnueabihf
+            cc: arm-linux-gnueabihf-gcc
+
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -60,7 +65,9 @@ jobs:
         run: sudo apt-get install -y ${{ matrix.dependencies }}
 
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
+        run: |
+          export CC=${{ matrix.cc }}
+          cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - name: Strip
         run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }}
