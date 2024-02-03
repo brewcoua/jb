@@ -70,50 +70,9 @@ jobs:
       - uses: dtolnay/install@cargo-outdated
       - run: cargo outdated --workspace --exit-code 1
 
-  pre-release:
-    name: Pre-release
+  release:
+    name: Release
     needs: [test, build, clippy, outdated]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        build: [x86_64, aarch64]
-        include:
-          - build: x86_64
-            toolchain: stable
-            target: x86_64-unknown-linux-gnu
-          - build: aarch64
-            toolchain: stable
-            target: aarch64-unknown-linux-gnu
-    steps:
-      - uses: actions/checkout@v4
-      - uses: Swatinem/rust-cache@v2.7.3
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ matrix.toolchain }}
-
-      - name: Build
-        run: cargo build --release --locked --target ${{ matrix.target }}
-
-      - name: Strip
-        run: strip "target/${{ matrix.target }}/release/${{ env.BINARY_NAME }}"
-
-      - name: Package
-        run: |
-          mkdir -p dist
-          cp "target/${{ matrix.target }}/release/${{ env.BINARY_NAME }}" "dist/${{ env.BINARY_NAME }}-${{ matrix.build }}"
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}-${{ matrix.build }}
-          path: dist/${{ env.BINARY_NAME }}-${{ matrix.build }}
-
-  publish:
-    name: Publish
-    needs: pre-release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     timeout-minutes: 45
@@ -144,6 +103,13 @@ jobs:
             echo "needed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Build release
+        run: |
+          mkdir -p dist
+          cargo build --release --locked
+          strip "target/release/${{ env.BINARY_NAME }}"
+          cp "target/release/${{ env.BINARY_NAME }}" "dist/${{ env.BINARY_NAME }}-x86_64"
+
       - name: Set up Git
         if: steps.check_release.outputs.needed == 'true'
         run: |
@@ -158,15 +124,6 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.check_release.outputs.version }}"
           git tag -a "v${{ steps.check_release.outputs.version }}" -m "Release v${{ steps.check_release.outputs.version }}"
           git push origin "v${{ steps.check_release.outputs.version }}" --follow-tags
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}-x86_64
-          path: dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}-aarch64
-          path: dist
 
       - name: Generate release body
         if: steps.check_release.outputs.needed == 'true'
