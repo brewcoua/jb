@@ -613,6 +613,13 @@
 <a href="#613" id="613">613</a>
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool management
 //!
 //! This module contains functions and structs for managing `JetBrains` tools.
@@ -1128,18 +1135,29 @@
 
         <span class="kw">let </span>download_path = temp_folder.join(archive_name);
 
-        file::download(<span class="kw-2">&amp;</span>download.link, <span class="kw-2">&amp;</span>download_path, <span class="prelude-val">Some</span>(download.size))<span class="question-mark">?</span>;
-        file::download(<span class="kw-2">&amp;</span>download.checksum_link, <span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>install_process = || {
+            file::download(<span class="kw-2">&amp;</span>download.link, <span class="kw-2">&amp;</span>download_path, <span class="prelude-val">Some</span>(download.size))<span class="question-mark">?</span>;
+            file::download(<span class="kw-2">&amp;</span>download.checksum_link, <span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// Verify the checksum
-        </span>file::checksum(<span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="kw-2">&amp;</span>download_path)<span class="question-mark">?</span>;
+            <span class="comment">// Verify the checksum
+            </span>file::checksum(<span class="kw-2">&amp;</span>download_path.with_extension(<span class="string">&quot;sha256&quot;</span>), <span class="kw-2">&amp;</span>download_path)<span class="question-mark">?</span>;
 
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>tool_dir)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>icons_dir)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create icons directory {}&quot;</span>, icons_dir.display()))<span class="question-mark">?</span>;
+            std::fs::create_dir_all(<span class="kw-2">&amp;</span>tool_dir)
+                .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;
+            std::fs::create_dir_all(<span class="kw-2">&amp;</span>icons_dir)
+                .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to create icons directory {}&quot;</span>, icons_dir.display()))<span class="question-mark">?</span>;
 
-        file::extract_archive(<span class="kw-2">&amp;</span>download_path, <span class="kw-2">&amp;</span>tool_dir, <span class="number">1</span>)<span class="question-mark">?</span>;
+            file::extract_archive(<span class="kw-2">&amp;</span>download_path, <span class="kw-2">&amp;</span>tool_dir, <span class="number">1</span>)<span class="question-mark">?</span>;
+
+            <span class="comment">// Symlink the tool
+            </span><span class="self">self</span>.link()<span class="question-mark">?</span>;
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Symlinked {self} to {}&quot;</span>, tool_dir.display());
+
+            <span class="prelude-val">Ok</span>(())
+        };
+
+        <span class="comment">// Make sure to clean up even if the installation fails (to avoid leaving temporary files behind)
+        </span><span class="kw">let </span>output = install_process();
 
         <span class="comment">// Clean up the temporary directory
         </span>std::fs::remove_dir_all(<span class="kw-2">&amp;</span>temp_folder).with_context(|| {
@@ -1150,11 +1168,7 @@
         })<span class="question-mark">?</span>;
         <span class="macro">tracing::debug!</span>(<span class="string">&quot;Removed temporary directory {}&quot;</span>, temp_folder.display());
 
-        <span class="comment">// Symlink the tool
-        </span><span class="self">self</span>.link()<span class="question-mark">?</span>;
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Symlinked {self} to {}&quot;</span>, tool_dir.display());
-
-        <span class="prelude-val">Ok</span>(())
+        output
     }
 
     <span class="doccomment">/// Uninstall the tool.
