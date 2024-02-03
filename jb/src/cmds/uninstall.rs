@@ -75,7 +75,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                         return false;
                     }
 
-                    return true;
+                    true
                 })
                 .collect::<Vec<Tool>>();
 
@@ -130,6 +130,6 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     if error_batch.is_empty() {
         Ok(())
     } else {
-        Err(error_batch.into())
+        Err(error_batch)
     }
 }
