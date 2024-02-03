@@ -41,8 +41,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2.7.3
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
+
       - name: Build
-        run: cargo build --all --all-features
+        run: cargo build --release --locked
+
+      - name: Move to root
+        run: mv target/release/${{ env.BINARY_NAME }} .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BINARY_NAME }}
+          path: ${{ env.BINARY_NAME }}
 
   clippy:
     name: Clippy
@@ -109,13 +119,6 @@ jobs:
             echo "needed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build release
-        run: |
-          mkdir -p dist
-          cargo build --release --locked
-          strip "target/release/${{ env.BINARY_NAME }}"
-          cp "target/release/${{ env.BINARY_NAME }}" "dist/${{ env.BINARY_NAME }}-x86_64"
-
       - name: Set up Git
         if: steps.check_release.outputs.needed == 'true'
         run: |
@@ -132,6 +135,19 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.check_release.outputs.version }}"
           git tag -a "v${{ steps.check_release.outputs.version }}" -m "Release v${{ steps.check_release.outputs.version }}"
           git push --follow-tags
+
+      - name: Download binaries
+        if: steps.check_release.outputs.needed == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.BINARY_NAME }}
+          path: dist
+
+      - name: Strip and rename
+        if: steps.check_release.outputs.needed == 'true'
+        run: |
+          strip dist/${{ env.BINARY_NAME }}
+          mv dist/${{ env.BINARY_NAME }} dist/${{ env.BINARY_NAME }}-${{ steps.check_release.outputs.version }}
 
       - name: Generate release body
         if: steps.check_release.outputs.needed == 'true'
