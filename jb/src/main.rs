@@ -32,8 +32,10 @@ fn setup_logger(matches: &clap::ArgMatches) {
         LevelFilter::INFO
     };
 
-    let filter = EnvFilter::from_env("JB_LOG") // Ignore hyper and reqwest logs
+    let filter = EnvFilter::from_env("JB_LOG") // Ignore all tls and reqwest logs
         .add_directive("hyper=off".parse().unwrap())
+        .add_directive("rustls=off".parse().unwrap())
+        .add_directive("h2=off".parse().unwrap())
         .add_directive("reqwest=off".parse().unwrap())
         .add_directive(log_level.into());
 

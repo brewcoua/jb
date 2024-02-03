@@ -50,10 +50,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Build
-        run: |
-          sudo apt-get install -y libssl-dev
-          export OPENSSL_DIR=$(openssl version -d | cut -d'"' -f2)
-          cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
+        run: cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - name: Strip
         run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }}

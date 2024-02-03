@@ -43,13 +43,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Build
-        run: cargo build --release --locked
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.BINARY_NAME }}
-          path: target/release/${{ env.BINARY_NAME }}
+        run: cargo build --locked
 
   clippy:
     name: Clippy
