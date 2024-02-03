@@ -129,7 +129,7 @@ jobs:
           sed -i "0,/^version =/s/^version =.*/version = \"${{ steps.check_release.outputs.version }}\"/" ./jb/Cargo.toml
         
           git add CHANGELOG.md jb/Cargo.toml
-          git commit -m "chore: bump version to ${{ steps.check_release.outputs.version }}"
+          git commit -m "chore(version): bump version to ${{ steps.check_release.outputs.version }}"
           git tag -a "v${{ steps.check_release.outputs.version }}" -m "Release v${{ steps.check_release.outputs.version }}"
           git push --follow-tags
 
@@ -140,11 +140,11 @@ jobs:
           name: ${{ env.BINARY_NAME }}
           path: dist
 
-      - name: Strip and rename
+      - name: Strip and package binaries
         if: steps.check_release.outputs.needed == 'true'
         run: |
           strip dist/${{ env.BINARY_NAME }}
-          mv dist/${{ env.BINARY_NAME }} dist/${{ env.BINARY_NAME }}-${{ steps.check_release.outputs.version }}
+          tar -czf dist/${{ env.BINARY_NAME }}-${{ steps.check_release.outputs.version }}.tar.gz -C dist ${{ env.BINARY_NAME }}
 
       - name: Generate release body
         if: steps.check_release.outputs.needed == 'true'
@@ -155,7 +155,7 @@ jobs:
         if: steps.check_release.outputs.needed == 'true'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "dist/${{ env.BINARY_NAME }}-*"
+          artifacts: "dist/${{ env.BINARY_NAME }}-*.tar.gz"
           tag: v${{ steps.check_release.outputs.version }}
           name: Release v${{ steps.check_release.outputs.version }}
           bodyFile: RELEASE.md
