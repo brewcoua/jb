@@ -96,37 +96,21 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::thread;
 <span class="kw">use </span>anyhow::anyhow;
 
 <span class="kw">use </span>clap::{arg, value_parser, Command};
-<span class="kw">use </span>jb_lib::{tool::{Kind, Tool, Version}, error::{<span class="prelude-ty">Result</span>, Batch}};
+<span class="kw">use </span>jb_lib::{tool::Tool, error::{<span class="prelude-ty">Result</span>, Batch}};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>command() -&gt; Command {
     Command::new(<span class="string">&quot;install&quot;</span>)
-        .about(<span class="string">&quot;Install a JetBrains tool&quot;</span>)
+        .about(<span class="string">&quot;Install JetBrains tools&quot;</span>)
         .arg(
-            <span class="macro">arg!</span>(tool: &lt;TOOL&gt; <span class="string">&quot;The tools to install&quot;</span>)
+            <span class="macro">arg!</span>(tools: &lt;TOOLS&gt; <span class="string">&quot;The tools to install&quot;</span>)
                 .required(<span class="bool-val">true</span>)
-                .value_parser(<span class="macro">value_parser!</span>(Kind))
+                .value_parser(<span class="macro">value_parser!</span>(Tool))
                 .num_args(<span class="number">1</span>..=<span class="number">10</span>),
-        )
-        .arg(
-            <span class="macro">arg!</span>(--build &lt;VERSION&gt;)
-                .help(<span class="string">&quot;The release version to install (e.g. &#39;2023.2.1-eap&#39; or &#39;preview&#39;)&quot;</span>)
-                .value_parser(<span class="macro">value_parser!</span>(Version))
-                .required(<span class="bool-val">false</span>),
         )
         .arg(
             <span class="macro">arg!</span>(-d --directory &lt;PATH&gt;)
@@ -142,20 +126,16 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dispatch(args: <span class="kw-2">&amp;</span>clap::ArgMatches) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span>tool_kinds = args
-        .get_many::&lt;Kind&gt;(<span class="string">&quot;tool&quot;</span>)
+    <span class="kw">let </span>tools = args
+        .get_many::&lt;Tool&gt;(<span class="string">&quot;tools&quot;</span>)
         .expect(<span class="string">&quot;Could not find argument tools&quot;</span>);
-    <span class="kw">let </span>version: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Version&gt; = args.get_one::&lt;Version&gt;(<span class="string">&quot;build&quot;</span>);
     <span class="kw">let </span>directory: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::PathBuf&gt; = args.get_one::&lt;std::path::PathBuf&gt;(<span class="string">&quot;directory&quot;</span>);
 
     <span class="kw">let </span>clean = Arc::new(args.get_flag(<span class="string">&quot;clean&quot;</span>));
 
-    <span class="kw">let </span>handles: Vec&lt;<span class="kw">_</span>&gt; = tool_kinds
-        .map(|tool_kind| {
-            <span class="kw">let </span><span class="kw-2">mut </span>tool = Tool::new(<span class="kw-2">*</span>tool_kind);
-            <span class="kw">if </span>version.is_some() {
-                tool = tool.with_version(<span class="kw-2">*</span>version.unwrap());
-            }
+    <span class="kw">let </span>handles: Vec&lt;<span class="kw">_</span>&gt; = tools
+        .map(|tool| {
+            <span class="kw">let </span><span class="kw-2">mut </span>tool = tool.clone();
             <span class="kw">if </span>directory.is_some() {
                 tool = tool.with_directory(directory.unwrap().clone());
             }
@@ -163,7 +143,7 @@
             <span class="kw">let </span>clean = Arc::clone(<span class="kw-2">&amp;</span>clean);
 
             thread::spawn(<span class="kw">move </span>|| {
-                <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;task&quot;</span>, tool = tool.name());
+                <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;task&quot;</span>, tool = tool.to_string());
                 <span class="kw">let </span>_guard = span.enter();
 
                 tool.install()<span class="question-mark">?</span>;
@@ -172,7 +152,7 @@
 
                 <span class="kw">if </span><span class="kw-2">*</span>clean {
                     <span class="comment">// Clean up old versions
-                    </span><span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;cleanup&quot;</span>, tool = tool.name());
+                    </span><span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;cleanup&quot;</span>, tool = tool.to_string());
                     <span class="kw">let </span>_guard = span.enter();
 
                     <span class="macro">tracing::info!</span>(<span class="string">&quot;Cleaning up old versions of {}&quot;</span>, tool.kind.as_str());

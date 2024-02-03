@@ -604,6 +604,15 @@
 <a href="#604" id="604">604</a>
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool management
 //!
 //! This module contains functions and structs for managing `JetBrains` tools.
@@ -614,6 +623,7 @@
 <span class="kw">use </span>anyhow::{anyhow, bail, Context, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::str::FromStr;
 
@@ -640,7 +650,7 @@
 ///   .with_version(&quot;2021.2.1&quot;.parse().unwrap())
 ///   .with_directory(&quot;/home/user/.local/share/JetBrains&quot;.into());
 /// ```
-</span><span class="attr">#[derive(Debug, Clone, PartialEq)]
+</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[readonly::make]
 </span><span class="kw">pub struct </span>Tool {
     <span class="doccomment">/// The kind of tool
@@ -710,28 +720,30 @@
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
             <span class="kw">for </span>tool_dir <span class="kw">in </span>tool_dirs {
-                <span class="comment">// remove only the first part of the tool name (e.g. &quot;idea&quot; from &quot;idea-2021.1.1-eap&quot;)
-                </span><span class="kw">let </span>tool_version = Version::from_str(
-                    tool_dir
-                        .strip_prefix(<span class="macro">format!</span>(<span class="string">&quot;{}-&quot;</span>, tool.as_str()).as_str())
-                        .with_context(|| {
-                            <span class="macro">format!</span>(<span class="string">&quot;Failed to strip tool name prefix from {tool_dir:?}&quot;</span>)
-                        })<span class="question-mark">?</span>,
-                );
-
-                <span class="kw">if </span>tool_version.is_err() {
-                    <span class="kw">continue</span>;
-                }
-
                 installed_tools.push(
-                    Tool::new(<span class="kw-2">*</span>tool)
-                        .with_version(tool_version.unwrap())
-                        .with_directory(directory.clone()),
+                    Tool::from_str(tool_dir.as_str())
+                        .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to parse tool from {tool_dir:?}&quot;</span>))<span class="question-mark">?
+                        </span>.with_directory(directory.clone()),
                 );
             }
         }
 
         <span class="prelude-val">Ok</span>(installed_tools)
+    }
+
+    <span class="doccomment">/// List all installed `JetBrains` tools of a specific kind.
+    ///
+    /// This function is a shorthand for `Tool::list` and filters the list of installed tools by kind.
+    ///
+    /// # Errors
+    /// This function may return an error if it fails to list the installed tools.
+    </span><span class="kw">pub fn </span>list_kind(kind: Kind, directory: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Tool&gt;&gt; {
+        <span class="prelude-val">Ok</span>(
+            Tool::list(directory)<span class="question-mark">?
+            </span>.into_iter()
+            .filter(|tool| tool.kind == kind)
+            .collect()
+        )
     }
 
     <span class="doccomment">/// Set the version of the tool.
@@ -831,7 +843,7 @@
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
         <span class="kw">if </span><span class="self">self</span>.is_linked() {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.kind.as_str());
+            <span class="macro">tracing::error!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.kind.as_str());
             <span class="macro">bail!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.kind.as_str());
         }
 
@@ -886,8 +898,8 @@
         <span class="kw">let </span>_guard = span.enter();
 
         <span class="kw">if </span>!<span class="self">self</span>.is_linked() {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;{} is not linked&quot;</span>, <span class="self">self</span>.name());
-            <span class="macro">bail!</span>(<span class="string">&quot;{} is not linked&quot;</span>, <span class="self">self</span>.kind.as_str());
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;{self} is not linked&quot;</span>);
+            <span class="macro">bail!</span>(<span class="string">&quot;{self} is not linked&quot;</span>);
         }
 
         <span class="kw">let </span>directory = <span class="self">self
@@ -945,28 +957,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Get the name of the tool.
-    ///
-    /// This function returns the name of the tool, including its version.
-    /// This is used for the name of the tool&#39;s directory.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use jb_lib::tool::{Tool, Kind};
-    /// let tool = Tool::new(Kind::RustRover)
-    ///  .with_version(&quot;2021.2.1&quot;.parse().unwrap());
-    ///
-    /// println!(&quot;Tool name: {}&quot;, tool.name());
-    /// ```
-    </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="macro">format!</span>(
-            <span class="string">&quot;{}-{}&quot;</span>,
-            <span class="self">self</span>.kind.as_str(),
-            <span class="self">self</span>.version.unwrap_or_default()
-        )
-    }
-
     <span class="doccomment">/// Get the path to the tool.
     ///
     /// This function returns the path to the tool&#39;s directory.
@@ -986,7 +976,7 @@
             .clone()
             .unwrap_or(Variable::get(Variable::ToolsDirectory));
         <span class="kw">let </span>apps_dir = directory.join(<span class="string">&quot;apps&quot;</span>);
-        apps_dir.join(<span class="self">self</span>.name())
+        apps_dir.join(<span class="self">self</span>.to_string())
     }
 
     <span class="doccomment">/// Get the download link for the tool.
@@ -1124,7 +1114,7 @@
             );
         }
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Installing {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;Installing {self} to {}&quot;</span>, tool_dir.display());
 
         <span class="kw">let </span>archive_name = download
             .link
@@ -1162,7 +1152,7 @@
 
         <span class="comment">// Symlink the tool
         </span><span class="self">self</span>.link()<span class="question-mark">?</span>;
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Symlinked {} to {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Symlinked {self} to {}&quot;</span>, tool_dir.display());
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1195,19 +1185,47 @@
         <span class="kw">let </span>tool_dir = <span class="self">self</span>.as_path();
 
         <span class="kw">if </span>!tool_dir.exists() {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;{} is not installed&quot;</span>, <span class="self">self</span>.name());
-            <span class="macro">bail!</span>(<span class="string">&quot;{} is not installed&quot;</span>, <span class="self">self</span>.name());
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;{self} is not installed&quot;</span>);
+            <span class="macro">bail!</span>(<span class="string">&quot;{self} is not installed&quot;</span>);
         }
 
         <span class="kw">if </span><span class="self">self</span>.is_linked() {
             <span class="self">self</span>.unlink()<span class="question-mark">?</span>;
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unlinked {} from {}&quot;</span>, <span class="self">self</span>.name(), tool_dir.display());
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unlinked {self} from {}&quot;</span>, tool_dir.display());
         }
 
         std::fs::remove_dir_all(<span class="kw-2">&amp;</span>tool_dir)
             .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to remove tool directory {}&quot;</span>, tool_dir.display()))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl </span>Display <span class="kw">for </span>Tool {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f,
+               <span class="string">&quot;{}-{}&quot;</span>,
+               <span class="self">self</span>.kind.as_str(),
+               <span class="self">self</span>.version.unwrap_or_default()
+        )
+    }
+}
+
+<span class="kw">impl </span>FromStr <span class="kw">for </span>Tool {
+    <span class="kw">type </span><span class="prelude-val">Err </span>= anyhow::Error;
+
+    <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
+        <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.split(<span class="string">&#39;-&#39;</span>).collect();
+
+        <span class="kw">let </span>kind = Kind::from_str(parts[<span class="number">0</span>])<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>parts.len() &lt; <span class="number">2 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(Tool::new(kind));
+        }
+
+        <span class="kw">let </span>parts = parts[<span class="number">1</span>..].join(<span class="string">&quot;-&quot;</span>);
+        <span class="kw">let </span>version = Version::from_str(parts.as_str())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Tool::new(kind).with_version(version))
     }
 }
 </code></pre></div></section></main></body></html>
