@@ -107,7 +107,7 @@ jobs:
       - name: Check if a release is needed
         id: check_release
         run: |
-          export BUMPED_VERSION=$(git cliff --unreleased --bump --context | jq -r ".[0].version")
+          export BUMPED_VERSION=$(git cliff --unreleased --bump --context --config .github/cliff.toml | jq -r ".[0].version")
           if [ "$BUMPED_VERSION" = "null" ]; then
             echo "needed=false" >> "$GITHUB_OUTPUT"
           else

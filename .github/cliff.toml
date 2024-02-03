@@ -72,8 +72,8 @@ commit_parsers = [
     { message = "^test", group = "Tests" },
     { message = "^chore\\(version\\):", skip = true },
     { message = "^chore", group = "Miscellaneous Chores" },
-    { message = "^build", group = "Build System" },
-    { message = "^ci", group = "Continuous Integration" },
+    { message = "^build", skip = true },
+    { message = "^ci", skip = true },
     { message = "^security", group = "Security" },
     { body = ".*security", group = "Security" },
 ]
