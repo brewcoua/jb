@@ -30,15 +30,19 @@ jobs:
           - arch: x86_64
             distrib: unknown-linux-gnu
             toolchain: stable
+            gcc: gcc
           - arch: x86_64
             distrib: unknown-linux-musl
             toolchain: stable
+            gcc: musl-gcc
           - arch: aarch64
             distrib: unknown-linux-gnu
             toolchain: stable
+            gcc: aaarch64-linux-gnu-gcc
           - arch: arm
             distrib: unknown-linux-gnueabihf
             toolchain: stable
+            gcc: arm-linux-gnueabihf-gcc
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -48,6 +52,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2.7.3
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Install gcc
+        run: sudo apt-get install -y ${{ matrix.gcc }}
 
       - name: Build
         run: cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
