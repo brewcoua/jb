@@ -3,17 +3,21 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.0](https://github.com/brewcoua/jb/compare/v1.1.1..1.2.0) - 2024-02-03
+## [1.2.1](https://github.com/brewcoua/jb/compare/v1.2.0..1.2.1) - 2024-02-03
+
+### Bug Fixes
+
+- **(install)** clean up temporary files even if install fails - ([a0a7e53](https://github.com/brewcoua/jb/commit/a0a7e53b0343f4e5d1f382bca64f282251bed55e)) - Brewen Couaran
+- **(tls)** switch to rustls-tls to avoid using openssl bindings - ([7d9f660](https://github.com/brewcoua/jb/commit/7d9f660b9aa270767d678e0e8037a8d9e6a358cd)) - Brewen Couaran
+
+---
+## [1.2.0](https://github.com/brewcoua/jb/compare/v1.1.1..v1.2.0) - 2024-02-03
 
 ### Features
 
 - **(tool)** directly parse tool instead of kind and specify versions directly on the tool - ([b9d0c3a](https://github.com/brewcoua/jb/commit/b9d0c3a064a64e9a9c2ae9769579b7b70301547c)) - Brewen Couaran
 - **(uninstall)** add concurrency with multiple args matching - ([2fd5212](https://github.com/brewcoua/jb/commit/2fd521226d911af177599bbe0c38cef32796da50)) - Brewen Couaran
 - **(uninstall)** add matching for tools arg - ([a6b260f](https://github.com/brewcoua/jb/commit/a6b260fde0c948c9aae0ecbdf8368f92edab84a0)) - Brewen Couaran
-
-### Miscellaneous Chores
-
-- **(clippy)** fix errors - ([0f94055](https://github.com/brewcoua/jb/commit/0f94055316b41eea6a9bd890ce7cd4f89d806abc)) - Brewen Couaran
 
 ---
 ## [1.1.1](https://github.com/brewcoua/jb/compare/v1.1.0..v1.1.1) - 2024-02-03
@@ -44,7 +48,6 @@ All notable changes to this project will be documented in this file. See [conven
 ### Miscellaneous Chores
 
 - **(cargo)** update meta with license and repo - ([468fbaa](https://github.com/brewcoua/jb/commit/468fbaa2d35a82695e0ec1cee3b73b64ffdeb762)) - Brewen Couaran
-- **(clippy)** fix all errors and warnings - ([67607e0](https://github.com/brewcoua/jb/commit/67607e0f85696f1eee73a5ec7918347f2fba5ce1)) - Brewen Couaran
 - bump dependencies - ([66fd3f7](https://github.com/brewcoua/jb/commit/66fd3f76bc006a1c5eebc7c8163dba4744ee8341)) - Brewen Couaran
 - bump dependencies - ([faa202e](https://github.com/brewcoua/jb/commit/faa202e366b074ecd048863655d570f61ab53a1b)) - Brewen Couaran
 - bump version to 1.1.0 - ([ca3dc1e](https://github.com/brewcoua/jb/commit/ca3dc1ea5f9f9d01d50425c8edf6f86ec39f803c)) - brewcoua
