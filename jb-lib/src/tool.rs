@@ -35,7 +35,7 @@ pub use release::{Type, Version};
 ///   .with_version("2021.2.1".parse().unwrap())
 ///   .with_directory("/home/user/.local/share/JetBrains".into());
 /// ```
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[readonly::make]
 pub struct Tool {
     /// The kind of tool
@@ -114,6 +114,21 @@ impl Tool {
         }
 
         Ok(installed_tools)
+    }
+
+    /// List all installed `JetBrains` tools of a specific kind.
+    ///
+    /// This function is a shorthand for `Tool::list` and filters the list of installed tools by kind.
+    ///
+    /// # Errors
+    /// This function may return an error if it fails to list the installed tools.
+    pub fn list_kind(kind: Kind, directory: Option<PathBuf>) -> Result<Vec<Tool>> {
+        Ok(
+            Tool::list(directory)?
+            .into_iter()
+            .filter(|tool| tool.kind == kind)
+            .collect()
+        )
     }
 
     /// Set the version of the tool.
@@ -213,7 +228,7 @@ impl Tool {
         let tool_dir = self.as_path();
 
         if self.is_linked() {
-            tracing::debug!("{} is already linked", self.kind.as_str());
+            tracing::error!("{} is already linked", self.kind.as_str());
             bail!("{} is already linked", self.kind.as_str());
         }
 

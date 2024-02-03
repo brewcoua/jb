@@ -2,14 +2,16 @@
 //!
 //! The tool kind represents the tool among the `JetBrains` products.
 
+use std::cmp::Ordering;
 use std::str::FromStr;
+
 use super::release::Type;
 use clap::builder::PossibleValue;
 
 /// Tool kind
 ///
 /// This enum does not contain any information. It only represents which kind of tool it is.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Kind {
     IntelliJIdeaUltimate,
     IntelliJIdeaCommunity,
@@ -232,5 +234,17 @@ impl FromStr for Kind {
             "gateway" => Ok(Self::Gateway),
             _ => anyhow::bail!("Unknown tool kind: {}", s)
         }
+    }
+}
+
+impl Ord for Kind {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_str().cmp(other.as_str())
+    }
+}
+
+impl PartialOrd for Kind {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }

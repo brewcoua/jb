@@ -168,6 +168,14 @@ impl Version {
         self.major.is_none() && self.minor.is_none() && self.patch.is_none()
     }
 
+    /// Check if this version is complete
+    ///
+    /// This returns `true` if the version has all three version numbers set, and `false` otherwise.
+    #[must_use]
+    pub fn is_complete(&self) -> bool {
+        self.major.is_some() && self.minor.is_some() && self.patch.is_some()
+    }
+
     /// Compare this version to another version, ignoring the release type
     ///
     /// This returns an `Ordering` representing the comparison between the two versions.
