@@ -56,9 +56,6 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           targets: ${{ matrix.arch }}-${{ matrix.distrib }}
-      - uses: Swatinem/rust-cache@v2.7.3
-        with:
-          save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Install dependencies
         if: matrix.dependencies
