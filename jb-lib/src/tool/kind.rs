@@ -2,6 +2,7 @@
 //!
 //! The tool kind represents the tool among the `JetBrains` products.
 
+use std::str::FromStr;
 use super::release::Type;
 use clap::builder::PossibleValue;
 
@@ -199,5 +200,37 @@ impl clap::ValueEnum for Kind {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(PossibleValue::new(self.as_str()))
+    }
+}
+
+impl FromStr for Kind {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
+            "idea-community" => Ok(Self::IntelliJIdeaCommunity),
+            "pycharm-professional" => Ok(Self::PyCharmProfessional),
+            "pycharm-community" => Ok(Self::PyCharmCommunity),
+            "phpstorm" => Ok(Self::PhpStorm),
+            "goland" => Ok(Self::GoLand),
+            "rider" => Ok(Self::Rider),
+            "clion" => Ok(Self::CLion),
+            "clion-nova" => Ok(Self::ClionNova),
+            "rustrover" => Ok(Self::RustRover),
+            "webstorm" => Ok(Self::WebStorm),
+            "rubymine" => Ok(Self::RubyMine),
+            "datagrip" => Ok(Self::DataGrip),
+            "dataspell" => Ok(Self::DataSpell),
+            "fleet" => Ok(Self::Fleet),
+            "aqua" => Ok(Self::Aqua),
+            "writerside" => Ok(Self::Writerside),
+            "dotmemory" => Ok(Self::DotMemory),
+            "dottrace" => Ok(Self::DotTrace),
+            "mps" => Ok(Self::MPS),
+            "space" => Ok(Self::Space),
+            "gateway" => Ok(Self::Gateway),
+            _ => anyhow::bail!("Unknown tool kind: {}", s)
+        }
     }
 }

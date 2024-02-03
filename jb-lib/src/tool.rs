@@ -8,6 +8,7 @@ pub mod release;
 use anyhow::{anyhow, bail, Context, Result};
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -104,22 +105,9 @@ impl Tool {
                 .collect::<Vec<_>>();
 
             for tool_dir in tool_dirs {
-                // remove only the first part of the tool name (e.g. "idea" from "idea-2021.1.1-eap")
-                let tool_version = Version::from_str(
-                    tool_dir
-                        .strip_prefix(format!("{}-", tool.as_str()).as_str())
-                        .with_context(|| {
-                            format!("Failed to strip tool name prefix from {tool_dir:?}")
-                        })?,
-                );
-
-                if tool_version.is_err() {
-                    continue;
-                }
-
                 installed_tools.push(
-                    Tool::new(*tool)
-                        .with_version(tool_version.unwrap())
+                    Tool::from_str(tool_dir.as_str())
+                        .with_context(|| format!("Failed to parse tool from {tool_dir:?}"))?
                         .with_directory(directory.clone()),
                 );
             }
@@ -280,8 +268,8 @@ impl Tool {
         let _guard = span.enter();
 
         if !self.is_linked() {
-            tracing::debug!("{} is not linked", self.name());
-            bail!("{} is not linked", self.kind.as_str());
+            tracing::debug!("{self} is not linked");
+            bail!("{self} is not linked");
         }
 
         let directory = self
@@ -339,28 +327,6 @@ impl Tool {
         Ok(())
     }
 
-    /// Get the name of the tool.
-    ///
-    /// This function returns the name of the tool, including its version.
-    /// This is used for the name of the tool's directory.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use jb_lib::tool::{Tool, Kind};
-    /// let tool = Tool::new(Kind::RustRover)
-    ///  .with_version("2021.2.1".parse().unwrap());
-    ///
-    /// println!("Tool name: {}", tool.name());
-    /// ```
-    #[must_use]
-    pub fn name(&self) -> String {
-        format!(
-            "{}-{}",
-            self.kind.as_str(),
-            self.version.unwrap_or_default()
-        )
-    }
-
     /// Get the path to the tool.
     ///
     /// This function returns the path to the tool's directory.
@@ -380,7 +346,7 @@ impl Tool {
             .clone()
             .unwrap_or(Variable::get(Variable::ToolsDirectory));
         let apps_dir = directory.join("apps");
-        apps_dir.join(self.name())
+        apps_dir.join(self.to_string())
     }
 
     /// Get the download link for the tool.
@@ -518,7 +484,7 @@ impl Tool {
             );
         }
 
-        tracing::debug!("Installing {} to {}", self.name(), tool_dir.display());
+        tracing::info!("Installing {self} to {}", tool_dir.display());
 
         let archive_name = download
             .link
@@ -556,7 +522,7 @@ impl Tool {
 
         // Symlink the tool
         self.link()?;
-        tracing::debug!("Symlinked {} to {}", self.name(), tool_dir.display());
+        tracing::debug!("Symlinked {self} to {}", tool_dir.display());
 
         Ok(())
     }
@@ -589,18 +555,46 @@ impl Tool {
         let tool_dir = self.as_path();
 
         if !tool_dir.exists() {
-            tracing::debug!("{} is not installed", self.name());
-            bail!("{} is not installed", self.name());
+            tracing::debug!("{self} is not installed");
+            bail!("{self} is not installed");
         }
 
         if self.is_linked() {
             self.unlink()?;
-            tracing::debug!("Unlinked {} from {}", self.name(), tool_dir.display());
+            tracing::debug!("Unlinked {self} from {}", tool_dir.display());
         }
 
         std::fs::remove_dir_all(&tool_dir)
             .with_context(|| format!("Failed to remove tool directory {}", tool_dir.display()))?;
 
         Ok(())
+    }
+}
+
+impl Display for Tool {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,
+               "{}-{}",
+               self.kind.as_str(),
+               self.version.unwrap_or_default()
+        )
+    }
+}
+
+impl FromStr for Tool {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('-').collect();
+
+        let kind = Kind::from_str(parts[0])?;
+
+        if parts.len() < 2 {
+            return Ok(Tool::new(kind));
+        }
+
+        let parts = parts[1..].join("-");
+        let version = Version::from_str(parts.as_str())?;
+        Ok(Tool::new(kind).with_version(version))
     }
 }
