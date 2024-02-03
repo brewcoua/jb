@@ -49,6 +49,8 @@
 <a href="#49" id="49">49</a>
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>tracing_subscriber::EnvFilter;
 <span class="kw">use </span>tracing_subscriber::filter::LevelFilter;
 <span class="kw">use </span>tracing_subscriber::layer::SubscriberExt;
@@ -83,8 +85,10 @@
         LevelFilter::INFO
     };
 
-    <span class="kw">let </span>filter = EnvFilter::from_env(<span class="string">&quot;JB_LOG&quot;</span>) <span class="comment">// Ignore hyper and reqwest logs
+    <span class="kw">let </span>filter = EnvFilter::from_env(<span class="string">&quot;JB_LOG&quot;</span>) <span class="comment">// Ignore all tls and reqwest logs
         </span>.add_directive(<span class="string">&quot;hyper=off&quot;</span>.parse().unwrap())
+        .add_directive(<span class="string">&quot;rustls=off&quot;</span>.parse().unwrap())
+        .add_directive(<span class="string">&quot;h2=off&quot;</span>.parse().unwrap())
         .add_directive(<span class="string">&quot;reqwest=off&quot;</span>.parse().unwrap())
         .add_directive(log_level.into());
 
