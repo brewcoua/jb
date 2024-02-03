@@ -30,25 +30,18 @@ jobs:
           - arch: x86_64
             distrib: unknown-linux-gnu
             toolchain: stable
-            cc: gcc
 
           - arch: x86_64
             distrib: unknown-linux-musl
             toolchain: stable
-            dependencies: musl-tools
-            cc: musl-gcc
 
           - arch: aarch64
             distrib: unknown-linux-gnu
             toolchain: stable
-            dependencies: gcc-aarch64-linux-gnu
-            cc: aarch64-linux-gnu-gcc
 
           - arch: arm
             distrib: unknown-linux-gnueabihf
             toolchain: stable
-            dependencies: gcc-arm-linux-gnueabihf
-            cc: arm-linux-gnueabihf-gcc
 
     steps:
       - uses: actions/checkout@v4
@@ -57,14 +50,15 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           targets: ${{ matrix.arch }}-${{ matrix.distrib }}
 
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y cross --git https://github.com/cross-rs/cross
+
       - name: Install dependencies
         if: matrix.dependencies
         run: sudo apt-get install -y ${{ matrix.dependencies }}
 
       - name: Build
-        run: |
-          cargo config --target ${{ matrix.arch }}-${{ matrix.distrib }} linker ${{ matrix.cc }}
-          cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
+        run: cross build --release --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - name: Strip
         run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }}
@@ -87,19 +81,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Git Cliff
-        env:
-          VERSION: 1.4.0
-        run: |
-          export directory=$(mktemp -d)
-          cd "$directory"
-          
-          wget "https://github.com/orhun/git-cliff/releases/download/v${{ env.VERSION }}/git-cliff-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
-          tar -xvf "git-cliff-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz" --strip-components 1
-          sudo mv git-cliff /usr/local/bin/
-          
-          cd -
-          rm -rf "$directory"
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y git-cliff
 
       - name: Set up Git
         if: steps.check_release.outputs.needed == 'true'
