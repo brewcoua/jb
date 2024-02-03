@@ -86,9 +86,9 @@ jobs:
           VERSION: 1.4.0
         run: |
           wget "https://github.com/orhun/git-cliff/releases/download/v${{ env.VERSION }}/git-cliff-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
-          tar -xvf "git-cliff-v${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
+          tar -xvf "git-cliff-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
           sudo mv git-cliff /usr/local/bin/
-          rm "git-cliff-v${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
+          rm "git-cliff-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz"
 
       - name: Check if a release is needed
         id: check_release
