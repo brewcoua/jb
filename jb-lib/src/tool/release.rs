@@ -1,6 +1,6 @@
 //! Release version parsing and comparison
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::builder::PossibleValue;
 use serde::Deserialize;
 use std::cmp::Ordering;
@@ -168,6 +168,14 @@ impl Version {
         self.major.is_none() && self.minor.is_none() && self.patch.is_none()
     }
 
+    /// Check if this version is complete
+    ///
+    /// This returns `true` if the version has all three version numbers set, and `false` otherwise.
+    #[must_use]
+    pub fn is_complete(&self) -> bool {
+        self.major.is_some() && self.minor.is_some() && self.patch.is_some()
+    }
+
     /// Compare this version to another version, ignoring the release type
     ///
     /// This returns an `Ordering` representing the comparison between the two versions.
@@ -277,12 +285,13 @@ impl std::fmt::Display for Version {
 }
 
 impl FromStr for Version {
-    type Err = &'static str;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut base = s.split('-');
 
-        let first = base.next().ok_or("Failed to parse version")?;
+        let first = base.next()
+            .with_context(|| "Failed to parse version: no version numbers")?;
 
         // Check if it's a release type
         if let Ok(release) = Type::from_str(first) {
@@ -297,17 +306,17 @@ impl FromStr for Version {
                 }
 
                 part.parse::<u32>()
-                    .map_err(|_| "Failed to parse version number")
+                    .with_context(|| format!("Failed to parse version: invalid version number: {part}"))
                     .map(Some)
             })
             .collect::<Result<Vec<_>, _>>()?;
 
         if parts.len() > 3 {
-            return Err("Failed to parse version: too many version numbers");
+            anyhow::bail!("Failed to parse version: too many version numbers");
         }
 
         if parts.first().is_none() {
-            return Err("Failed to parse version: major version is required if no release_type is specified");
+            anyhow::bail!("Failed to parse version: no version numbers found when no release type is specified");
         }
 
         // Parse release type
@@ -317,7 +326,7 @@ impl FromStr for Version {
                 "release" => Ok(Type::Release),
                 "eap" => Ok(Type::EAP),
                 "preview" => Ok(Type::Preview),
-                _ => Err("Failed to parse release type"),
+                _ => anyhow::bail!("Failed to parse version: invalid release type")
             })
             .transpose()?;
 

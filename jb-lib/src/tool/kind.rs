@@ -2,13 +2,16 @@
 //!
 //! The tool kind represents the tool among the `JetBrains` products.
 
+use std::cmp::Ordering;
+use std::str::FromStr;
+
 use super::release::Type;
 use clap::builder::PossibleValue;
 
 /// Tool kind
 ///
 /// This enum does not contain any information. It only represents which kind of tool it is.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Kind {
     IntelliJIdeaUltimate,
     IntelliJIdeaCommunity,
@@ -199,5 +202,49 @@ impl clap::ValueEnum for Kind {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(PossibleValue::new(self.as_str()))
+    }
+}
+
+impl FromStr for Kind {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
+            "idea-community" => Ok(Self::IntelliJIdeaCommunity),
+            "pycharm-professional" => Ok(Self::PyCharmProfessional),
+            "pycharm-community" => Ok(Self::PyCharmCommunity),
+            "phpstorm" => Ok(Self::PhpStorm),
+            "goland" => Ok(Self::GoLand),
+            "rider" => Ok(Self::Rider),
+            "clion" => Ok(Self::CLion),
+            "clion-nova" => Ok(Self::ClionNova),
+            "rustrover" => Ok(Self::RustRover),
+            "webstorm" => Ok(Self::WebStorm),
+            "rubymine" => Ok(Self::RubyMine),
+            "datagrip" => Ok(Self::DataGrip),
+            "dataspell" => Ok(Self::DataSpell),
+            "fleet" => Ok(Self::Fleet),
+            "aqua" => Ok(Self::Aqua),
+            "writerside" => Ok(Self::Writerside),
+            "dotmemory" => Ok(Self::DotMemory),
+            "dottrace" => Ok(Self::DotTrace),
+            "mps" => Ok(Self::MPS),
+            "space" => Ok(Self::Space),
+            "gateway" => Ok(Self::Gateway),
+            _ => anyhow::bail!("Unknown tool kind: {}", s)
+        }
+    }
+}
+
+impl Ord for Kind {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_str().cmp(other.as_str())
+    }
+}
+
+impl PartialOrd for Kind {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }

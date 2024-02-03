@@ -3,22 +3,16 @@ use std::thread;
 use anyhow::anyhow;
 
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool::{Kind, Tool, Version}, error::{Result, Batch}};
+use jb_lib::{tool::Tool, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
-        .about("Install a JetBrains tool")
+        .about("Install JetBrains tools")
         .arg(
-            arg!(tool: <TOOL> "The tools to install")
+            arg!(tools: <TOOLS> "The tools to install")
                 .required(true)
-                .value_parser(value_parser!(Kind))
+                .value_parser(value_parser!(Tool))
                 .num_args(1..=10),
-        )
-        .arg(
-            arg!(--build <VERSION>)
-                .help("The release version to install (e.g. '2023.2.1-eap' or 'preview')")
-                .value_parser(value_parser!(Version))
-                .required(false),
         )
         .arg(
             arg!(-d --directory <PATH>)
@@ -34,20 +28,16 @@ pub(crate) fn command() -> Command {
 }
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
-    let tool_kinds = args
-        .get_many::<Kind>("tool")
+    let tools = args
+        .get_many::<Tool>("tools")
         .expect("Could not find argument tools");
-    let version: Option<&Version> = args.get_one::<Version>("build");
     let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
 
     let clean = Arc::new(args.get_flag("clean"));
 
-    let handles: Vec<_> = tool_kinds
-        .map(|tool_kind| {
-            let mut tool = Tool::new(*tool_kind);
-            if version.is_some() {
-                tool = tool.with_version(*version.unwrap());
-            }
+    let handles: Vec<_> = tools
+        .map(|tool| {
+            let mut tool = tool.clone();
             if directory.is_some() {
                 tool = tool.with_directory(directory.unwrap().clone());
             }
@@ -55,7 +45,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             let clean = Arc::clone(&clean);
 
             thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.name());
+                let span = tracing::info_span!("task", tool = tool.to_string());
                 let _guard = span.enter();
 
                 tool.install()?;
@@ -64,7 +54,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
                 if *clean {
                     // Clean up old versions
-                    let span = tracing::info_span!("cleanup", tool = tool.name());
+                    let span = tracing::info_span!("cleanup", tool = tool.to_string());
                     let _guard = span.enter();
 
                     tracing::info!("Cleaning up old versions of {}", tool.kind.as_str());
