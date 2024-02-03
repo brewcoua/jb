@@ -30,19 +30,21 @@ jobs:
           - arch: x86_64
             distrib: unknown-linux-gnu
             toolchain: stable
-            gcc: gcc
+
           - arch: x86_64
             distrib: unknown-linux-musl
             toolchain: stable
-            gcc: musl-gcc
+            dependencies: musl-tools
+
           - arch: aarch64
             distrib: unknown-linux-gnu
             toolchain: stable
-            gcc: aaarch64-linux-gnu-gcc
+            dependencies: gcc-aarch64-linux-gnu
+
           - arch: arm
             distrib: unknown-linux-gnueabihf
             toolchain: stable
-            gcc: arm-linux-gnueabihf-gcc
+            dependencies: gcc-arm-linux-gnueabihf
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -53,8 +55,9 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
 
-      - name: Install gcc
-        run: sudo apt-get install -y ${{ matrix.gcc }}
+      - name: Install dependencies
+        if: matrix.dependencies
+        run: sudo apt-get install -y ${{ matrix.dependencies }}
 
       - name: Build
         run: cargo build --release --locked --target ${{ matrix.arch }}-${{ matrix.distrib }}
