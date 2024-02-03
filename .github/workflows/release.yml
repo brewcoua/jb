@@ -45,23 +45,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          targets: ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - uses: cargo-bins/cargo-binstall@main
       - run: cargo binstall -y cross --git https://github.com/cross-rs/cross
-
-      - name: Install dependencies
-        if: matrix.dependencies
-        run: sudo apt-get install -y ${{ matrix.dependencies }}
 
       - name: Build
         run: cross build --release --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
       - name: Strip
-        run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }}
+        # Attempt to strip the binary, but don't fail if it doesn't work (since it's not available on all platforms)
+        run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }} || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
