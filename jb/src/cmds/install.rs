@@ -7,9 +7,9 @@ use jb_lib::{tool::Tool, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
-        .about("Install a JetBrains tool")
+        .about("Install JetBrains tools")
         .arg(
-            arg!(tool: <TOOL> "The tools to install")
+            arg!(tools: <TOOLS> "The tools to install")
                 .required(true)
                 .value_parser(value_parser!(Tool))
                 .num_args(1..=10),
@@ -29,7 +29,7 @@ pub(crate) fn command() -> Command {
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools = args
-        .get_many::<Tool>("tool")
+        .get_many::<Tool>("tools")
         .expect("Could not find argument tools");
     let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
 
