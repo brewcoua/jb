@@ -80,6 +80,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history for tags and changes
 
       - name: Install Git Cliff
         env:
