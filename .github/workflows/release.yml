@@ -78,13 +78,11 @@ jobs:
       - run: cargo binstall -y git-cliff
 
       - name: Set up Git
-        if: steps.check_release.outputs.needed == 'true'
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
       - name: Generate changelog & Bump version
-        if: steps.check_release.outputs.needed == 'true'
         run: |
           git cliff --bump --config .github/cliff.toml > CHANGELOG.md
           sed -i "0,/^version =/s/^version =.*/version = \"${{ inputs.bumped_version }}\"/" jb/Cargo.toml
