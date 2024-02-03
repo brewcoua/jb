@@ -3,13 +3,24 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.1.1](https://github.com/brewcoua/jb/compare/v1.1.0..1.1.1) - 2024-02-03
+## [1.2.0](https://github.com/brewcoua/jb/compare/v1.1.1..1.2.0) - 2024-02-03
 
-### Ci
+### Features
 
-- **(build)** set artifact path - ([5aa368a](https://github.com/brewcoua/jb/commit/5aa368a3c2459a358de8b7372480378dc0e2a75a)) - Brewen Couaran
-- **(release)** fix bumped version check & update commit email - ([0129dba](https://github.com/brewcoua/jb/commit/0129dba5fce0dcede50ba64c30f0aa1c75583974)) - Brewen Couaran
-- **(release)** use built artifact instead of rebuilding - ([ee21309](https://github.com/brewcoua/jb/commit/ee2130919f580f89e0a0578dfcf6f4d86fe283a5)) - Brewen Couaran
+- **(tool)** directly parse tool instead of kind and specify versions directly on the tool - ([b9d0c3a](https://github.com/brewcoua/jb/commit/b9d0c3a064a64e9a9c2ae9769579b7b70301547c)) - Brewen Couaran
+- **(uninstall)** add concurrency with multiple args matching - ([2fd5212](https://github.com/brewcoua/jb/commit/2fd521226d911af177599bbe0c38cef32796da50)) - Brewen Couaran
+- **(uninstall)** add matching for tools arg - ([a6b260f](https://github.com/brewcoua/jb/commit/a6b260fde0c948c9aae0ecbdf8368f92edab84a0)) - Brewen Couaran
+
+### Miscellaneous Chores
+
+- **(clippy)** fix errors - ([0f94055](https://github.com/brewcoua/jb/commit/0f94055316b41eea6a9bd890ce7cd4f89d806abc)) - Brewen Couaran
+
+---
+## [1.1.1](https://github.com/brewcoua/jb/compare/v1.1.0..v1.1.1) - 2024-02-03
+
+### Miscellaneous Chores
+
+- bump version to 1.1.1 - ([6f155eb](https://github.com/brewcoua/jb/commit/6f155eb8463cf60dfa9a46b7cf3eb5a150d39920)) - brewcoua
 
 ---
 ## [1.1.0](https://github.com/brewcoua/jb/compare/v1.0.1..v1.1.0) - 2024-02-03
@@ -37,17 +48,6 @@ All notable changes to this project will be documented in this file. See [conven
 - bump dependencies - ([66fd3f7](https://github.com/brewcoua/jb/commit/66fd3f76bc006a1c5eebc7c8163dba4744ee8341)) - Brewen Couaran
 - bump dependencies - ([faa202e](https://github.com/brewcoua/jb/commit/faa202e366b074ecd048863655d570f61ab53a1b)) - Brewen Couaran
 - bump version to 1.1.0 - ([ca3dc1e](https://github.com/brewcoua/jb/commit/ca3dc1ea5f9f9d01d50425c8edf6f86ec39f803c)) - brewcoua
-
-### Ci
-
-- **(release)** fix typo in git cliff download link - ([55b4f6b](https://github.com/brewcoua/jb/commit/55b4f6b4d2ba35355cc5353b4e15d6db233ba92a)) - Brewen Couaran
-- **(release)** fix another typo - ([1f4292b](https://github.com/brewcoua/jb/commit/1f4292b2cfbc885840a29ef81543dc10863fbe79)) - Brewen Couaran
-- **(release)** add strip component to tar - ([b665e89](https://github.com/brewcoua/jb/commit/b665e89e45175950b63173e722b41a7ab7c0f23b)) - Brewen Couaran
-- **(release)** add fetch depth to allow generating changelogs - ([707e440](https://github.com/brewcoua/jb/commit/707e4406b3a70faa5984b67b6ead5f8d36b28510)) - Brewen Couaran
-- **(release)** add cargo bump and fix release body version - ([7dcf8a8](https://github.com/brewcoua/jb/commit/7dcf8a80fabc290507ddf14e66c7428968c4b36c)) - Brewen Couaran
-- **(release)** set tag for release manually - ([c4d41df](https://github.com/brewcoua/jb/commit/c4d41df0c3b3419c1de8f03ca606318b102f77bc)) - Brewen Couaran
-- add steps for bumping version & releasing - ([cf697d3](https://github.com/brewcoua/jb/commit/cf697d3542e3e3e7e55fb1278919689925c48d39)) - Brewen Couaran
-- use only one target for now - ([ac0822b](https://github.com/brewcoua/jb/commit/ac0822bbce9e67346b8e20f651c36267b01b1e04)) - Brewen Couaran
 
 ---
 ## [1.0.1](https://github.com/brewcoua/jb/compare/v1.0.0..v1.0.1) - 2024-01-27
@@ -86,18 +86,6 @@ All notable changes to this project will be documented in this file. See [conven
 ### Tests
 
 - add no_run to functions writing files - ([bac0a79](https://github.com/brewcoua/jb/commit/bac0a7911a69bfe9e87d6d73f151c483899727b0)) - Brewen Couaran
-
-### Ci
-
-- **(docs)** add index.html to root with redirect - ([373a261](https://github.com/brewcoua/jb/commit/373a2613f1325aaea6e626fef40ce9875aba3a24)) - Brewen Couaran
-- add ci steps for test, build, clippy and outdated - ([2aae0a9](https://github.com/brewcoua/jb/commit/2aae0a9ae781c6217cca142f384fb714af2a8823)) - Brewen Couaran
-- add more permissions to docs workflow - ([e525d2a](https://github.com/brewcoua/jb/commit/e525d2a7766206a2cc3e558349c00ab92ae9becd)) - Brewen Couaran
-- split docs deploy in 2 steps - ([bd9fcd1](https://github.com/brewcoua/jb/commit/bd9fcd1a89bef64b65ab22f1bd6cd3010b0eaae3)) - Brewen Couaran
-- update artifact id and remove cache for docs - ([2453916](https://github.com/brewcoua/jb/commit/2453916ba35246d6c8d255dd3fe9ecc4a3938f31)) - Brewen Couaran
-- fix typo in action name - ([d74b463](https://github.com/brewcoua/jb/commit/d74b4634eee9c736e340d53229fffd84bfe11c64)) - Brewen Couaran
-- update docs environment & add workflow_dispatch - ([ff81daa](https://github.com/brewcoua/jb/commit/ff81daa2850c8b56dfd47dd495ebabe4412daebf)) - Brewen Couaran
-- publish to branch instead of actions (since it does not work) - ([d423057](https://github.com/brewcoua/jb/commit/d423057fafad29a20536d02945fc17c6e5854904)) - Brewen Couaran
-- update permissions for docs workflow - ([e5bb1ea](https://github.com/brewcoua/jb/commit/e5bb1ea891132f1e7cb2eda6624e3eb4d9ccc9d7)) - Brewen Couaran
 
 ---
 ## [1.0.0] - 2024-01-21
