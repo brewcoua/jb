@@ -45,14 +45,11 @@ jobs:
       - name: Build
         run: cargo build --release --locked
 
-      - name: Move to root
-        run: mv target/release/${{ env.BINARY_NAME }} .
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BINARY_NAME }}
-          path: ${{ env.BINARY_NAME }}
+          path: target/release/${{ env.BINARY_NAME }}
 
   clippy:
     name: Clippy
