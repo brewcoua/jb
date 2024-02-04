@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.1](https://github.com/brewcoua/jb/compare/v1.2.0..1.2.1) - 2024-02-03
+## [1.2.2](https://github.com/brewcoua/jb/compare/v1.2.1..1.2.2) - 2024-02-04
+
+### Miscellaneous Chores
+
+- **(cargo)** update lockfile - ([58bd79b](https://github.com/brewcoua/jb/commit/58bd79b00bf52658c94505616e7b5ec08bfa9372)) - Brewen Couaran
+
+---
+## [1.2.1](https://github.com/brewcoua/jb/compare/v1.2.0..v1.2.1) - 2024-02-03
 
 ### Bug Fixes
 
