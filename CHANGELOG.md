@@ -3,11 +3,11 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.2](https://github.com/brewcoua/jb/compare/v1.2.1..1.2.2) - 2024-02-04
+## [1.2.3](https://github.com/brewcoua/jb/compare/v1.2.2..1.2.3) - 2024-02-04
 
-### Miscellaneous Chores
+### Bug Fixes
 
-- **(cargo)** update lockfile - ([58bd79b](https://github.com/brewcoua/jb/commit/58bd79b00bf52658c94505616e7b5ec08bfa9372)) - Brewen Couaran
+- **(cargo)** set release profile with lto and strip - ([691d833](https://github.com/brewcoua/jb/commit/691d83319c2b2c258edc221a8ab2bc3a84b6bf9e)) - Brewen Couaran
 
 ---
 ## [1.2.1](https://github.com/brewcoua/jb/compare/v1.2.0..v1.2.1) - 2024-02-03
@@ -54,7 +54,6 @@ All notable changes to this project will be documented in this file. See [conven
 
 ### Miscellaneous Chores
 
-- **(cargo)** update meta with license and repo - ([468fbaa](https://github.com/brewcoua/jb/commit/468fbaa2d35a82695e0ec1cee3b73b64ffdeb762)) - Brewen Couaran
 - bump dependencies - ([66fd3f7](https://github.com/brewcoua/jb/commit/66fd3f76bc006a1c5eebc7c8163dba4744ee8341)) - Brewen Couaran
 - bump dependencies - ([faa202e](https://github.com/brewcoua/jb/commit/faa202e366b074ecd048863655d570f61ab53a1b)) - Brewen Couaran
 - bump version to 1.1.0 - ([ca3dc1e](https://github.com/brewcoua/jb/commit/ca3dc1ea5f9f9d01d50425c8edf6f86ec39f803c)) - brewcoua
