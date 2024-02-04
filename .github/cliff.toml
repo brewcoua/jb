@@ -72,6 +72,7 @@ commit_parsers = [
     { message = "^test", group = "Tests" },
     { message = "^chore\\(version\\):", skip = true },
     { message = "^chore\\(clippy\\):", skip = true },
+    { message = "^chore\\(cargo\\):", skip = true },
     { message = "^chore", group = "Miscellaneous Chores" },
     { message = "^build", skip = true },
     { message = "^ci", skip = true },
