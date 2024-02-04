@@ -13,19 +13,25 @@ pub mod build;
 pub mod release;
 pub mod action;
 
+pub use action::*;
+pub use kind::Kind;
+pub use version::Version;
+pub use build::Build;
+pub use release::Type;
+
 /// A tool.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[readonly::make]
 pub struct Tool {
-    pub kind: kind::Kind,
-    pub version: Option<version::Version>,
-    pub build: Option<build::Build>,
-    pub release: Option<release::Type>,
+    pub kind: Kind,
+    pub version: Option<Version>,
+    pub build: Option<Build>,
+    pub release: Option<Type>,
 }
 
 impl Tool {
     #[must_use]
-    pub fn new(kind: kind::Kind, version: Option<version::Version>, build: Option<build::Build>, release: Option<release::Type>) -> Self {
+    pub fn new(kind: Kind, version: Option<Version>, build: Option<Build>, release: Option<Type>) -> Self {
         Self { kind, version, build, release }
     }
 
@@ -60,6 +66,52 @@ impl Tool {
         Variable::ToolsDirectory.get::<std::path::PathBuf>()
             .join(self.as_str())
     }
+
+    /// Returns whether the tool matches another tool.
+    ///
+    /// This is used in arguments to match multiple tools.
+    #[must_use]
+    pub fn matched(&self, other: &Self) -> bool {
+        // Match the kind
+        if self.kind != other.kind {
+            return false;
+        }
+
+        // Match the version
+        if let Some(version) = &self.version {
+            if let Some(other_version) = &other.version {
+                if !version.matched(other_version) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // Match the build
+        if let Some(build) = &self.build {
+            if let Some(other_build) = &other.build {
+                if !build.matched(other_build) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // Match the release
+        if let Some(release) = &self.release {
+            if let Some(other_release) = &other.release {
+                if release != other_release {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 impl Display for Tool {
@@ -81,7 +133,7 @@ impl FromStr for Tool {
         let kind = parts
             .next()
             .ok_or_else(|| anyhow::anyhow!("No tool kind found"))?
-            .parse::<kind::Kind>()
+            .parse::<Kind>()
             .with_context(|| "Failed to parse tool kind")?;
 
         let mut version = None;
@@ -89,18 +141,18 @@ impl FromStr for Tool {
         let mut release = None;
 
         // First try parsing a version
-        if let Ok(v) = parts.next().map(|v| v.parse::<version::Version>()) {
-            version = v.ok();
+        if let Some(Ok(v)) = parts.next().map(|v| v.parse::<Version>()) {
+            version = Some(v);
         }
 
         // Then try parsing a build
-        if let Ok(b) = parts.next().map(|b| b.parse::<build::Build>()) {
-            build = b.ok();
+        if let Some(Ok(b)) = parts.next().map(|b| b.parse::<Build>()) {
+            build = Some(b);
         }
 
         // Then try parsing a release type
-        if let Ok(r) = parts.next().map(|r| r.parse::<release::Type>()) {
-            release = r.ok();
+        if let Some(Ok(r)) = parts.next().map(|r| r.parse::<Type>()) {
+            release = Some(r);
         }
 
         Ok(Self::new(kind, version, build, release))

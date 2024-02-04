@@ -3,7 +3,7 @@ use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-use jb_lib::env::Variable;
+use jb::env::Variable;
 
 mod cmds;
 
@@ -11,7 +11,8 @@ fn main() {
     let cli = cmds::cli();
     let matches = cli.get_matches();
 
-    setup_logger(&matches);
+    update_env(&matches);
+    setup_logger();
 
     match cmds::dispatch(matches.subcommand()) {
         Ok(()) => {}
@@ -22,11 +23,37 @@ fn main() {
     }
 }
 
-fn setup_logger(matches: &clap::ArgMatches) {
-    let verbose = matches.get_flag("verbose");
-    let env_verbose = Variable::get::<String>(Variable::Verbose).parse::<bool>().unwrap_or(false);
+fn update_env(matches: &clap::ArgMatches) {
+    let notify = matches.get_flag("notify");
+    if notify {
+        Variable::Notify.set("true");
+    }
 
-    let log_level = if verbose || env_verbose {
+    let tools_dir = matches.get_one::<std::path::PathBuf>("tools-dir");
+    if let Some(tools_dir) = tools_dir {
+        Variable::ToolsDirectory.set(tools_dir.to_str().unwrap().to_string());
+    }
+
+    let icons_dir = matches.get_one::<std::path::PathBuf>("icons-dir");
+    if let Some(icons_dir) = icons_dir {
+        Variable::IconsDirectory.set(icons_dir.to_str().unwrap().to_string());
+    }
+
+    let bin_dir = matches.get_one::<std::path::PathBuf>("bin-dir");
+    if let Some(bin_dir) = bin_dir {
+        Variable::BinariesDirectory.set(bin_dir.to_str().unwrap().to_string());
+    }
+
+    let verbose = matches.get_flag("verbose");
+    if verbose {
+        Variable::Verbose.set("true");
+    }
+}
+
+fn setup_logger() {
+    let verbose = Variable::Verbose.get::<String>().parse::<bool>().unwrap_or(false);
+
+    let log_level = if verbose {
         LevelFilter::DEBUG
     } else {
         LevelFilter::INFO

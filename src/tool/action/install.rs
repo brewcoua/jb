@@ -9,12 +9,13 @@ use crate::parse;
 use crate::tool::Tool;
 
 pub trait Install {
-    fn is_installed(&self) -> bool;
-    fn install(&self) -> anyhow::Result<()>;
+    fn is_installed(&self) -> anyhow::Result<bool>;
+    fn install(&mut self) -> anyhow::Result<()>;
+    fn uninstall(&self) -> anyhow::Result<()>;
 }
 
 impl Install for Tool {
-    fn is_installed(&self) -> bool {
+    fn is_installed(&self) -> anyhow::Result<bool> {
         let span = tracing::debug_span!("is_installed", tool = %self);
         let _enter = span.enter();
 
@@ -22,8 +23,10 @@ impl Install for Tool {
 
         Tool::list_kind(self.kind)
             .with_context(|| format!("Failed to list installed tools for {}", self.kind))?
-            .map(|tool| tool.as_str())
-            .contains(&self.as_str())
+            .iter()
+            .any(|tool| self.matched(tool))
+            .then(|| true)
+            .ok_or_else(|| anyhow::anyhow!("Failed to check if installed"))
     }
 
     fn install(&mut self) -> anyhow::Result<()> {
@@ -38,7 +41,8 @@ impl Install for Tool {
         self.build = Some(result.tool.build.unwrap());
         self.release = Some(result.tool.release.unwrap());
 
-        if self.is_installed() {
+        let installed = self.is_installed()?;
+        if installed {
             tracing::warn!("{} is already installed", self.as_str());
             return Ok(());
         }
@@ -90,6 +94,29 @@ impl Install for Tool {
                 Err(e)
             }
         }
+    }
+
+    fn uninstall(&self) -> anyhow::Result<()> {
+        let span = tracing::info_span!("uninstall", tool = self.as_str());
+        let _enter = span.enter();
+
+        let installed = self.is_installed()?;
+        if !installed {
+            tracing::warn!("{} is not installed", self.as_str());
+            return Ok(());
+        }
+
+        tracing::info!("Unlinking {}", self.as_str());
+        self.unlink()?;
+
+        let tool_directory = self.as_path();
+        tracing::info!("Removing {}", tool_directory.display());
+        std::fs::remove_dir_all(&tool_directory)
+            .with_context(|| format!("Failed to remove {}", tool_directory.display()))?;
+
+        tracing::info!("Uninstalled {}", self.as_str());
+
+        Ok(())
     }
 }
 

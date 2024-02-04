@@ -8,3 +8,5 @@ mod list;
 mod link;
 
 pub use install::Install;
+pub use list::List;
+pub use link::Link;

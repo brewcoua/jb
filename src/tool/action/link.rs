@@ -2,7 +2,7 @@
 //!
 //! This module provides the ability to link and unlink tools, which is useful for setting up the PATH environment variable.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::Context;
 use super::list::List;
 use crate::env::Variable;
@@ -16,14 +16,14 @@ pub trait Link {
 
 impl Link for Tool {
     fn is_linked(&self) -> bool {
-        let span = tracing::debug_span!("is_linked", tool = %self);
+        let span = tracing::debug_span!("is_linked", tool = self.as_str());
         let _enter = span.enter();
 
-        let tool_directory = Variable::ToolsDirectory.get::<Path>()
+        let tool_directory = Variable::ToolsDirectory.get::<PathBuf>()
             .join(self.kind.as_str());
 
         let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
-        let binaries_directory = Variable::BinariesDirectory.get::<Path>();
+        let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
 
 
         // Check if linked binary is the right one (not any other version or simply doesn't exist)
@@ -36,7 +36,7 @@ impl Link for Tool {
 
 
         let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
-        let icons_directory = Variable::IconsDirectory.get::<Path>();
+        let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         // Check if linked icon is the right one (not any other version or simply doesn't exist)
         let icon = icons_directory.join(self.kind.as_str());
@@ -58,11 +58,11 @@ impl Link for Tool {
             return Ok(());
         }
 
-        let tool_directory = Variable::ToolsDirectory.get::<Path>()
+        let tool_directory = Variable::ToolsDirectory.get::<PathBuf>()
             .join(self.kind.as_str());
 
         let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
-        let binaries_directory = Variable::BinariesDirectory.get::<Path>();
+        let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
 
         if !binaries_directory.exists() {
             std::fs::create_dir_all(&binaries_directory)?;
@@ -74,7 +74,7 @@ impl Link for Tool {
 
         let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
 
-        let icons_directory = Variable::IconsDirectory.get::<Path>();
+        let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         if !icons_directory.exists() {
             std::fs::create_dir_all(&icons_directory)?;
@@ -96,13 +96,13 @@ impl Link for Tool {
             return Ok(());
         }
 
-        let binaries_directory = Variable::BinariesDirectory.get::<Path>();
+        let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
 
         std::fs::remove_file(binaries_directory.join(self.kind.as_str()))?;
 
         tracing::debug!("Unlinked binary");
 
-        let icons_directory = Variable::IconsDirectory.get::<Path>();
+        let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         std::fs::remove_file(icons_directory.join(self.kind.as_str()))?;
 

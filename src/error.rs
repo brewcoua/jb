@@ -67,3 +67,31 @@ impl Default for Batch {
         Self::new()
     }
 }
+
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {
+        $crate::error::Batch::from(anyhow::anyhow!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! error_with {
+    ($batch:expr, $($arg:tt)*) => {
+        $batch.add(anyhow::anyhow!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! bail {
+    ($($arg:tt)*) => {
+        return Err($crate::error::Batch::from(anyhow::anyhow!($($arg)*)))
+    };
+}
+
+#[macro_export]
+macro_rules! bail_with {
+    ($err:expr, $($arg:tt)*) => {
+        return Err($crate::error::Batch::from($err.context(format!($($arg)*))))
+    };
+}

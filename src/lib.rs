@@ -8,8 +8,6 @@ pub mod env;
 pub mod error;
 pub mod tool;
 pub mod parse;
-mod util;
 
-
-pub use error::Result;
-pub use tool_old::Tool;
+pub use error::{Batch, Result};
+pub use tool::Tool;

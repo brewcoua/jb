@@ -3,7 +3,8 @@ use std::thread;
 use anyhow::anyhow;
 
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool_old::Tool, error::{Result, Batch}};
+use jb::{Tool, Result, Batch};
+use jb::tool::{Install,List};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -13,12 +14,6 @@ pub(crate) fn command() -> Command {
                 .required(true)
                 .value_parser(value_parser!(Tool))
                 .num_args(1..=10),
-        )
-        .arg(
-            arg!(-d --directory <PATH>)
-                .help("The directory to install the tool to")
-                .value_parser(value_parser!(std::path::PathBuf))
-                .required(false),
         )
         .arg(
             arg!(--clean)
@@ -31,48 +26,39 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools = args
         .get_many::<Tool>("tools")
         .expect("Could not find argument tools");
-    let directory: Option<&std::path::PathBuf> = args.get_one::<std::path::PathBuf>("directory");
 
     let clean = Arc::new(args.get_flag("clean"));
 
     let handles: Vec<_> = tools
         .map(|tool| {
             let mut tool = tool.clone();
-            if directory.is_some() {
-                tool = tool.with_directory(directory.unwrap().clone());
-            }
 
             let clean = Arc::clone(&clean);
 
             thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.to_string());
+                let span = tracing::info_span!("task", tool = tool.as_str());
                 let _guard = span.enter();
 
                 tool.install()?;
 
-                tracing::info!("Installed {}", tool.as_path().display().to_string());
+                tracing::info!("Installed {}", tool.as_str());
 
                 if *clean {
                     // Clean up old versions
-                    let span = tracing::info_span!("cleanup", tool = tool.to_string());
+                    let span = tracing::info_span!("cleanup");
                     let _guard = span.enter();
 
-                    tracing::info!("Cleaning up old versions of {}", tool.kind.as_str());
+                    tracing::info!("Cleaning up older versions of {}", tool.kind);
 
-                    let installed_tools = Tool::list(tool.directory.clone())?
-                        .into_iter()
-                        .filter(|t| t.kind == tool.kind && t.version != tool.version)
-                        .collect::<Vec<Tool>>();
+                    let mut installed_tools = Tool::list_kind(tool.kind)?;
+                    installed_tools.sort_by(|a, b| b.version.cmp(&a.version));
+                    installed_tools.retain(|t| t.version < tool.version);
 
                     for tool in installed_tools {
                         tool.uninstall()?;
-                        tracing::debug!(
-                            "Uninstalled {}",
-                            tool.as_path().display().to_string()
-                        );
                     }
 
-                    tracing::info!("Cleaned up old versions of {}", tool.kind.as_str());
+                    tracing::info!("Cleaned up older versions of {}", tool.kind);
                 }
 
                 Ok(())

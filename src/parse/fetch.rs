@@ -35,8 +35,8 @@ pub fn release(tool: &Tool) -> anyhow::Result<Fetch> {
     } else {
         releases.iter()
             .find(|release| {
-                if (tool.version.is_some() && release.version != tool.version.unwrap()) ||
-                    (tool.build.is_some() && release.build != tool.build.unwrap()) {
+                if (tool.version.is_some() && &release.version != tool.version.as_ref().unwrap()) ||
+                    (tool.build.is_some() && &release.build != tool.build.as_ref().unwrap()) {
                     return false;
                 }
                 true

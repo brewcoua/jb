@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use std::fmt::Display;
+use serde::Deserialize;
 use super::kind::Kind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -55,6 +56,16 @@ impl FromStr for Type {
             "preview" => Ok(Self::Preview),
             _ => anyhow::bail!("Failed to parse release type"),
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for Type {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Self::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 

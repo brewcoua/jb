@@ -1,6 +1,7 @@
 use std::thread;
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool_old::{Tool, release}, error::{Result, Batch}};
+use jb::{Tool, Result, Batch, bail_with, error_with};
+use jb::tool::{Install, List};
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")
@@ -22,12 +23,11 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let args_tools = args
         .get_many::<Tool>("tools")
         .expect("Could not find argument tool");
-    let directory = args.get_one::<std::path::PathBuf>("directory");
 
     let mut tools: Vec<Tool> = Vec::new();
-    let installed_tools = match Tool::list(directory.cloned()) {
+    let installed_tools = match Tool::list() {
         Ok(tools) => tools,
-        Err(e) => return Err(Batch::from(e)),
+        Err(e) => bail_with!(e, "Could not list installed tools"),
     };
 
     let mut error_batch = Batch::new();
@@ -40,47 +40,18 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 .collect::<Vec<Tool>>();
 
             if installed_tools.is_empty() {
-                error_batch.add(anyhow::anyhow!("Could not find any installed versions of {}", tool.kind.as_str()));
+                error_with!(error_batch, "Could not find any installed versions of {tool}");
             } else {
                 tools.extend(installed_tools);
             }
         } else {
-            let version = tool.version.as_ref().unwrap();
-
-            if version.is_complete() {
-                tools.push(tool.clone());
-                continue;
-            }
-
-            // Match against the version
             let installed_tools = installed_tools.clone()
                 .into_iter()
-                .filter(|t| {
-                    if t.kind != tool.kind || t.version.is_none() {
-                        return false;
-                    }
-
-                    let t = t.version.unwrap();
-
-                    if version.major.is_some() && (t.major.is_none() || t.major.unwrap() != version.major.unwrap()) {
-                        return false;
-                    }
-                    if version.minor.is_some() && (t.minor.is_none() || t.minor.unwrap() != version.minor.unwrap()) {
-                        return false;
-                    }
-                    if version.patch.is_some() && (t.patch.is_none() || t.patch.unwrap() != version.patch.unwrap()) {
-                        return false;
-                    }
-                    if version.release != release::Type::Release && (t.release != version.release) {
-                        return false;
-                    }
-
-                    true
-                })
+                .filter(|t| tool.matched(t))
                 .collect::<Vec<Tool>>();
 
             if installed_tools.is_empty() {
-                error_batch.add(anyhow::anyhow!("Could not find any installed versions of {tool}"));
+                error_with!(error_batch, "Could not find any installed versions of {tool}");
             } else {
                 tools.extend(installed_tools);
             }
@@ -96,21 +67,13 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let handles: Vec<_> = tools
         .iter()
         .map(|tool| {
-            let mut tool = tool.clone();
-            if directory.is_some() {
-                tool = tool.with_directory(directory.cloned().unwrap());
-            }
+            let tool = tool.clone();
 
             thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.to_string());
+                let span = tracing::info_span!("task", tool = tool.as_str());
                 let _guard = span.enter();
 
                 tool.uninstall()?;
-
-                tracing::info!(
-                    "Uninstalled {tool} from {}",
-                    tool.as_path().display(),
-                );
 
                 Ok(())
             })
@@ -123,7 +86,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         match result {
             Ok(Ok(())) => {}
             Ok(Err(e)) => error_batch.add(e),
-            Err(e) => error_batch.add(anyhow::anyhow!("Thread panicked: {e:?}")),
+            Err(e) => error_with!(error_batch, "Thread panicked: {e:?}"),
         }
     }
 

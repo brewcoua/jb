@@ -5,6 +5,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 use anyhow::Context;
+use serde::Deserialize;
 
 /// A build version number
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -20,11 +21,34 @@ impl Build {
     pub fn new(major: u16, minor: u16, patch: Option<u16>) -> Self {
         Self { major, minor, patch }
     }
+
+    /// Returns whether the build version matches another build version.
+    ///
+    /// This will return `true` if the major and minor versions match and the patch version matches if it is present.
+    #[must_use]
+    pub fn matched(&self, other: &Self) -> bool {
+        if self.major != other.major {
+            return false;
+        }
+        if self.minor != other.minor {
+            return false;
+        }
+        if self.patch.is_some() {
+            if other.patch.is_none() {
+                return false;
+            }
+            if self.patch.unwrap() != other.patch.unwrap() {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 impl Display for Build {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}{}", self.major, self.minor, self.patch.map_or("", |p| format!(".{}", p).as_str()))
+        write!(f, "{}.{}{}", self.major, self.minor, self.patch.map_or("".to_string(), |p| format!(".{}", p)))
     }
 }
 
@@ -55,5 +79,15 @@ impl FromStr for Build {
         } else {
             Ok(Self::new(major, minor, None))
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for Build {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Self::from_str(&s).map_err(serde::de::Error::custom)
     }
 }

@@ -1,7 +1,7 @@
 //! Module for handling defaults and environment variables.
 
 use std::env;
-use std::path::{Path,PathBuf};
+use std::path::PathBuf;
 use nix::unistd::Uid;
 
 #[derive(Debug, Clone, Copy)]
@@ -41,6 +41,14 @@ impl Variable {
         self.get_or(self.default::<T>())
     }
 
+    /// Set the value of the variable.
+    pub fn set<T>(&self, value: T)
+    where
+        T: Into<String>,
+    {
+        env::set_var(self.env(), value.into());
+    }
+
     /// Get the value of a variable.
     #[must_use]
     pub fn get_one<T>(var: Variable) -> T
@@ -48,6 +56,14 @@ impl Variable {
         T: From<String> + Send + Sync,
     {
         var.get_or(var.default::<T>())
+    }
+
+    /// Set the value of a variable.
+    pub fn set_one<T>(var: Variable, value: T)
+    where
+        T: Into<String>,
+    {
+        env::set_var(var.env(), value.into());
     }
 
     /// Get the value of a variable, or a default value if it is not set.
