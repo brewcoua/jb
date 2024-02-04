@@ -112,7 +112,10 @@ jobs:
       - name: Package
         # Make a tar.gz archive for each binary, named after the target
         run: |
+          ls -l dist # debug
           for f in dist/*; do
+            ls -l $f # debug
+            
             chmod +x $f/${{ env.BINARY_NAME }}
             tar -czf $f.tar.gz -C $f ${{ env.BINARY_NAME }}
             rm -rf $f
