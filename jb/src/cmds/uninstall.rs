@@ -1,6 +1,6 @@
 use std::thread;
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool::{Tool, release}, error::{Result, Batch}};
+use jb_lib::{tool_old::{Tool, release}, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")

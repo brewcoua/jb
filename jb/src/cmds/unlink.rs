@@ -1,6 +1,6 @@
 use clap::{arg, value_parser, Command};
 use colored::Colorize;
-use jb_lib::{tool::{Kind, Tool, Version},error::{Batch,Result}};
+use jb_lib::{tool_old::{Kind, Tool, Version}, error::{Batch, Result}};
 
 pub(crate) fn command() -> Command {
     Command::new("unlink")

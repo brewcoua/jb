@@ -1,12 +1,17 @@
-//! JetBrains tool kinds and parsing
+//! The tool kind.
 //!
-//! This module contains types and parsing for JetBrains tool kinds.
+//! The tool kind represents the tool among the `JetBrains` products.
 
-use std::fmt::Display;
+use std::cmp::Ordering;
 use std::str::FromStr;
 
-/// The tool kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+use super::release::Type;
+use clap::builder::PossibleValue;
+
+/// Tool kind
+///
+/// This enum does not contain any information. It only represents which kind of tool it is.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Kind {
     IntelliJIdeaUltimate,
     IntelliJIdeaCommunity,
@@ -16,7 +21,7 @@ pub enum Kind {
     GoLand,
     Rider,
     CLion,
-    CLionNova,
+    ClionNova,
     RustRover,
     WebStorm,
     RubyMine,
@@ -36,7 +41,7 @@ pub enum Kind {
 impl Kind {
     /// Returns a list of all tool kinds.
     ///
-    /// This is used for ordering and display purposes.
+    /// This is used for display purposes and to loop over all tool kinds.
     /// The list is static and does not require any allocations.
     #[must_use]
     pub fn list() -> &'static [Self] {
@@ -49,7 +54,7 @@ impl Kind {
             Self::GoLand,
             Self::Rider,
             Self::CLion,
-            Self::CLionNova,
+            Self::ClionNova,
             Self::RustRover,
             Self::WebStorm,
             Self::RubyMine,
@@ -66,55 +71,11 @@ impl Kind {
         ]
     }
 
-    /// Get the binary name for this tool kind.
+    /// Returns the code for this tool kind.
     ///
-    /// This is used to determine the binary name for a tool kind and symbolically link it to the correct binary.
+    /// This is used to fetch the releases for this tool from the `JetBrains` website.
     #[must_use]
-    pub fn binary(&self) -> &'static str {
-        match self {
-            Self::IntelliJIdeaUltimate | Self::IntelliJIdeaCommunity => "idea",
-            Self::PyCharmProfessional | Self::PyCharmCommunity => "pycharm",
-            Self::CLionNova => "clion",
-            _ => self.as_str(),
-        }
-    }
-
-    /// Get the tool kind as a string (e.g. "intellij-idea-ultimate", "pycharm-professional").
-    ///
-    /// This returns the same string as the `FromStr` implementation.
-    #[must_use]
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::IntelliJIdeaUltimate => "intellij-idea-ultimate",
-            Self::IntelliJIdeaCommunity => "intellij-idea-community",
-            Self::PyCharmProfessional => "pycharm-professional",
-            Self::PyCharmCommunity => "pycharm-community",
-            Self::PhpStorm => "phpstorm",
-            Self::GoLand => "goland",
-            Self::Rider => "rider",
-            Self::CLion => "clion",
-            Self::CLionNova => "clion-nova",
-            Self::RustRover => "rust-rover",
-            Self::WebStorm => "webstorm",
-            Self::RubyMine => "rubymine",
-            Self::DataGrip => "datagrip",
-            Self::DataSpell => "dataspell",
-            Self::Fleet => "fleet",
-            Self::Aqua => "aqua",
-            Self::Writerside => "writerside",
-            Self::DotMemory => "dotmemory",
-            Self::DotTrace => "dottrace",
-            Self::MPS => "mps",
-            Self::Space => "space",
-            Self::Gateway => "gateway",
-        }
-    }
-
-    /// Get the tool kind as a code (e.g. "IIU", "IIC").
-    ///
-    /// This is used to fetch releases from JetBrains' API.
-    #[must_use]
-    pub fn code(&self) -> &'static str {
+    pub fn as_code(&self) -> &str {
         match self {
             Self::IntelliJIdeaUltimate => "IIU",
             Self::IntelliJIdeaCommunity => "IIC",
@@ -124,7 +85,7 @@ impl Kind {
             Self::GoLand => "GO",
             Self::Rider => "RD",
             Self::CLion => "CL",
-            Self::CLionNova => "CLN",
+            Self::ClionNova => "CLN",
             Self::RustRover => "RR",
             Self::WebStorm => "WS",
             Self::RubyMine => "RM",
@@ -141,11 +102,45 @@ impl Kind {
             Self::Gateway => "GW",
         }
     }
-}
 
-impl Display for Kind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
+    /// Returns the string representation of this tool kind.
+    ///
+    /// This is used to determine the directory name for the tool as well as the arguments for the CLI.
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::IntelliJIdeaUltimate => "idea-ultimate",
+            Self::IntelliJIdeaCommunity => "idea-community",
+            Self::PyCharmProfessional => "pycharm-professional",
+            Self::PyCharmCommunity => "pycharm-community",
+            Self::PhpStorm => "phpstorm",
+            Self::GoLand => "goland",
+            Self::Rider => "rider",
+            Self::CLion => "clion",
+            Self::ClionNova => "clion-nova",
+            Self::RustRover => "rustrover",
+            Self::WebStorm => "webstorm",
+            Self::RubyMine => "rubymine",
+            Self::DataGrip => "datagrip",
+            Self::DataSpell => "dataspell",
+            Self::Fleet => "fleet",
+            Self::Aqua => "aqua",
+            Self::Writerside => "writerside",
+            Self::DotMemory => "dotmemory",
+            Self::DotTrace => "dottrace",
+            Self::MPS => "mps",
+
+            Self::Space => "space",
+            Self::Gateway => "gateway",
+        }
+    }
+
+    /// Returns the pretty name for this tool kind.
+    ///
+    /// This is used for display purposes.
+    #[must_use]
+    pub fn pretty(&self) -> &'static str {
+        match self {
             Self::IntelliJIdeaUltimate => "IntelliJ IDEA Ultimate",
             Self::IntelliJIdeaCommunity => "IntelliJ IDEA Community",
             Self::PyCharmProfessional => "PyCharm Professional",
@@ -154,7 +149,7 @@ impl Display for Kind {
             Self::GoLand => "GoLand",
             Self::Rider => "Rider",
             Self::CLion => "CLion",
-            Self::CLionNova => "CLion Nova",
+            Self::ClionNova => "CLion Nova",
             Self::RustRover => "RustRover",
             Self::WebStorm => "WebStorm",
             Self::RubyMine => "RubyMine",
@@ -166,9 +161,55 @@ impl Display for Kind {
             Self::DotMemory => "dotMemory",
             Self::DotTrace => "dotTrace",
             Self::MPS => "MPS",
+
             Self::Space => "Space",
             Self::Gateway => "Gateway",
-        })
+        }
+    }
+
+    /// Returns the source name for this tool kind.
+    ///
+    /// This is used to determine the binary name for the tool, as some tools may have the same binary name while being different tools. (e.g. `idea` for `IntelliJ IDEA Ultimate` and `IntelliJ IDEA Community`)
+    #[must_use]
+    pub fn src_name(&self) -> &str {
+        match self {
+            Self::IntelliJIdeaUltimate | Self::IntelliJIdeaCommunity => "idea",
+            Self::PyCharmCommunity | Self::PyCharmProfessional => "pycharm",
+            Self::ClionNova => "clion",
+            _ => self.as_str(),
+        }
+    }
+
+    /// Returns the default release type for this tool kind.
+    ///
+    /// This is used for tools that are not yet officially released.
+    ///
+    /// For example, the default release type for `Kind::Fleet` is `Type::Preview`.
+    #[must_use]
+    pub fn default_type(&self) -> Type {
+        match self {
+            Self::Fleet | Self::Aqua => Type::Preview,
+            Self::Writerside | Self::ClionNova | Self::RustRover => Type::EAP,
+            _ => Type::Release,
+        }
+    }
+
+    /// Returns the tool kind by matching the beginning of the string, ignoring the rest.
+    ///
+    /// This is used to parse the tool from the CLI arguments, as it may be parsed alongside the version.
+    /// # Errors
+    /// This function returns an error if the string does not match any tool kind.
+    pub fn from_str_lossy(s: &str) -> anyhow::Result<Self> {
+        // Sort it by length to ensure that the longest match is found first
+        let mut list = Self::list().to_vec();
+        list.sort_by_key(|b| std::cmp::Reverse(b.as_str().len()));
+
+        for kind in list {
+            if s.starts_with(kind.as_str()) {
+                return Ok(kind);
+            }
+        }
+        anyhow::bail!("Unknown tool kind: {}", s)
     }
 }
 
@@ -177,8 +218,8 @@ impl FromStr for Kind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "intellij-idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
-            "intellij-idea-community" => Ok(Self::IntelliJIdeaCommunity),
+            "idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
+            "idea-community" => Ok(Self::IntelliJIdeaCommunity),
             "pycharm-professional" => Ok(Self::PyCharmProfessional),
             "pycharm-community" => Ok(Self::PyCharmCommunity),
             "phpstorm" => Ok(Self::PhpStorm),
@@ -186,7 +227,7 @@ impl FromStr for Kind {
             "rider" => Ok(Self::Rider),
             "clion" => Ok(Self::CLion),
             "clion-nova" => Ok(Self::ClionNova),
-            "rust-rover" => Ok(Self::RustRover),
+            "rustrover" => Ok(Self::RustRover),
             "webstorm" => Ok(Self::WebStorm),
             "rubymine" => Ok(Self::RubyMine),
             "datagrip" => Ok(Self::DataGrip),
@@ -199,20 +240,19 @@ impl FromStr for Kind {
             "mps" => Ok(Self::MPS),
             "space" => Ok(Self::Space),
             "gateway" => Ok(Self::Gateway),
-            _ => anyhow::bail!("Unknown tool kind: {}", s),
+            _ => anyhow::bail!("Unknown tool kind: {}", s)
         }
     }
 }
 
 impl Ord for Kind {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        Self::list().iter().position(|kind| kind == self)
-            .cmp(&Self::list().iter().position(|kind| kind == other))
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_str().cmp(other.as_str())
     }
 }
 
 impl PartialOrd for Kind {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }

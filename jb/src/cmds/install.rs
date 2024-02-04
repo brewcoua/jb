@@ -3,7 +3,7 @@ use std::thread;
 use anyhow::anyhow;
 
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool::Tool, error::{Result, Batch}};
+use jb_lib::{tool_old::Tool, error::{Result, Batch}};
 
 pub(crate) fn command() -> Command {
     Command::new("install")

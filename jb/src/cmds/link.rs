@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, Command};
-use jb_lib::{tool::Tool,error::{Batch,Result}};
+use jb_lib::{tool_old::Tool, error::{Batch, Result}};
 
 pub(crate) fn command() -> Command {
     Command::new("link")
