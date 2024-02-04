@@ -193,6 +193,20 @@ impl Kind {
             _ => Type::Release,
         }
     }
+
+    /// Returns the tool kind by matching the beginning of the string, ignoring the rest.
+    ///
+    /// This is used to parse the tool from the CLI arguments, as it may be parsed alongside the version.
+    /// # Errors
+    /// This function returns an error if the string does not match any tool kind.
+    pub fn from_str_lossy(s: &str) -> anyhow::Result<Self> {
+        for kind in Self::list() {
+            if s.starts_with(kind.as_str()) {
+                return Ok(*kind);
+            }
+        }
+        anyhow::bail!("Unknown tool kind: {}", s)
+    }
 }
 
 impl clap::ValueEnum for Kind {

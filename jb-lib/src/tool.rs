@@ -607,16 +607,14 @@ impl FromStr for Tool {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split('-').collect();
+        let kind = Kind::from_str_lossy(s)?;
+        let s = s.strip_prefix(kind.as_str()).unwrap_or(s);
 
-        let kind = Kind::from_str(parts[0])?;
-
-        if parts.len() < 2 {
+        if s.is_empty() {
             return Ok(Tool::new(kind));
         }
 
-        let parts = parts[1..].join("-");
-        let version = Version::from_str(parts.as_str())?;
+        let version = Version::from_str(s.trim_start_matches('-'))?;
         Ok(Tool::new(kind).with_version(version))
     }
 }
