@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.4](https://github.com/brewcoua/jb/compare/v1.2.3..1.2.4) - 2024-02-04
+## [1.2.5](https://github.com/brewcoua/jb/compare/v1.2.4..1.2.5) - 2024-02-04
+
+### Bug Fixes
+
+- **(tool)** take longest match first - ([06c67df](https://github.com/brewcoua/jb/commit/06c67df651706d638e25a04ff282f805aa969b1d)) - Brewen Couaran
+
+---
+## [1.2.4](https://github.com/brewcoua/jb/compare/v1.2.3..v1.2.4) - 2024-02-04
 
 ### Bug Fixes
 
