@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.3](https://github.com/brewcoua/jb/compare/v1.2.2..1.2.3) - 2024-02-04
+## [1.2.4](https://github.com/brewcoua/jb/compare/v1.2.3..1.2.4) - 2024-02-04
+
+### Bug Fixes
+
+- **(tool)** kind parsing error on tool names with hyphens - ([6eee164](https://github.com/brewcoua/jb/commit/6eee16427940708930a724474e6324f0aba773ca)) - Brewen Couaran
+
+---
+## [1.2.3](https://github.com/brewcoua/jb/compare/v1.2.2..v1.2.3) - 2024-02-04
 
 ### Bug Fixes
 
