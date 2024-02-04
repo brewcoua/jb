@@ -470,7 +470,7 @@
     </span><span class="kw">pub fn </span>from_str_lossy(s: <span class="kw-2">&amp;</span>str) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
         <span class="comment">// Sort it by length to ensure that the longest match is found first
         </span><span class="kw">let </span><span class="kw-2">mut </span>list = <span class="self">Self</span>::list().to_vec();
-        list.sort_by(|a, b| b.as_str().len().cmp(<span class="kw-2">&amp;</span>a.as_str().len()));
+        list.sort_by_key(|b| std::cmp::Reverse(b.as_str().len()));
 
         <span class="kw">for </span>kind <span class="kw">in </span>list {
             <span class="kw">if </span>s.starts_with(kind.as_str()) {
