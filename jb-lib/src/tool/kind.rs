@@ -202,7 +202,7 @@ impl Kind {
     pub fn from_str_lossy(s: &str) -> anyhow::Result<Self> {
         // Sort it by length to ensure that the longest match is found first
         let mut list = Self::list().to_vec();
-        list.sort_by(|a, b| b.as_str().len().cmp(&a.as_str().len()));
+        list.sort_by_key(|b| std::cmp::Reverse(b.as_str().len()));
 
         for kind in list {
             if s.starts_with(kind.as_str()) {
