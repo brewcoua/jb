@@ -52,10 +52,6 @@ jobs:
       - name: Build
         run: cross build --release --target ${{ matrix.arch }}-${{ matrix.distrib }}
 
-      - name: Strip
-        # Attempt to strip the binary, but don't fail if it doesn't work (since it's not available on all platforms)
-        run: strip target/${{ matrix.arch }}-${{ matrix.distrib }}/release/${{ env.BINARY_NAME }} || true
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

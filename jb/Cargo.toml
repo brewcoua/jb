@@ -1,10 +1,18 @@
 [package]
 name = "jb"
-version = "1.2.2"
+description = "A simple CLI to manage JetBrains tools"
+authors = ["Brewen Couaran <contact@brewen.dev>"]
+categories = ["command-line-utilities"]
 edition = "2021"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/brewcoua/jb"
+rust-version = "1.75.0"
 readme = "../README.md"
+homepage = "https://github.com/brewcoua/jb"
+repository = "https://github.com/brewcoua/jb"
+license = "MIT OR Apache-2.0"
+version = "1.2.2"
+
+[[bin]]
+name = "jb"
 
 [dependencies]
 jb-lib = { path = "../jb-lib" }
