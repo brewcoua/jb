@@ -1,10 +1,12 @@
-//! # jb-lib
-//! This is a library crate for `JetBrains` tooling.
+//! # JetBrains CLI
+//!
+//! This crate is made to provide a simple CLI for JetBrains tools.
 
 #[cfg(not(target_os = "linux"))]
 compile_error!("This crate only supports Linux");
 
 pub mod env;
+pub mod log;
 pub mod error;
 pub mod tool;
 pub mod api;

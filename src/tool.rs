@@ -4,7 +4,6 @@
 
 use std::fmt::Display;
 use std::str::FromStr;
-use std::io::IsTerminal;
 use anyhow::Context;
 use crate::env::Variable;
 
@@ -143,16 +142,18 @@ impl Tool {
         // Sort by version, build, and release
         matching.sort();
 
-        if std::io::stdout().is_terminal() {
-            // Prompt the user to select a tool
-            let selected = inquire::Select::new("Select a tool", matching)
-                .with_help_message("Use the arrow keys to navigate, and press Enter to select")
-                .prompt()?;
+        let result = dialoguer::Select::new()
+            .with_prompt("Select a tool")
+            .items(&matching)
+            .interact();
 
-            return Ok(selected);
+        match result {
+            Ok(tool) => Ok(matching[tool].clone()),
+            Err(_) => {
+                tracing::warn!("Failed to prompt for tool, defaulting...");
+                Ok(matching[0].clone())
+            }
         }
-
-        Ok(matching[0].clone())
     }
 }
 

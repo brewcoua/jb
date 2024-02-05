@@ -64,7 +64,7 @@ impl Display for Batch {
         if self.errors.is_empty() {
             return write!(f, "No errors occurred");
         } else if self.errors.len() == 1 {
-            return write!(f, "{:?}", self.first());
+            return write!(f, "{:?}", self.first().unwrap());
         }
 
         writeln!(

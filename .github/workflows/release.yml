@@ -47,7 +47,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: cargo-bins/cargo-binstall@main
-      - run: cargo binstall -y cross --git https://github.com/cross-rs/cross
+      - run: |
+          cargo binstall -y cross --git https://github.com/cross-rs/cross
+          cargo binstall -y git-cliff
+
+      - name: Bump version
+        run: |
+          sed -i "0,/^version =/s/^version =.*/version = \"${{ inputs.bumped_version }}\"/" Cargo.toml
 
       - name: Build
         run: cross build --release --target ${{ matrix.arch }}-${{ matrix.distrib }}
