@@ -26,7 +26,7 @@ pub(crate) fn dispatch() -> Result<()> {
     let checkmark = char::from_u32(0x2714).unwrap().to_string();
     let cross = char::from_u32(0x2718).unwrap().to_string();
 
-    for tool in installed_tools {
+    for tool in &installed_tools {
         let linked = tool.is_linked();
 
         let icon = if linked {
@@ -67,6 +67,20 @@ pub(crate) fn dispatch() -> Result<()> {
                 line.dimmed(),
             );
         }
+    }
+
+    if installed_tools.is_empty() {
+        println!(
+            "{}",
+            format!(
+                "{:<1} {:<30} {:<15} {:<15} {:<15}",
+                " ",
+                "Empty",
+                "Empty",
+                "Empty",
+                "Empty",
+            ).italic().dimmed(),
+        )
     }
 
     Ok(())
