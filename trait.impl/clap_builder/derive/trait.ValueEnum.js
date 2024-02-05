@@ -1,3 +1,0 @@
-(function() {var implementors = {
-"jb_lib":[["impl ValueEnum for <a class=\"enum\" href=\"jb_lib/tool/release/enum.Type.html\" title=\"enum jb_lib::tool::release::Type\">Type</a>"],["impl ValueEnum for <a class=\"enum\" href=\"jb_lib/tool/kind/enum.Kind.html\" title=\"enum jb_lib::tool::kind::Kind\">Kind</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

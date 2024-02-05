@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main","setup_logger"],"mod":["cmds"]};
+window.SIDEBAR_ITEMS = {"macro":["bail","bail_with","error","error_with"],"mod":["api","env","error","tool"]};

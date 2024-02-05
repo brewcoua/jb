@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["cli","dispatch"],"mod":["install","link","list","uninstall","unlink"]};
