@@ -2,7 +2,7 @@
 This is a simple, unofficial CLI for installing, updating and configuring JetBrains IDEs from the command line.
 
 ## Installation
-Either download the latest release from the `TODO` page or build it yourself using `cargo build --release`.
+Either download the latest release from the [releases](https://github.com/brewcoua/jb/releases) page or build it yourself using `cargo build --release`.
 
 ## Usage
 ```
@@ -10,12 +10,15 @@ USAGE:
     jb [FLAGS] [OPTIONS] [SUBCOMMAND]
 
 FLAGS:
-    -h, --help       Print help
-    -V, --version    Print version
-    -v, --verbose    Enable verbose logging
+    -h, --help                      Print help
+    -V, --version                   Print version
+    -v, --verbose                   Enable verbose logging (JB_VERBOSE)
+    -n, --notify                    Enable desktop notifications (enabled in non-tty)
 
 OPTIONS:
-    -d, --directory <directory>    Set the installation directory
+        --tools-dir <tools-dir>     The directory to install tools to (JB_TOOLS_DIR)
+        --icons-dir <icons-dir>     The directory to link icons to (JB_ICONS_DIR)
+        --bin-dir <bin-dir>         The directory to link binaries to (JB_BINARIES_DIR)
 
 SUBCOMMANDS:
     install    Install a JetBrains tool
@@ -23,14 +26,11 @@ SUBCOMMANDS:
     list       List installed JetBrains tools
     link       Link a JetBrains tool to the PATH
     unlink     Unlink a JetBrains tool from the PATH
+    update     Update the CLI
     help       Print help
 ```
 
-Some flags and options can be set using environment variables:
-- `JB_TOOLS_DIR` - The installation directory (can be overridden using the `-d` option) <br />
-(default: `$HOME/.local/share/jetbrains`)
-- `JB_VERBOSE` - Enable verbose logging (can be overridden using the `-v` flag)
-- `JB_LOG` - Set the log level (can be overridden using the `-v` flag)
+Some flags and options can be set using environment variables, which are listed [here](https://brewcoua.github.io/jb/jb/env/enum.Variable.html).
 
 ## Disclaimer
 This is not an official JetBrains project.
