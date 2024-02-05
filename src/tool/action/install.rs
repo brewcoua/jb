@@ -9,8 +9,28 @@ use crate::api;
 use crate::tool::Tool;
 
 pub trait Install {
+    /// Returns whether the tool is installed.
+    ///
+    /// This will check if the tool's directory exists and if the tool is linked.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool's directory cannot be checked.
     fn is_installed(&self) -> anyhow::Result<bool> where Self: Sized;
+
+    /// Installs the tool.
+    ///
+    /// This will download the tool's release, extract it, and link the tool.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is already installed, or if the tool cannot be installed.
     fn install(&mut self) -> anyhow::Result<()> where Self: Sized;
+
+    /// Uninstalls the tool.
+    ///
+    /// This will remove the tool's directory and unlink the tool.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is not installed, or if the tool cannot be removed.
     fn uninstall(&self) -> anyhow::Result<()> where Self: Sized;
 }
 
@@ -172,11 +192,11 @@ fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> anyhow::
 
     let output = std::process::Command::new("tar")
         .arg("--strip-components")
-        .arg(format!("{}", strip))
+        .arg(format!("{strip}"))
         .arg("-xf")
-        .arg(&path)
+        .arg(path)
         .arg("-C")
-        .arg(&destination)
+        .arg(destination)
         .output()
         .with_context(|| format!("Failed to extract {}", path.display()))?;
 

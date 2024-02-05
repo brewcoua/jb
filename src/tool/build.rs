@@ -25,6 +25,9 @@ impl Build {
     /// Returns whether the build version matches another build version.
     ///
     /// This will return `true` if the major and minor versions match and the patch version matches if it is present.
+    ///
+    /// # Panics
+    /// This function will panic if the build version is not valid.
     #[must_use]
     pub fn matched(&self, other: &Self) -> bool {
         if self.major != other.major {
@@ -48,7 +51,7 @@ impl Build {
 
 impl Display for Build {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}{}", self.major, self.minor, self.patch.map_or("".to_string(), |p| format!(".{}", p)))
+        write!(f, "{}.{}{}", self.major, self.minor, self.patch.map_or(String::new(), |p| format!(".{p}")))
     }
 }
 
@@ -68,13 +71,13 @@ impl FromStr for Build {
             .next();
 
         let major = major.parse::<u16>()
-            .with_context(|| format!("Failed to parse major version: {}", major))?;
+            .with_context(|| format!("Failed to parse major version: {major}"))?;
         let minor = minor.parse::<u16>()
-            .with_context(|| format!("Failed to parse minor version: {}", minor))?;
+            .with_context(|| format!("Failed to parse minor version: {minor}"))?;
 
         if let Some(patch) = patch {
             let patch = patch.parse::<u16>()
-                .with_context(|| format!("Failed to parse patch version: {}", patch))?;
+                .with_context(|| format!("Failed to parse patch version: {patch}"))?;
             Ok(Self::new(major, minor, Some(patch)))
         } else {
             Ok(Self::new(major, minor, None))

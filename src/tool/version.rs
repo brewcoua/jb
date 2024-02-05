@@ -34,6 +34,9 @@ impl Version {
     /// Returns whether the version matches another version.
     ///
     /// This is used to check if a version matches another version, used in arguments and commands.
+    ///
+    /// # Panics
+    /// This function will panic if the versions are not valid.
     #[must_use]
     pub fn matched(&self, other: &Version) -> bool {
         if self.major != other.major {
@@ -52,7 +55,7 @@ impl Version {
 
 impl Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.major, self.minor.map_or("".to_string(), |m| format!(".{m}")))
+        write!(f, "{}{}", self.major, self.minor.map_or(String::new(), |m| format!(".{m}")))
     }
 }
 
@@ -77,7 +80,8 @@ impl FromStr for Version {
         // If it has 3 parts, both the major and minor version are present
         let minor = parts[2].parse::<u8>()
             .with_context(|| format!("Failed to parse minor version: {}", parts[2]))?;
-        return Ok(Self::new(major, Some(minor)));
+
+        Ok(Self::new(major, Some(minor)))
     }
 }
 
@@ -117,9 +121,9 @@ impl FromStr for Major {
             .ok_or_else(|| anyhow::anyhow!("No month found"))?;
 
         let year = year.parse::<u16>()
-            .with_context(|| format!("Failed to parse year: {}", year))?;
+            .with_context(|| format!("Failed to parse year: {year}"))?;
         let month = month.parse::<u8>()
-            .with_context(|| format!("Failed to parse month: {}", month))?;
+            .with_context(|| format!("Failed to parse month: {month}"))?;
 
         Ok(Self::new(year, month))
     }

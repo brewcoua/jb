@@ -9,7 +9,18 @@ use crate::env::Variable;
 use crate::tool::{Tool, kind::Kind};
 
 pub trait List {
+    /// Lists all tools.
+    ///
+    /// Any tools that are not valid will be skipped. (logged as debug)
+    ///
+    /// # Errors
+    /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
     fn list() -> anyhow::Result<Vec<Tool>> where Self: Sized;
+
+    /// Lists tools of a specific kind.
+    ///
+    /// # Errors
+    /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
     fn list_kind(kind: Kind) -> anyhow::Result<Vec<Tool>> where Self: Sized;
 }
 
@@ -28,12 +39,10 @@ impl List for Tool {
             if path.is_dir() {
                 let name= path.file_name().unwrap().to_str().unwrap();
 
-                match Tool::from_str(name) {
-                    Ok(tool) => tools.push(tool),
-                    Err(_) => {
-                        tracing::debug!("Skipping invalid tool directory: {}", name);
-                        continue;
-                    }
+                if let Ok(tool) = Tool::from_str(name) {
+                    tools.push(tool);
+                } else {
+                    tracing::debug!("Skipping invalid tool directory: {name}");
                 }
             }
         }

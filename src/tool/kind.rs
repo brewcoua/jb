@@ -1,6 +1,6 @@
-//! JetBrains tool kinds and parsing
+//! `JetBrains` tool kinds and parsing
 //!
-//! This module contains types and parsing for JetBrains tool kinds.
+//! This module contains types and parsing for `JetBrains` tool kinds.
 
 use std::fmt::Display;
 use std::str::FromStr;
@@ -112,7 +112,7 @@ impl Kind {
 
     /// Get the tool kind as a code (e.g. "IIU", "IIC").
     ///
-    /// This is used to fetch releases from JetBrains' API.
+    /// This is used to fetch releases from `JetBrains`' API.
     #[must_use]
     pub fn code(&self) -> &'static str {
         match self {

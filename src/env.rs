@@ -44,11 +44,7 @@ impl Variable {
     /// Get the value of the variable as a bool.
     #[must_use]
     pub fn get_bool(&self) -> bool {
-        match self.get::<String>().as_str() {
-            "true" | "1" => true,
-            "false" | "0" => false,
-            _ => false,
-        }
+        matches!(self.get::<String>().as_str(), "true" | "1")
     }
 
     /// Set the value of the variable.

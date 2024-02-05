@@ -1,8 +1,11 @@
+//! Module for deserializing responses from `JetBrains`' API.
+
 use std::collections::HashMap;
 use anyhow::bail;
 use serde::Deserialize;
 use crate::tool::{release, version::Version, build::Build};
 
+/// The deserialized release data from `JetBrains`' API.
 #[derive(Deserialize, Debug, Clone)]
 pub struct Release {
     #[serde(rename = "type")]
@@ -13,6 +16,7 @@ pub struct Release {
     pub downloads: HashMap<String, Download>,
 }
 
+/// The deserialized download data from `JetBrains`' API. (This is a subset of the `Release` struct)
 #[derive(Deserialize, Debug, Clone)]
 pub struct Download {
     pub link: String,
@@ -29,6 +33,12 @@ static ARCHITECTURES: &[&[&str]] = &[
 ];
 
 impl Release {
+    /// Returns the download for the current platform and architecture.
+    ///
+    /// # Errors
+    /// This function will return an error if the download is not found, or if the platform or architecture is not supported.
+    /// # Panics
+    /// This function will panic if the platform or architecture is not valid.
     pub fn download(&self) -> anyhow::Result<Download> {
         let platform = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();

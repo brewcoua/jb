@@ -42,7 +42,7 @@ impl Tool {
     pub fn as_str(&self) -> String {
         let mut s = self.kind.as_str().to_string();
         if self.version.is_some() || self.build.is_some() || self.release.is_some() {
-            s.push_str("_");
+            s.push('_');
         }
 
         if let Some(version) = &self.version {
@@ -62,6 +62,7 @@ impl Tool {
     ///
     /// This is used to convert the tool to a path for use in the filesystem.<br />
     /// **Note:** This does not check if the tool actually exists.
+    #[must_use]
     pub fn as_path(&self) -> std::path::PathBuf {
         Variable::ToolsDirectory.get::<std::path::PathBuf>()
             .join(self.as_str())
@@ -158,8 +159,8 @@ impl Display for Tool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}{}",
                self.kind,
-               if let Some(version) = &self.version { format!(" {}", version) } else { "".to_string() },
-               if let Some(build) = &self.build { format!(" {}", build) } else { "".to_string() },
+               if let Some(version) = &self.version { format!(" {version}") } else { String::new() },
+               if let Some(build) = &self.build { format!(" {build}") } else { String::new() },
         )
     }
 }
@@ -184,17 +185,17 @@ impl FromStr for Tool {
             let mut parts = part.split('-');
 
             // First try parsing a version
-            if let Some(Ok(v)) = parts.next().map(|v| v.parse::<Version>()) {
+            if let Some(Ok(v)) = parts.next().map(str::parse::<Version>) {
                 version = Some(v);
             }
 
             // Then try parsing a build
-            if let Some(Ok(b)) = parts.next().map(|b| b.parse::<Build>()) {
+            if let Some(Ok(b)) = parts.next().map(str::parse::<Build>) {
                 build = Some(b);
             }
 
             // Then try parsing a release type
-            if let Some(Ok(r)) = parts.next().map(|r| r.parse::<Type>()) {
+            if let Some(Ok(r)) = parts.next().map(str::parse::<Type>) {
                 release = Some(r);
             }
         }

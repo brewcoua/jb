@@ -9,8 +9,24 @@ use crate::env::Variable;
 use crate::tool::Tool;
 
 pub trait Link {
+    /// Returns whether the tool is linked.
     fn is_linked(&self) -> bool where Self: Sized;
+
+    /// Links the tool.
+    ///
+    /// This creates a symlink to the tool's binary and icon in the PATH and icons directory, respectively.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is already linked, or if the symlinks fail.
     fn link(&self) -> anyhow::Result<()> where Self: Sized;
+
+    /// Unlinks the tool.
+    ///
+    /// This removes the symlink to the tool's binary and icon in the PATH and icons directory, respectively.
+    /// It will also try to link an alternative version if one is available (with the latest version taking priority).
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is not linked, or if the symlinks fail.
     fn unlink(&self) -> anyhow::Result<()> where Self: Sized;
 }
 
@@ -68,7 +84,7 @@ impl Link for Tool {
             std::fs::create_dir_all(&binaries_directory)?;
         }
 
-        symlink(&binary_path, binaries_directory.join(self.kind.as_str()))?;
+        symlink(binary_path, binaries_directory.join(self.kind.as_str()))?;
 
         tracing::debug!("Linked binary");
 
@@ -80,7 +96,7 @@ impl Link for Tool {
             std::fs::create_dir_all(&icons_directory)?;
         }
 
-        symlink(&icon_path, icons_directory.join(self.kind.as_str()))?;
+        symlink(icon_path, icons_directory.join(self.kind.as_str()))?;
 
         tracing::debug!("Linked icon");
 

@@ -57,10 +57,7 @@ pub(crate) fn dispatch() -> Result<()> {
         );
 
         if linked {
-            println!(
-                "{}",
-                line,
-            );
+            println!("{line}");
         } else {
             println!(
                 "{}",
