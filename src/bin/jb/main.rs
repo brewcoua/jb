@@ -51,7 +51,7 @@ fn update_env(matches: &clap::ArgMatches) {
 }
 
 fn setup_logger() {
-    let verbose = Variable::Verbose.get::<String>().parse::<bool>().unwrap_or(false);
+    let verbose = Variable::Verbose.get_bool();
 
     let log_level = if verbose {
         LevelFilter::DEBUG

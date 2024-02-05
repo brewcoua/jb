@@ -41,6 +41,16 @@ impl Variable {
         self.get_or(self.default::<T>())
     }
 
+    /// Get the value of the variable as a bool.
+    #[must_use]
+    pub fn get_bool(&self) -> bool {
+        match self.get::<String>().as_str() {
+            "true" | "1" => true,
+            "false" | "0" => false,
+            _ => false,
+        }
+    }
+
     /// Set the value of the variable.
     pub fn set<T>(&self, value: T)
     where

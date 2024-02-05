@@ -110,12 +110,13 @@ impl Link for Tool {
         // Find an alternative version to link
         let mut tools = Tool::list_kind(self.kind)
             .with_context(|| format!("Failed to list installed tools for {}", self.kind))?;
+        tools.retain(|tool| tool != self);
         tools.sort();
 
         if let Some(tool) = tools.first() {
             tracing::debug!("Found alternative version: {}", tool.as_str());
             tool.link()?;
-            tracing::debug!("Linked alternative version");
+            tracing::info!("Linked alternative version {tool}");
         }
 
         Ok(())
