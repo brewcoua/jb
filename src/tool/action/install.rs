@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 
 use super::list::List;
 use super::link::Link;
-use crate::parse;
+use crate::api;
 use crate::tool::Tool;
 
 pub trait Install {
@@ -33,7 +33,7 @@ impl Install for Tool {
         let span = tracing::info_span!("install", tool = self.as_str());
         let _enter = span.enter();
 
-        let result = parse::fetch::release(self)?;
+        let result = api::fetch::release(self)?;
 
         tracing::info!("Found release: {}", result.tool);
 

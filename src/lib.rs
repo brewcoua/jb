@@ -7,7 +7,7 @@ compile_error!("This crate only supports Linux");
 pub mod env;
 pub mod error;
 pub mod tool;
-pub mod parse;
+pub mod api;
 
 pub use error::{Batch, Result};
 pub use tool::Tool;
