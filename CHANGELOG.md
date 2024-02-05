@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.3.0](https://github.com/brewcoua/jb/compare/v1.2.5..1.3.0) - 2024-02-05
+## [1.3.1](https://github.com/brewcoua/jb/compare/v1.3.0..1.3.1) - 2024-02-05
+
+### Security
+
+- **(atty)** remove atty and use std as atty is unmaintained - ([6ddf6c7](https://github.com/brewcoua/jb/commit/6ddf6c712b808840e495dc8826f4ec57ed2b4867)) - Brewen Couaran
+
+---
+## [1.3.0](https://github.com/brewcoua/jb/compare/v1.2.5..v1.3.0) - 2024-02-05
 
 ### Bug Fixes
 
