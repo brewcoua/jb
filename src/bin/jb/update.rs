@@ -37,12 +37,12 @@ impl Release {
         let current = env!("CARGO_PKG_VERSION");
         let target = env!("TARGET");
 
-        if latest.tag_name == format!("v{}", current) {
+        if latest.tag_name == format!("v{current}") {
             if force {
                 tracing::warn!("The latest version is already installed ({})", current);
                 tracing::warn!("Forcing the update...");
             } else {
-                tracing::error!("The latest version is already installed ({})", current);
+                tracing::error!("The latest version is already installed ({current})");
                 return Ok((false, String::new()));
             }
         }
@@ -52,7 +52,7 @@ impl Release {
         let tempdir = tempfile::tempdir()?;
 
         let process = || {
-            let archive = format!("jb_{}.tar.gz", target);
+            let archive = format!("jb_{target}.tar.gz");
 
             let archive_path = tempdir.path().join(&archive);
 

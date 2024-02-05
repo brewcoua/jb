@@ -174,9 +174,9 @@ impl FromStr for Tool {
         let mut parts = s.split('_');
         let kind = parts
             .next()
-            .ok_or_else(|| anyhow::anyhow!("No tool kind found"))?
-            .parse::<Kind>()
-            .with_context(|| "Failed to parse tool kind")?;
+            .ok_or_else(|| anyhow::anyhow!("No tool kind found"))?;
+        let kind = kind.parse::<Kind>()
+            .with_context(|| format!("Failed to parse tool kind: {kind}"))?;
 
         let mut version = None;
         let mut build = None;

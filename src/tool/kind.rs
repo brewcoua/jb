@@ -85,8 +85,8 @@ impl Kind {
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::IntelliJIdeaUltimate => "intellij-idea-ultimate",
-            Self::IntelliJIdeaCommunity => "intellij-idea-community",
+            Self::IntelliJIdeaUltimate => "idea-ultimate",
+            Self::IntelliJIdeaCommunity => "idea-community",
             Self::PyCharmProfessional => "pycharm-professional",
             Self::PyCharmCommunity => "pycharm-community",
             Self::PhpStorm => "phpstorm",
@@ -177,8 +177,8 @@ impl FromStr for Kind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "intellij-idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
-            "intellij-idea-community" => Ok(Self::IntelliJIdeaCommunity),
+            "idea-ultimate" => Ok(Self::IntelliJIdeaUltimate),
+            "idea-community" => Ok(Self::IntelliJIdeaCommunity),
             "pycharm-professional" => Ok(Self::PyCharmProfessional),
             "pycharm-community" => Ok(Self::PyCharmCommunity),
             "phpstorm" => Ok(Self::PhpStorm),

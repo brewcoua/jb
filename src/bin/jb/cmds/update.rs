@@ -31,7 +31,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::error::Result<()> {
             if done {
                 tracing::info!("Updated to the latest version");
                 if !changelog.is_empty() {
-                    println!("\nChangelog:\n{}", changelog);
+                    println!("\nChangelog:\n{changelog}");
                 }
             }
 
