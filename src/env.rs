@@ -2,6 +2,7 @@
 
 use std::env;
 use std::path::PathBuf;
+use std::io::IsTerminal;
 use nix::unistd::Uid;
 
 #[derive(Debug, Clone, Copy)]
@@ -98,11 +99,9 @@ impl Variable {
             Variable::Verbose => "false".to_string().into(),
             Variable::Notify => {
                 // True if terminal is not interactive else false
-                if atty::isnt(atty::Stream::Stdout) {
-                    "true".to_string().into()
-                } else {
-                    "false".to_string().into()
-                }
+                std::io::stdout().is_terminal()
+                    .then(|| "false".to_string().into())
+                    .unwrap_or("true".to_string().into())
             }
             Variable::ToolsDirectory => {
                 if Self::is_root() {

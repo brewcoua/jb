@@ -4,6 +4,7 @@
 
 use std::fmt::Display;
 use std::str::FromStr;
+use std::io::IsTerminal;
 use anyhow::Context;
 use crate::env::Variable;
 
@@ -142,7 +143,7 @@ impl Tool {
         // Sort by version, build, and release
         matching.sort();
 
-        if atty::is(atty::Stream::Stdout) {
+        if std::io::stdout().is_terminal() {
             // Prompt the user to select a tool
             let selected = inquire::Select::new("Select a tool", matching)
                 .with_help_message("Use the arrow keys to navigate, and press Enter to select")

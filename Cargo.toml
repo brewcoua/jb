@@ -25,7 +25,6 @@ panic = "abort"
 [dependencies]
 clap = "4.4" # CLI parsing and argument validation
 anyhow = "1.0" # Error handling
-atty = "0.2"  # Terminal detection (for interactive mode)
 futures-util = "0.3" # Async utilities (for async stream download)
 humansize = "2.1" # Human-readable file size (for download size)
 readonly = "0.2" # Avoid making getters for each field in a struct
