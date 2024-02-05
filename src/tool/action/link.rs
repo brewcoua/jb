@@ -9,9 +9,9 @@ use crate::env::Variable;
 use crate::tool::Tool;
 
 pub trait Link {
-    fn is_linked(&self) -> bool;
-    fn link(&self) -> anyhow::Result<()>;
-    fn unlink(&self) -> anyhow::Result<()>;
+    fn is_linked(&self) -> bool where Self: Sized;
+    fn link(&self) -> anyhow::Result<()> where Self: Sized;
+    fn unlink(&self) -> anyhow::Result<()> where Self: Sized;
 }
 
 impl Link for Tool {

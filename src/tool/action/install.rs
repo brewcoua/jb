@@ -9,9 +9,9 @@ use crate::api;
 use crate::tool::Tool;
 
 pub trait Install {
-    fn is_installed(&self) -> anyhow::Result<bool>;
-    fn install(&mut self) -> anyhow::Result<()>;
-    fn uninstall(&self) -> anyhow::Result<()>;
+    fn is_installed(&self) -> anyhow::Result<bool> where Self: Sized;
+    fn install(&mut self) -> anyhow::Result<()> where Self: Sized;
+    fn uninstall(&self) -> anyhow::Result<()> where Self: Sized;
 }
 
 impl Install for Tool {

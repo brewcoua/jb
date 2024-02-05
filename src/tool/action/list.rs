@@ -9,8 +9,8 @@ use crate::env::Variable;
 use crate::tool::{Tool, kind::Kind};
 
 pub trait List {
-    fn list() -> anyhow::Result<Vec<Tool>>;
-    fn list_kind(kind: Kind) -> anyhow::Result<Vec<Tool>>;
+    fn list() -> anyhow::Result<Vec<Tool>> where Self: Sized;
+    fn list_kind(kind: Kind) -> anyhow::Result<Vec<Tool>> where Self: Sized;
 }
 
 impl List for Tool {
