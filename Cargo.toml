@@ -23,34 +23,34 @@ codegen-units = 1
 panic = "abort"
 
 [dependencies]
-clap = "4.4"
-anyhow = "1.0"
-atty = "0.2"
-futures-util = "0.3"
-humansize = "2.1"
-readonly = "0.2"
-serde_json = "1.0"
-tempfile = "3.9"
-tracing = "0.1"
-colored = "2.1"
+clap = "4.4" # CLI parsing and argument validation
+anyhow = "1.0" # Error handling
+atty = "0.2"  # Terminal detection (for interactive mode)
+futures-util = "0.3" # Async utilities (for async stream download)
+humansize = "2.1" # Human-readable file size (for download size)
+readonly = "0.2" # Avoid making getters for each field in a struct
+serde_json = "1.0" # JSON parsing (for API response)
+tempfile = "3.9" # Temporary file creation (for installation)
+tracing = "0.1" # Logging
+colored = "2.1" # Colored output (in list)
 
-[dependencies.reqwest]
+[dependencies.reqwest] # HTTP client
 version = "0.11"
 default-features = false
 features = ["blocking","json","stream","rustls-tls"]
 
-[dependencies.serde]
+[dependencies.serde] # De/serialization
 version = "1.0"
 features = ["derive"]
 
-[dependencies.nix]
+[dependencies.nix] # Unix utilities (used for detecting root)
 version = "0.27"
 features = ["user"]
 
-[dependencies.tokio]
+[dependencies.tokio] # Async runtime
 version = "1.35"
 features = ["full"]
 
-[dependencies.tracing-subscriber]
+[dependencies.tracing-subscriber] # Logging
 version = "0.3"
 features = ["env-filter", "fmt"]
