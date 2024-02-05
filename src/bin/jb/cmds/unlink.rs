@@ -1,5 +1,4 @@
 use clap::{arg, value_parser, Command};
-use colored::Colorize;
 use jb::{Tool, Result, bail_with};
 use jb::tool::Link;
 
@@ -24,15 +23,20 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         .get_one::<Tool>("tool")
         .expect("Could not find argument tool");
 
+    let tool = match tool.fill() {
+        Ok(tool) => tool,
+        Err(err) => bail_with!(err, "Failed to fill {tool}")
+    };
+
     match tool.unlink() {
         Ok(()) => {}
-        Err(err) => bail_with!(err, "Failed to unlink {}", tool.as_path().display())
+        Err(err) => bail_with!(err, "Failed to unlink {tool}")
     }
 
     tracing::info!(
-        "Unlinked {} to {}",
-        tool.kind.as_str().bright_green(),
-        tool.as_path().display().to_string().bright_green()
+        "Unlinked {} from {}",
+        tool.kind.as_str(),
+        tool.as_path().display(),
     );
 
     Ok(())

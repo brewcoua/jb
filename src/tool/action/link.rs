@@ -92,8 +92,7 @@ impl Link for Tool {
         let _enter = span.enter();
 
         if !self.is_linked() {
-            tracing::warn!("{} is not linked", self.as_str());
-            return Ok(());
+            anyhow::bail!("{} is not linked", self.as_str());
         }
 
         let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
