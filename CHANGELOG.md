@@ -3,7 +3,33 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.2.5](https://github.com/brewcoua/jb/compare/v1.2.4..1.2.5) - 2024-02-04
+## [1.3.0](https://github.com/brewcoua/jb/compare/v1.2.5..1.3.0) - 2024-02-05
+
+### Bug Fixes
+
+- **(env)** parse 1 as true for bool - ([676da6f](https://github.com/brewcoua/jb/commit/676da6f0b4b024a91be8e5760d9cf92b28f06e19)) - Brewen Couaran
+- tool parsing and link checking - ([88128ef](https://github.com/brewcoua/jb/commit/88128efd5804c5bd5aa4500229762e81cfe8f400)) - Brewen Couaran
+
+### Documentation
+
+- **(cargo)** add usage description for each dependency - ([9c88e60](https://github.com/brewcoua/jb/commit/9c88e604325f4383679c1fb0102013b08be8b2fa)) - Brewen Couaran
+- add descriptions to root modules - ([084c038](https://github.com/brewcoua/jb/commit/084c038633fc5c65f463d267716bb9a093fad856)) - Brewen Couaran
+
+### Features
+
+- **(list)** add empty text when no tool is detected - ([6ce7410](https://github.com/brewcoua/jb/commit/6ce7410be60a924ad8beb0b1ee5459ea2032c8e1)) - Brewen Couaran
+- add build numbers to tool and refactor practically everything - ([162e3a9](https://github.com/brewcoua/jb/commit/162e3a9949666795b92a84ead5c181703322cfb8)) - Brewen Couaran
+- add env settings and use traits with bin commands - ([8f7cc38](https://github.com/brewcoua/jb/commit/8f7cc38c44f8914fd23531e5691d595cd03fdaeb)) - Brewen Couaran
+
+### Refactoring
+
+- **(action)** make traits object safe - ([0345292](https://github.com/brewcoua/jb/commit/03452921668c93b8c965345f99cc805303d4678b)) - Brewen Couaran
+- **(unlink)** fix logging - ([442e29b](https://github.com/brewcoua/jb/commit/442e29b61285a66cf4c05789456f12f74dee11cb)) - Brewen Couaran
+- move back lib and bin crates together - ([9894b7b](https://github.com/brewcoua/jb/commit/9894b7b34ab6fb85a23d987f0f6d565264326874)) - Brewen Couaran
+- remove old files and rename parse mod to api - ([6cc824f](https://github.com/brewcoua/jb/commit/6cc824fbdc3879f3a258b4df516cd9f6739f5a4b)) - Brewen Couaran
+
+---
+## [1.2.5](https://github.com/brewcoua/jb/compare/v1.2.4..v1.2.5) - 2024-02-04
 
 ### Bug Fixes
 
