@@ -80,7 +80,9 @@ pub(crate) fn dispatch() -> Result<()> {
                 "Empty",
                 "Empty",
             ).italic().dimmed(),
-        )
+        );
+
+        tracing::warn!("No JetBrains tools installed");
     }
 
     Ok(())

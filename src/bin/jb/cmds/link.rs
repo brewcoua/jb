@@ -17,6 +17,11 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         .get_one::<Tool>("tool")
         .expect("Could not find argument tool");
 
+    let tool = match tool.fill() {
+        Ok(tool) => tool,
+        Err(err) => bail!("Could not fill tool: {err}"),
+    };
+
     match tool.link() {
         Ok(()) => {}
         Err(err) => bail!("Could not link {tool}: {err}"),

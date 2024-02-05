@@ -40,7 +40,7 @@ impl Tool {
     /// This is used to convert the tool to a string for display purposes and for serialization.
     #[must_use]
     pub fn as_str(&self) -> String {
-        let mut s = self.kind.to_string();
+        let mut s = self.kind.as_str().to_string();
         if self.version.is_some() || self.build.is_some() || self.release.is_some() {
             s.push_str("_");
         }
@@ -52,7 +52,7 @@ impl Tool {
             s.push_str(&format!("{}{build}", if self.version.is_some() { "-" } else { "" }));
         }
         if let Some(release) = &self.release {
-            s.push_str(&format!("{}{release}", if self.version.is_some() || self.build.is_some() { "-" } else { "" }));
+            s.push_str(&format!("{}{}", if self.version.is_some() || self.build.is_some() { "-" } else { "" }, release.as_str()));
         }
 
         s
@@ -112,6 +112,46 @@ impl Tool {
 
         true
     }
+
+    /// Fills the tool with the latest version, build, and release.
+    ///
+    /// If the terminal is interactive, the user will be prompted to select a tool if multiple tools match.
+    ///
+    /// # Errors
+    /// This function will return an error if no matching tool is found,
+    /// Or if the prompt fails.
+    pub fn fill(&self) -> anyhow::Result<Self> {
+        let tools = Tool::list_kind(self.kind)?;
+
+        let mut matching = vec![];
+        for tool in tools {
+            if self.matched(&tool) {
+                matching.push(tool);
+            }
+        }
+
+        if matching.is_empty() {
+            anyhow::bail!("No matching tool found");
+        }
+
+        if matching.len() == 1 {
+            return Ok(matching[0].clone());
+        }
+
+        // Sort by version, build, and release
+        matching.sort();
+
+        if atty::is(atty::Stream::Stdout) {
+            // Prompt the user to select a tool
+            let selected = inquire::Select::new("Select a tool", matching)
+                .with_help_message("Use the arrow keys to navigate, and press Enter to select")
+                .prompt()?;
+
+            return Ok(selected);
+        }
+
+        Ok(matching[0].clone())
+    }
 }
 
 impl Display for Tool {
@@ -140,19 +180,23 @@ impl FromStr for Tool {
         let mut build = None;
         let mut release = None;
 
-        // First try parsing a version
-        if let Some(Ok(v)) = parts.next().map(|v| v.parse::<Version>()) {
-            version = Some(v);
-        }
+        if let Some(part) = parts.next() {
+            let mut parts = part.split('-');
 
-        // Then try parsing a build
-        if let Some(Ok(b)) = parts.next().map(|b| b.parse::<Build>()) {
-            build = Some(b);
-        }
+            // First try parsing a version
+            if let Some(Ok(v)) = parts.next().map(|v| v.parse::<Version>()) {
+                version = Some(v);
+            }
 
-        // Then try parsing a release type
-        if let Some(Ok(r)) = parts.next().map(|r| r.parse::<Type>()) {
-            release = Some(r);
+            // Then try parsing a build
+            if let Some(Ok(b)) = parts.next().map(|b| b.parse::<Build>()) {
+                build = Some(b);
+            }
+
+            // Then try parsing a release type
+            if let Some(Ok(r)) = parts.next().map(|r| r.parse::<Type>()) {
+                release = Some(r);
+            }
         }
 
         Ok(Self::new(kind, version, build, release))

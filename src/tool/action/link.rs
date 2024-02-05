@@ -19,8 +19,7 @@ impl Link for Tool {
         let span = tracing::debug_span!("is_linked", tool = self.as_str());
         let _enter = span.enter();
 
-        let tool_directory = Variable::ToolsDirectory.get::<PathBuf>()
-            .join(self.kind.as_str());
+        let tool_directory = self.as_path();
 
         let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
         let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
@@ -28,7 +27,8 @@ impl Link for Tool {
 
         // Check if linked binary is the right one (not any other version or simply doesn't exist)
         let binary = binaries_directory.join(self.kind.as_str());
-        if !binary.exists() || std::fs::read_link(binary).ok() != Some(binary_path) {
+        if !binary.exists() || std::fs::read_link(&binary).ok() != Some(binary_path.clone()) {
+            tracing::debug!("Binary is not linked: {}, {:?} != {:?}", binary.exists(), std::fs::read_link(binary).ok(), Some(binary_path));
             return false;
         }
 
@@ -41,6 +41,7 @@ impl Link for Tool {
         // Check if linked icon is the right one (not any other version or simply doesn't exist)
         let icon = icons_directory.join(self.kind.as_str());
         if !icon.exists() || std::fs::read_link(icon).ok() != Some(icon_path) {
+            tracing::debug!("Icon is not linked");
             return false;
         }
 
@@ -58,8 +59,7 @@ impl Link for Tool {
             return Ok(());
         }
 
-        let tool_directory = Variable::ToolsDirectory.get::<PathBuf>()
-            .join(self.kind.as_str());
+        let tool_directory = self.as_path();
 
         let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
         let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
@@ -127,9 +127,9 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> anyhow::Result<()>
     let src = src.as_ref();
     let dst = dst.as_ref();
 
-    if dst.exists() {
-        std::fs::remove_file(dst)?;
-    }
+    // Try removing the destination file anyway since it might be a broken symlink
+    // Broken symlinks show up as non-existent files, and may cause the symlink to fail
+    std::fs::remove_file(dst).ok();
 
     #[cfg(unix)]
     std::os::unix::fs::symlink(src, dst)?;

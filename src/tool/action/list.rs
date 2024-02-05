@@ -15,6 +15,9 @@ pub trait List {
 
 impl List for Tool {
     fn list() -> anyhow::Result<Vec<Tool>> {
+        let span = tracing::debug_span!("list");
+        let _enter = span.enter();
+
         let tools_directory = Variable::ToolsDirectory.get::<PathBuf>();
 
         let mut tools = vec![];

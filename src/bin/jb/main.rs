@@ -71,7 +71,8 @@ fn setup_logger() {
         // Show spans but not targets
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_target(false)
-        .with_level(true);
+        .with_level(true)
+        .with_timer(tracing_subscriber::fmt::time::time());
 
     tracing_subscriber::registry()
         .with(filter)

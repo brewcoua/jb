@@ -16,17 +16,17 @@ pub trait Install {
 
 impl Install for Tool {
     fn is_installed(&self) -> anyhow::Result<bool> {
-        let span = tracing::debug_span!("is_installed", tool = %self);
+        let span = tracing::debug_span!("is_installed", tool = self.as_str());
         let _enter = span.enter();
 
         tracing::debug!("Checking if installed");
 
-        Tool::list_kind(self.kind)
-            .with_context(|| format!("Failed to list installed tools for {}", self.kind))?
-            .iter()
-            .any(|tool| self.matched(tool))
-            .then(|| true)
-            .ok_or_else(|| anyhow::anyhow!("Failed to check if installed"))
+        Ok(
+            Tool::list_kind(self.kind)
+                .with_context(|| format!("Failed to list installed tools for {}", self.kind))?
+                .iter()
+                .any(|tool| self.matched(tool))
+        )
     }
 
     fn install(&mut self) -> anyhow::Result<()> {
