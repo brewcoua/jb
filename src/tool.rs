@@ -1,4 +1,4 @@
-//! Tools
+//! Module for tools and tool actions.
 //!
 //! Tools can be installed, updated, and removed. They can also be used to perform actions.
 

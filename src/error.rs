@@ -1,6 +1,12 @@
+//! Module for handling errors in a batch
+//!
+//! This module provides a `Batch` struct that can be used to collect multiple errors that occur across multiple tasks.
+//! This is useful when you want to collect all errors that occur during a command and then display them all at once.
+
 use anyhow::Error;
 use std::fmt::Display;
 
+/// A type alias for a result that can return a batch of errors
 pub type Result<T> = std::result::Result<T, Batch>;
 
 /// A batch of errors that occurred while executing a command
@@ -68,6 +74,7 @@ impl Default for Batch {
     }
 }
 
+/// Create a new batch of errors from a single error
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
@@ -75,6 +82,7 @@ macro_rules! error {
     };
 }
 
+/// Add an error to the given batch
 #[macro_export]
 macro_rules! error_with {
     ($batch:expr, $($arg:tt)*) => {
@@ -82,6 +90,7 @@ macro_rules! error_with {
     };
 }
 
+/// Return a batch of errors directly from a format string
 #[macro_export]
 macro_rules! bail {
     ($($arg:tt)*) => {
@@ -89,6 +98,7 @@ macro_rules! bail {
     };
 }
 
+/// Return a batch of errors directly from an error with a formatted context
 #[macro_export]
 macro_rules! bail_with {
     ($err:expr, $($arg:tt)*) => {
