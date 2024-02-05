@@ -3,7 +3,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.3.1](https://github.com/brewcoua/jb/compare/v1.3.0..1.3.1) - 2024-02-05
+## [1.3.2](https://github.com/brewcoua/jb/compare/v1.3.1..1.3.2) - 2024-02-05
+
+### Bug Fixes
+
+- **(kind)** remove intellij from idea-ultimate and community - ([9da723a](https://github.com/brewcoua/jb/commit/9da723a4ce60fbb65686b2b937b7b9c94fd2478e)) - Brewen Couaran
+
+### Features
+
+- **(bin)** add update command to update cli - ([d3402f7](https://github.com/brewcoua/jb/commit/d3402f7c4b525bf0e24a42d53c77bcbbde558a44)) - Brewen Couaran
+
+---
+## [1.3.1](https://github.com/brewcoua/jb/compare/v1.3.0..v1.3.1) - 2024-02-05
 
 ### Security
 
