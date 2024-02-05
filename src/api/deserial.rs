@@ -1,41 +1,28 @@
-use crate::tool::release::{Type, Version};
-use anyhow::{bail, Result};
-use serde::Deserialize;
-use std::collections::HashMap;
+//! Module for deserializing responses from `JetBrains`' API.
 
+use std::collections::HashMap;
+use anyhow::bail;
+use serde::Deserialize;
+use crate::tool::{release, version::Version, build::Build};
+
+/// The deserialized release data from `JetBrains`' API.
 #[derive(Deserialize, Debug, Clone)]
 pub struct Release {
-    pub date: String,
-
     #[serde(rename = "type")]
-    pub rtype: Type,
-
-    #[serde(rename = "notesLink")]
-    pub notes_link: Option<String>,
-    #[serde(rename = "licenseRequired")]
-    pub license_required: Option<bool>,
+    pub release: release::Type,
 
     pub version: Version,
-    #[serde(rename = "majorVersion")]
-    pub major_version: String,
-    pub build: String,
-
-    pub downloads: HashMap<String, DownloadRaw>,
+    pub build: Build,
+    pub downloads: HashMap<String, Download>,
 }
 
+/// The deserialized download data from `JetBrains`' API. (This is a subset of the `Release` struct)
 #[derive(Deserialize, Debug, Clone)]
-pub struct DownloadRaw {
-    pub link: String,
-    pub size: u64,
-    #[serde(rename = "checksumLink")]
-    pub checksum_link: String,
-}
-
-#[derive(Debug, Clone)]
 pub struct Download {
-    pub version: Version,
     pub link: String,
     pub size: u64,
+
+    #[serde(rename = "checksumLink")]
     pub checksum_link: String,
 }
 
@@ -46,7 +33,13 @@ static ARCHITECTURES: &[&[&str]] = &[
 ];
 
 impl Release {
-    pub fn download(&self) -> Result<Download> {
+    /// Returns the download for the current platform and architecture.
+    ///
+    /// # Errors
+    /// This function will return an error if the download is not found, or if the platform or architecture is not supported.
+    /// # Panics
+    /// This function will panic if the platform or architecture is not valid.
+    pub fn download(&self) -> anyhow::Result<Download> {
         let platform = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
@@ -54,7 +47,7 @@ impl Release {
             "linux" => "linux",
             "macos" => "mac",
             "windows" => "windows",
-            _ => bail!("Unsupported platform {}", platform),
+            _ => anyhow::bail!("Unsupported platform {}", platform),
         };
 
         // Find the list of architectures that match the given architecture
@@ -81,26 +74,13 @@ impl Release {
 
         let platform_specific = self.downloads.get(platform);
 
-        let download_raw = match (arch_specific, platform_specific) {
+        let download = match (arch_specific, platform_specific) {
             (Some(arch), _) => Some(arch),
             (_, Some(platform)) => Some(platform),
             _ => None,
         };
 
-        let result = download_raw.map(|download| Download {
-            version: self.version.with_release(self.rtype),
-            link: download.link.clone(),
-            size: download.size,
-            checksum_link: download.checksum_link.clone(),
-        });
-
-        match result {
-            Some(download) => Ok(download),
-            None => bail!(
-                "No download found for platform {} and architecture {}",
-                platform,
-                arch
-            ),
-        }
+        download.cloned()
+            .ok_or_else(|| anyhow::anyhow!("No download found for platform {}", platform))
     }
 }

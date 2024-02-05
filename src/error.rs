@@ -1,6 +1,12 @@
+//! Module for handling errors in a batch
+//!
+//! This module provides a `Batch` struct that can be used to collect multiple errors that occur across multiple tasks.
+//! This is useful when you want to collect all errors that occur during a command and then display them all at once.
+
 use anyhow::Error;
 use std::fmt::Display;
 
+/// A type alias for a result that can return a batch of errors
 pub type Result<T> = std::result::Result<T, Batch>;
 
 /// A batch of errors that occurred while executing a command

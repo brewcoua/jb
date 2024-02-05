@@ -81,7 +81,7 @@ jobs:
       - name: Generate changelog & Bump version
         run: |
           git cliff --bump --config .github/cliff.toml > CHANGELOG.md
-          sed -i "0,/^version =/s/^version =.*/version = \"${{ inputs.bumped_version }}\"/" jb/Cargo.toml
+          sed -i "0,/^version =/s/^version =.*/version = \"${{ inputs.bumped_version }}\"/" Cargo.toml
           
           git add CHANGELOG.md jb/Cargo.toml
           git commit -m "chore(version): bump version to ${{ inputs.bumped_version }}"

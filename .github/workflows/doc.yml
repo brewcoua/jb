@@ -30,7 +30,7 @@ jobs:
 
       - name: Add redirect
         run: |
-          echo "<meta http-equiv=refresh content=0;url=jb_lib/index.html>" > ./target/doc/index.html
+          echo "<meta http-equiv=refresh content=0;url=jb/index.html>" > ./target/doc/index.html
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
