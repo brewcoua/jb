@@ -40,6 +40,12 @@ impl Batch {
         self.errors.is_empty()
     }
 
+    /// Get the first error in the batch
+    #[must_use]
+    pub fn first(&self) -> Option<&Error> {
+        self.errors.first()
+    }
+
     /// Get the number of errors in the batch
     #[must_use]
     pub fn len(&self) -> usize {
@@ -55,6 +61,12 @@ impl Batch {
 
 impl Display for Batch {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.errors.is_empty() {
+            return write!(f, "No errors occurred");
+        } else if self.errors.len() == 1 {
+            return write!(f, "{:?}", self.first());
+        }
+
         writeln!(
             f,
             "{} error{} occurred:",
@@ -64,6 +76,7 @@ impl Display for Batch {
         for error in &self.errors {
             writeln!(f, "{error:?}")?;
         }
+
         Ok(())
     }
 }

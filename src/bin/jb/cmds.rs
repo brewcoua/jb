@@ -3,6 +3,7 @@ mod link;
 mod list;
 mod uninstall;
 mod unlink;
+mod update;
 
 use anyhow::anyhow;
 use clap::{arg, Arg, Command, value_parser};
@@ -59,6 +60,7 @@ pub fn cli() -> Command {
         .subcommand(list::command())
         .subcommand(link::command())
         .subcommand(unlink::command())
+        .subcommand(update::command())
 }
 
 pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
@@ -69,6 +71,7 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "list" => list::dispatch(),
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),
+            "update" => update::dispatch(sub_matches),
             _ => Err(Batch::from(anyhow!("Unknown subcommand {} provided", name))),
         }
     } else {

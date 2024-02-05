@@ -6,6 +6,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 use jb::env::Variable;
 
 mod cmds;
+mod update;
 
 fn main() {
     let cli = cmds::cli();

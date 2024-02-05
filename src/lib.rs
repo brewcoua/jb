@@ -8,6 +8,7 @@ pub mod env;
 pub mod error;
 pub mod tool;
 pub mod api;
+pub mod util;
 
 pub use error::{Batch, Result};
 pub use tool::Tool;
