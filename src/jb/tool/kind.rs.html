@@ -303,8 +303,8 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::IntelliJIdeaUltimate =&gt; <span class="string">&quot;intellij-idea-ultimate&quot;</span>,
-            <span class="self">Self</span>::IntelliJIdeaCommunity =&gt; <span class="string">&quot;intellij-idea-community&quot;</span>,
+            <span class="self">Self</span>::IntelliJIdeaUltimate =&gt; <span class="string">&quot;idea-ultimate&quot;</span>,
+            <span class="self">Self</span>::IntelliJIdeaCommunity =&gt; <span class="string">&quot;idea-community&quot;</span>,
             <span class="self">Self</span>::PyCharmProfessional =&gt; <span class="string">&quot;pycharm-professional&quot;</span>,
             <span class="self">Self</span>::PyCharmCommunity =&gt; <span class="string">&quot;pycharm-community&quot;</span>,
             <span class="self">Self</span>::PhpStorm =&gt; <span class="string">&quot;phpstorm&quot;</span>,
@@ -395,8 +395,8 @@
 
     <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
         <span class="kw">match </span>s {
-            <span class="string">&quot;intellij-idea-ultimate&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::IntelliJIdeaUltimate),
-            <span class="string">&quot;intellij-idea-community&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::IntelliJIdeaCommunity),
+            <span class="string">&quot;idea-ultimate&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::IntelliJIdeaUltimate),
+            <span class="string">&quot;idea-community&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::IntelliJIdeaCommunity),
             <span class="string">&quot;pycharm-professional&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::PyCharmProfessional),
             <span class="string">&quot;pycharm-community&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::PyCharmCommunity),
             <span class="string">&quot;phpstorm&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::PhpStorm),
