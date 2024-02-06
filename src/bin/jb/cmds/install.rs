@@ -1,10 +1,13 @@
+use std::fmt::Write;
 use std::sync::Arc;
 use std::thread;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 
 use clap::{arg, value_parser, Command};
+use console::Emoji;
+use indicatif::{MultiProgress, ProgressBar};
 use jb::{Tool, Result, Batch};
-use jb::tool::{Install,List};
+use jb::tool::Probe;
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -22,59 +25,108 @@ pub(crate) fn command() -> Command {
         )
 }
 
+// Emoji for showing the release fetch
+static LOOKING_GLASS: Emoji = Emoji("🔍", "🔎");
+static HAMMER: Emoji = Emoji("🔨", "⚒");
+
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools = args
         .get_many::<Tool>("tools")
         .expect("Could not find argument tools");
 
-    let clean = Arc::new(args.get_flag("clean"));
+    let _clean = Arc::new(args.get_flag("clean"));
+    let mut error_batch = Batch::new();
 
+    jb::info!("{} Resolving tool releases...", LOOKING_GLASS);
+
+    // First step, find releases for all tools. If any fails, ignore them (while warning)
     let handles: Vec<_> = tools
         .map(|tool| {
             let mut tool = tool.clone();
 
-            let clean = Arc::clone(&clean);
-
             thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.as_str());
-                let _guard = span.enter();
+                jb::make!("{}", tool.as_str());
 
-                tool.install()?;
-
-                tracing::info!("Installed {}", tool.as_str());
-
-                if *clean {
-                    // Clean up old versions
-                    let span = tracing::info_span!("cleanup");
-                    let _guard = span.enter();
-
-                    tracing::info!("Cleaning up older versions of {}", tool.kind);
-
-                    let mut installed_tools = Tool::list_kind(tool.kind)?;
-                    installed_tools.sort_by(|a, b| b.version.cmp(&a.version));
-                    installed_tools.retain(|t| t.version < tool.version);
-
-                    for tool in installed_tools {
-                        tool.uninstall()?;
+                let release = match tool.sync() {
+                    Ok(release) => release,
+                    Err(err) => {
+                        jb::warn!("Failed to fetch release for {tool}, skipping...");
+                        return Err(err);
                     }
+                };
 
-                    tracing::info!("Cleaned up older versions of {}", tool.kind);
-                }
-
-                Ok(())
+                jb::debug!("Found release: {tool}");
+                Ok((tool, release))
             })
         }).collect();
 
-    let mut error_batch = Batch::new();
+    let mut tools = vec![];
 
     for handle in handles {
         let result = handle.join();
         match result {
-            Ok(Ok(())) => {}
+            Ok(Ok(result)) => tools.push(result),
             Ok(Err(e)) => error_batch.add(e),
             Err(e) => error_batch.add(anyhow!("Thread panicked: {:?}", e)),
         }
     }
+
+    // Remove duplicate tools (avoid installing the same tool twice)
+    tools.sort_by(|a, b| a.0.cmp(&b.0));
+    tools.dedup_by(|a, b| a.0 == b.0);
+
+    if !error_batch.is_empty() {
+        jb::warn!("Failed to fetch releases for some tools");
+        jb::warn!("{}", error_batch);
+    }
+
+    // Second step, download and extract all tools. If any fails, ignore them (while warning)
+    // All errors will be collected and returned at the end
+
+    jb::info!("{} Downloading tools...", HAMMER);
+
+    let m = MultiProgress::new();
+    let ps = indicatif::ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {bytes}/{total_bytes} ({eta})")
+        .unwrap()
+        .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .progress_chars("#>-");
+    let handles: Vec<_> = tools
+        .iter()
+        .map(|el| {
+            let pb = m.add(ProgressBar::new(100));
+            pb.set_style(ps.clone());
+
+            let (tool, release) = el.clone();
+
+            thread::spawn(move || {
+                jb::make!("{}", tool.as_str());
+
+                let install_dir = tool.as_path();
+
+                let result = jb::util::download_extract(&release.link, &install_dir, Some(&pb))
+                    .with_context(|| format!("Failed to install {}", tool.as_str()));
+
+                if let Err(e) = result {
+                    jb::warn!("Failed to install {}, skipping...", tool.as_str());
+                    return Err(e);
+                }
+
+                pb.finish();
+                Ok(tool)
+            })
+        }).collect();
+
+    let mut tools = vec![];
+
+    for handle in handles {
+        let result = handle.join();
+        match result {
+            Ok(Ok(tool)) => tools.push(tool),
+            Ok(Err(e)) => error_batch.add(e),
+            Err(e) => error_batch.add(anyhow!("Thread panicked: {:?}", e)),
+        }
+    }
+    m.clear().unwrap();
 
     if error_batch.is_empty() {
         Ok(())

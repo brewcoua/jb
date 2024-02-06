@@ -4,6 +4,7 @@ use super::list::List;
 use super::link::Link;
 use crate::{api,util};
 use crate::tool::Tool;
+use crate::debug;
 
 pub trait Install {
     /// Returns whether the tool is installed.
@@ -33,10 +34,7 @@ pub trait Install {
 
 impl Install for Tool {
     fn is_installed(&self) -> anyhow::Result<bool> {
-        let span = tracing::debug_span!("is_installed", tool = self.as_str());
-        let _enter = span.enter();
-
-        tracing::debug!("Checking if installed");
+        debug!("Checking if installed");
 
         Ok(
             Tool::list_kind(self.kind)
@@ -47,12 +45,9 @@ impl Install for Tool {
     }
 
     fn install(&mut self) -> anyhow::Result<()> {
-        let span = tracing::info_span!("install", tool = self.as_str());
-        let _enter = span.enter();
-
         let result = api::fetch::release(self)?;
 
-        tracing::info!("Found release: {}", result.tool);
+        crate::info!("Found release: {}", result.tool);
 
         self.version = Some(result.tool.version.unwrap());
         self.build = Some(result.tool.build.unwrap());
@@ -60,7 +55,7 @@ impl Install for Tool {
 
         let installed = self.is_installed()?;
         if installed {
-            tracing::warn!("{} is already installed", self.as_str());
+            crate::warn!("{} is already installed", self.as_str());
             return Ok(());
         }
 
@@ -74,7 +69,7 @@ impl Install for Tool {
                 .next()
                 .with_context(|| "Failed to get archive name")?;
 
-            tracing::info!("Downloading {} ({})", archive_name, humansize::format_size(result.download.size, humansize::DECIMAL));
+            crate::info!("Downloading {} ({})", archive_name, humansize::format_size(result.download.size, humansize::DECIMAL));
 
             let archive_path = tempdir.path().join(archive_name);
             util::download(&result.download.link, &archive_path, Some(result.download.size))?;
@@ -85,11 +80,11 @@ impl Install for Tool {
                     .with_context(|| format!("Failed to create {}", tool_directory.display()))?;
             }
 
-            tracing::info!("Extracting to {}", tool_directory.display());
+            crate::info!("Extracting to {}", tool_directory.display());
 
             util::extract_archive(&archive_path, &tool_directory, 1)?;
 
-            tracing::info!("Linking {}", self.as_str());
+            crate::info!("Linking {}", self.as_str());
             self.link()?;
 
             Ok(())
@@ -103,35 +98,32 @@ impl Install for Tool {
 
         match output {
             Ok(()) => {
-                tracing::info!("Installed {}", self.as_str());
+                crate::info!("Installed {}", self.as_str());
                 Ok(())
             }
             Err(e) => {
-                tracing::error!("Failed to install {}: {e}", self.as_str());
+                crate::error!("Failed to install {}: {e}", self.as_str());
                 Err(e)
             }
         }
     }
 
     fn uninstall(&self) -> anyhow::Result<()> {
-        let span = tracing::info_span!("uninstall", tool = self.as_str());
-        let _enter = span.enter();
-
         let installed = self.is_installed()?;
         if !installed {
-            tracing::warn!("{} is not installed", self.as_str());
+            crate::warn!("{} is not installed", self.as_str());
             return Ok(());
         }
 
-        tracing::info!("Unlinking {}", self.as_str());
+        crate::info!("Unlinking {}", self.as_str());
         self.unlink()?;
 
         let tool_directory = self.as_path();
-        tracing::info!("Removing {}", tool_directory.display());
+        crate::info!("Removing {}", tool_directory.display());
         std::fs::remove_dir_all(&tool_directory)
             .with_context(|| format!("Failed to remove {}", tool_directory.display()))?;
 
-        tracing::info!("Uninstalled {}", self.as_str());
+        crate::info!("Uninstalled {}", self.as_str());
 
         Ok(())
     }

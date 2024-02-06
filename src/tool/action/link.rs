@@ -32,9 +32,6 @@ pub trait Link {
 
 impl Link for Tool {
     fn is_linked(&self) -> bool {
-        let span = tracing::debug_span!("is_linked", tool = self.as_str());
-        let _enter = span.enter();
-
         let tool_directory = self.as_path();
 
         let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
@@ -44,11 +41,11 @@ impl Link for Tool {
         // Check if linked binary is the right one (not any other version or simply doesn't exist)
         let binary = binaries_directory.join(self.kind.as_str());
         if !binary.exists() || std::fs::read_link(&binary).ok() != Some(binary_path.clone()) {
-            tracing::debug!("Binary is not linked: {}, {:?} != {:?}", binary.exists(), std::fs::read_link(binary).ok(), Some(binary_path));
+            crate::debug!("Binary is not linked: {}, {:?} != {:?}", binary.exists(), std::fs::read_link(binary).ok(), Some(binary_path));
             return false;
         }
 
-        tracing::debug!("Binary is linked");
+        crate::debug!("Binary is linked");
 
 
         let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
@@ -57,21 +54,18 @@ impl Link for Tool {
         // Check if linked icon is the right one (not any other version or simply doesn't exist)
         let icon = icons_directory.join(self.kind.as_str());
         if !icon.exists() || std::fs::read_link(icon).ok() != Some(icon_path) {
-            tracing::debug!("Icon is not linked");
+            crate::debug!("Icon is not linked");
             return false;
         }
 
-        tracing::debug!("Icon is linked");
+        crate::debug!("Icon is linked");
 
         true
     }
 
     fn link(&self) -> anyhow::Result<()> {
-        let span = tracing::debug_span!("link", tool = self.as_str());
-        let _enter = span.enter();
-
         if self.is_linked() {
-            tracing::warn!("{} is already linked", self.as_str());
+            crate::warn!("{} is already linked", self.as_str());
             return Ok(());
         }
 
@@ -86,7 +80,7 @@ impl Link for Tool {
 
         symlink(binary_path, binaries_directory.join(self.kind.as_str()))?;
 
-        tracing::debug!("Linked binary");
+        crate::debug!("Linked binary");
 
         let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
 
@@ -98,15 +92,12 @@ impl Link for Tool {
 
         symlink(icon_path, icons_directory.join(self.kind.as_str()))?;
 
-        tracing::debug!("Linked icon");
+        crate::debug!("Linked icon");
 
         Ok(())
     }
 
     fn unlink(&self) -> anyhow::Result<()> {
-        let span = tracing::info_span!("unlink", tool = self.as_str());
-        let _enter = span.enter();
-
         if !self.is_linked() {
             anyhow::bail!("{} is not linked", self.as_str());
         }
@@ -115,13 +106,13 @@ impl Link for Tool {
 
         std::fs::remove_file(binaries_directory.join(self.kind.as_str()))?;
 
-        tracing::debug!("Unlinked binary");
+        crate::debug!("Unlinked binary");
 
         let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         std::fs::remove_file(icons_directory.join(self.kind.as_str()))?;
 
-        tracing::debug!("Unlinked icon");
+        crate::debug!("Unlinked icon");
 
         // Find an alternative version to link
         let mut tools = Tool::list_kind(self.kind)
@@ -130,9 +121,9 @@ impl Link for Tool {
         tools.sort();
 
         if let Some(tool) = tools.first() {
-            tracing::debug!("Found alternative version: {}", tool.as_str());
+            crate::debug!("Found alternative version: {}", tool.as_str());
             tool.link()?;
-            tracing::info!("Linked alternative version {tool}");
+            crate::info!("Linked alternative version {tool}");
         }
 
         Ok(())

@@ -1,6 +1,6 @@
 use clap::Command;
 use console::style;
-use jb::{Tool, Result, bail_with};
+use jb::{Tool, Result};
 use jb::tool::{Link, List};
 
 pub(crate) fn command() -> Command {
@@ -11,7 +11,7 @@ pub(crate) fn command() -> Command {
 pub(crate) fn dispatch() -> Result<()> {
     let installed_tools = match Tool::list() {
         Ok(tools) => tools,
-        Err(err) => bail_with!(err, "Failed to list tools"),
+        Err(err) => jb::bail_with!(err, "Failed to list tools"),
     };
 
     println!(
@@ -88,7 +88,7 @@ pub(crate) fn dispatch() -> Result<()> {
             ).italic().dim(),
         );
 
-        tracing::warn!("No JetBrains tools installed");
+        jb::warn!("No JetBrains tools installed");
     }
 
     Ok(())

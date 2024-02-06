@@ -26,9 +26,6 @@ pub trait List {
 
 impl List for Tool {
     fn list() -> anyhow::Result<Vec<Tool>> {
-        let span = tracing::debug_span!("list");
-        let _enter = span.enter();
-
         let tools_directory = Variable::ToolsDirectory.get::<PathBuf>();
 
         let mut tools = vec![];
@@ -42,7 +39,7 @@ impl List for Tool {
                 if let Ok(tool) = Tool::from_str(name) {
                     tools.push(tool);
                 } else {
-                    tracing::debug!("Skipping invalid tool directory: {name}");
+                    crate::debug!("Skipping invalid tool directory: {name}");
                 }
             }
         }

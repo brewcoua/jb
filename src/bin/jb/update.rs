@@ -39,15 +39,15 @@ impl Release {
 
         if latest.tag_name == format!("v{current}") {
             if force {
-                tracing::warn!("The latest version is already installed ({})", current);
-                tracing::warn!("Forcing the update...");
+                jb::warn!("The latest version is already installed ({})", current);
+                jb::warn!("Forcing the update...");
             } else {
-                tracing::error!("The latest version is already installed ({current})");
+                jb::error!("The latest version is already installed ({current})");
                 return Ok((false, String::new()));
             }
         }
 
-        tracing::debug!("Installing the latest version ({}) for target {} to {}", latest.tag_name, target, location.display());
+        jb::debug!("Installing the latest version ({}) for target {} to {}", latest.tag_name, target, location.display());
 
         let tempdir = tempfile::tempdir()?;
 

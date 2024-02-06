@@ -1,9 +1,15 @@
 //! Module for utilities.
 
+pub mod down;
+
 use std::path::PathBuf;
 use anyhow::Context;
 use tokio::io::AsyncWriteExt;
 use futures_util::StreamExt;
+
+
+pub use down::download_extract;
+
 
 /// Download a file from a URL to a path.
 ///
@@ -13,10 +19,7 @@ use futures_util::StreamExt;
 /// # Panics
 /// This function will panic if the runtime cannot be started.
 pub fn download(url: &str, path: &PathBuf, size: Option<u64>) -> anyhow::Result<()> {
-    let span = tracing::debug_span!("download", url = url, path = path.display().to_string());
-    let _guard = span.enter();
-
-    tracing::debug!("start");
+    crate::debug!("start");
 
     tokio::task::block_in_place(|| {
         tokio::runtime::Runtime::new()
@@ -35,7 +38,7 @@ pub fn download(url: &str, path: &PathBuf, size: Option<u64>) -> anyhow::Result<
                 let mut downloaded_size: u64 = 0;
                 let mut stream = response.bytes_stream();
 
-                tracing::debug!("downloading chunks with size {size}");
+                crate::debug!("downloading chunks with size {size}");
 
                 while let Some(chunk) = stream.next().await {
                     let chunk =
@@ -51,7 +54,7 @@ pub fn download(url: &str, path: &PathBuf, size: Option<u64>) -> anyhow::Result<
             })
     })?;
 
-    tracing::debug!("done");
+    crate::debug!("done");
 
     Ok(())
 }
@@ -61,10 +64,7 @@ pub fn download(url: &str, path: &PathBuf, size: Option<u64>) -> anyhow::Result<
 /// # Errors
 /// This function will return an error if the archive cannot be extracted.
 pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> anyhow::Result<()> {
-    let span = tracing::debug_span!("extract_archive", path = path.display().to_string(), destination = destination.display().to_string());
-    let _guard = span.enter();
-
-    tracing::debug!("start");
+    crate::debug!("start");
 
     let output = std::process::Command::new("tar")
         .arg("--strip-components")
@@ -80,7 +80,7 @@ pub fn extract_archive(path: &PathBuf, destination: &PathBuf, strip: u8) -> anyh
         anyhow::bail!("Failed to extract {}: {}", path.display(), String::from_utf8_lossy(&output.stderr));
     }
 
-    tracing::debug!("done");
+    crate::debug!("done");
 
     Ok(())
 }

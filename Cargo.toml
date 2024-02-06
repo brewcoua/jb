@@ -30,13 +30,17 @@ humansize = "2.1" # Human-readable file size (for download size)
 readonly = "0.2" # Avoid making getters for each field in a struct
 serde_json = "1.0" # JSON parsing (for API response)
 tempfile = "3.9" # Temporary file creation (for installation)
-tracing = "0.1" # Logging
 
 # Terminal UI
 console = "0.15"
 indicatif = "0.17"
 dialoguer = "0.11"
 once_cell = "1.19.0"
+dashmap = "5.5.3"
+flume = "0.11.0"
+flate2 = "1.0.28"
+tar = "0.4.40"
+futures-lite = "2.2.0"
 
 [dependencies.reqwest] # HTTP client
 version = "0.11"
@@ -54,7 +58,3 @@ features = ["user"]
 [dependencies.tokio] # Async runtime
 version = "1.35"
 features = ["full"]
-
-[dependencies.tracing-subscriber] # Logging
-version = "0.3"
-features = ["env-filter", "fmt"]

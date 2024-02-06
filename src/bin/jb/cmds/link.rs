@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, Command};
-use jb::{Tool, Result, bail_with};
+use jb::{Tool, Result};
 use jb::tool::Link;
 
 pub(crate) fn command() -> Command {
@@ -19,15 +19,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     let tool = match tool.fill() {
         Ok(tool) => tool,
-        Err(err) => bail_with!(err, "Failed to fill {tool}"),
+        Err(err) => jb::bail_with!(err, "Failed to fill {tool}"),
     };
 
     match tool.link() {
         Ok(()) => {}
-        Err(err) => bail_with!(err, "Failed to link {tool}")
+        Err(err) => jb::bail_with!(err, "Failed to link {tool}")
     }
 
-    tracing::info!("Linked {} to {tool}", tool.kind.as_str());
+    jb::info!("Linked {} to {tool}", tool.kind.as_str());
 
     Ok(())
 }

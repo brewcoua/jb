@@ -150,7 +150,7 @@ impl Tool {
         match result {
             Ok(tool) => Ok(matching[tool].clone()),
             Err(_) => {
-                tracing::warn!("Failed to prompt for tool, defaulting...");
+                crate::warn!("Failed to prompt for tool, defaulting...");
                 Ok(matching[0].clone())
             }
         }

@@ -1,6 +1,6 @@
 use std::thread;
 use clap::{arg, value_parser, Command};
-use jb::{Tool, Result, Batch, bail_with, error_with};
+use jb::{Tool, Result, Batch};
 use jb::tool::{Install, List};
 
 pub(crate) fn command() -> Command {
@@ -27,7 +27,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let mut tools: Vec<Tool> = Vec::new();
     let installed_tools = match Tool::list() {
         Ok(tools) => tools,
-        Err(e) => bail_with!(e, "Could not list installed tools"),
+        Err(e) => jb::bail_with!(e, "Could not list installed tools"),
     };
 
     let mut error_batch = Batch::new();
@@ -40,7 +40,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 .collect::<Vec<Tool>>();
 
             if installed_tools.is_empty() {
-                error_with!(error_batch, "Could not find any installed versions of {tool}");
+                jb::batch_with!(error_batch, "Could not find any installed versions of {tool}");
             } else {
                 tools.extend(installed_tools);
             }
@@ -51,7 +51,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 .collect::<Vec<Tool>>();
 
             if installed_tools.is_empty() {
-                error_with!(error_batch, "Could not find any installed versions of {tool}");
+                jb::batch_with!(error_batch, "Could not find any installed versions of {tool}");
             } else {
                 tools.extend(installed_tools);
             }
@@ -70,9 +70,6 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             let tool = tool.clone();
 
             thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.as_str());
-                let _guard = span.enter();
-
                 tool.uninstall()?;
 
                 Ok(())
@@ -86,7 +83,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         match result {
             Ok(Ok(())) => {}
             Ok(Err(e)) => error_batch.add(e),
-            Err(e) => error_with!(error_batch, "Thread panicked: {e:?}"),
+            Err(e) => jb::batch_with!(error_batch, "Thread panicked: {e:?}"),
         }
     }
 

@@ -5,9 +5,8 @@ mod uninstall;
 mod unlink;
 mod update;
 
-use anyhow::anyhow;
 use clap::{arg, Arg, Command, value_parser};
-use jb::error::{Batch, Result};
+use jb::error::Result;
 
 pub fn cli() -> Command {
     Command::new("jb")
@@ -72,9 +71,9 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),
             "update" => update::dispatch(sub_matches),
-            _ => Err(Batch::from(anyhow!("Unknown subcommand {} provided", name))),
+            _ => jb::bail!("Unknown subcommand {} provided", name),
         }
     } else {
-        Err(Batch::from(anyhow!("No subcommand provided")))
+        jb::bail!("No subcommand provided")
     }
 }

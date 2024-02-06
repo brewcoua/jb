@@ -6,7 +6,9 @@
 mod install;
 mod list;
 mod link;
+mod probe;
 
 pub use install::Install;
 pub use list::List;
 pub use link::Link;
+pub use probe::Probe;

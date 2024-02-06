@@ -29,7 +29,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::error::Result<()> {
             .with_context(|| "Failed to update the CLI") {
         Ok((done, changelog)) => {
             if done {
-                tracing::info!("Updated to the latest version");
+                jb::info!("Updated to the latest version");
                 if !changelog.is_empty() {
                     println!("\nChangelog:\n{changelog}");
                 }
