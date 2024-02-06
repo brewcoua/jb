@@ -4,7 +4,6 @@ use super::list::List;
 use super::link::Link;
 use crate::{api,util};
 use crate::tool::Tool;
-use crate::debug;
 
 pub trait Install {
     /// Returns whether the tool is installed.
@@ -34,7 +33,7 @@ pub trait Install {
 
 impl Install for Tool {
     fn is_installed(&self) -> anyhow::Result<bool> {
-        debug!("Checking if installed");
+        crate::debug!("Checking if installed");
 
         Ok(
             Tool::list_kind(self.kind)
@@ -115,15 +114,17 @@ impl Install for Tool {
             return Ok(());
         }
 
-        crate::info!("Unlinking {}", self.as_str());
-        self.unlink()?;
+        if self.is_linked() {
+            crate::debug!("Unlinking {}", self.as_str());
+            self.unlink()?;
+        }
 
         let tool_directory = self.as_path();
-        crate::info!("Removing {}", tool_directory.display());
+        crate::debug!("Removing {}", tool_directory.display());
         std::fs::remove_dir_all(&tool_directory)
             .with_context(|| format!("Failed to remove {}", tool_directory.display()))?;
 
-        crate::info!("Uninstalled {}", self.as_str());
+        crate::debug!("Uninstalled {}", self.as_str());
 
         Ok(())
     }

@@ -57,6 +57,11 @@ impl Batch {
     pub fn errors(&self) -> &Vec<Error> {
         &self.errors
     }
+
+    /// Extend the batch with another batch
+    pub fn extend(&mut self, other: Batch) {
+        self.errors.extend(other.errors);
+    }
 }
 
 impl Display for Batch {

@@ -40,6 +40,21 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
                     archive.unpack(&folder)
                         .with_context(|| format!("Failed to extract to {}", folder.display()))?;
 
+                    // Move all content of the unpacked folder into the parent folder (the specified folder)
+                    let mut entries = std::fs::read_dir(&folder)
+                        .with_context(|| format!("Failed to read {}", folder.display()))?;
+                    while let Some(entry) = entries.next() {
+                        let entry = entry
+                            .with_context(|| format!("Failed to read {}", folder.display()))?;
+                        let path = entry.path();
+                        let new_path = folder.join(path.file_name().unwrap());
+                        std::fs::rename(&path, &new_path)
+                            .with_context(|| format!("Failed to move {} to {}", path.display(), new_path.display()))?;
+                    }
+
+                    std::fs::remove_dir(&folder)
+                        .with_context(|| format!("Failed to remove {}", folder.display()))?;
+
                     Ok::<(), anyhow::Error>(())
                 });
 
