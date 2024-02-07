@@ -25,12 +25,12 @@ pub(crate) fn command() -> Command {
         )
 }
 
-
+#[allow(clippy::too_many_lines)]
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools: Vec<Tool> = args
         .get_many::<Tool>("tools")
         .expect("Could not find argument tools")
-        .map(|tool| tool.clone())
+        .map(Clone::clone)
         .collect();
 
     let clean = args.get_flag("clean");
@@ -56,9 +56,10 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     if tools.is_empty() {
         jb::warn!("No tools left to install, exiting... {SKIP}");
-        return match error_batch.is_empty() {
-            true => Ok(()),
-            false => Err(error_batch),
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
         };
     }
 
@@ -115,9 +116,10 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     if tools.is_empty() {
         jb::warn!("No tools left to install, exiting... {SKIP}");
-        return match error_batch.is_empty() {
-            true => Ok(()),
-            false => Err(error_batch),
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
         };
     }
 
@@ -126,7 +128,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     //* Remove all duplicate tool kinds, keeping the latest version (we can only have one version linked of each tool)
     let mut filtered_tools = tools.clone();
-    filtered_tools.sort_by(|a, b| a.cmp(&b));
+    filtered_tools.sort();
     filtered_tools.dedup_by(|a, b| a.kind == b.kind);
 
     crate::concurrent_step!(error_batch, filtered_tools, |tool: Tool| {
@@ -150,7 +152,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             jb::warn!("Failed to list installed tools, skipping cleanup... {SKIP}");
             jb::batch_with!(error_batch, e);
         } else {
-            let kinds = tools.iter().map(|tool| tool.kind.clone()).collect::<Vec<_>>();
+            let kinds = tools.iter().map(|tool| tool.kind).collect::<Vec<_>>();
             let old_tools = old_tools
                 .unwrap()
                 .into_iter()
@@ -166,7 +168,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                     jb::make!("{}", tool.as_str());
 
                     let path = tool.as_path();
-                    let result = std::fs::remove_dir_all(&path)
+                    let result = std::fs::remove_dir_all(path)
                         .with_context(|| format!("Failed to clean {}", tool.as_str()));
 
                     if let Err(e) = result {

@@ -7,6 +7,15 @@ use flate2::read::GzDecoder;
 use futures_lite::StreamExt;
 use tar::Archive;
 
+/// Download and extract a tarball from a URL.
+///
+/// It will directly stream the download to the extraction, so it will not store the tarball on disk.
+///
+/// # Errors
+/// This function will return an error if the download or extraction fails.
+///
+/// # Panics
+/// This function will panic if the folder cannot be created or written to.
 pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif::ProgressBar>) -> anyhow::Result<()> {
     let filename = url.split('/').last().expect("Failed to get filename");
     if !filename.ends_with(".tar.gz") {
@@ -14,7 +23,7 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
     }
 
     if !folder.exists() {
-        std::fs::create_dir_all(&folder)
+        std::fs::create_dir_all(folder)
             .with_context(|| format!("Failed to create {}", folder.display()))?;
     }
 
@@ -100,7 +109,7 @@ impl ChannelRead {
 
 impl Read for ChannelRead {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if self.current.position() as usize == self.current.get_ref().len() {
+        if self.current.position() == self.current.get_ref().len() as u64 {
             if let Ok(data) = self.rx.recv() {
                 self.current = io::Cursor::new(data);
             }
@@ -114,8 +123,11 @@ impl Read for ChannelRead {
 ///
 /// # Errors
 /// This function will return an error if any file or folder cannot be moved.
+///
+/// # Panics
+/// This function will panic if the folder cannot be read or written to.
 pub fn strip_content(folder: &PathBuf) -> anyhow::Result<()> {
-    let entries = std::fs::read_dir(&folder)
+    let entries = std::fs::read_dir(folder)
         .with_context(|| format!("Failed to read {}", folder.display()))?;
     for entry in entries {
         let entry = entry

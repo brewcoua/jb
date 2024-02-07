@@ -23,12 +23,15 @@ pub struct Logger {
     pub started: Instant,
 }
 
-static LOGGERS: Lazy<DashMap<ThreadId, Logger>> = Lazy::new(|| DashMap::new());
+static LOGGERS: Lazy<DashMap<ThreadId, Logger>> = Lazy::new(DashMap::new);
 
 impl Logger {
     /// Get the logger for the current thread or create a new one if it does not exist.
     ///
     /// This is a convenience method for getting the logger for the current thread.
+    ///
+    /// # Panics
+    /// This method will panic if the current thread ID is not found, after it was just inserted.
     pub fn instance<'a>() -> RefMut<'a, ThreadId, Logger> {
         let id = std::thread::current().id();
 
@@ -120,6 +123,8 @@ macro_rules! log {
         $crate::log::Logger::instance().log($level, format!($($arg)*), false)
     };
 }
+
+#[allow(clippy::module_name_repetitions)]
 #[macro_export]
 macro_rules! log_elapsed {
     ($level:expr, $($arg:tt)*) => {

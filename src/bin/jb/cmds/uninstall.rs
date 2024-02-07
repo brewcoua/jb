@@ -19,7 +19,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let args_tools: Vec<_> = args
         .get_many::<Tool>("tools")
         .expect("Could not find argument tool")
-        .map(|tool| tool.clone())
+        .map(Clone::clone)
         .collect();
 
     let mut error_batch = Batch::new();
@@ -48,10 +48,11 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     if tools.is_empty() {
         jb::warn!("No tools left to uninstall, skipping... {SKIP}");
-        return match error_batch.is_empty() {
-            true => Ok(()),
-            false => Err(error_batch),
-        };
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
+        }
     }
 
     // Third step, uninstall all tools
@@ -63,10 +64,11 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     if tools.is_empty() {
         jb::warn!("No tools left to uninstall, skipping... {SKIP}");
-        return match error_batch.is_empty() {
-            true => Ok(()),
-            false => Err(error_batch),
-        };
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
+        }
     }
 
     jb::info!("{CHECK} Uninstalled all tools:");

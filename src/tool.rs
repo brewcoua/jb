@@ -147,18 +147,18 @@ impl Tool {
             .items(&matching)
             .interact();
 
-        match result {
-            Ok(tool) => Ok(matching[tool].clone()),
-            Err(_) => {
-                crate::warn!("Failed to prompt for tool, defaulting...");
-                Ok(matching[0].clone())
-            }
+        if let Ok(tool) = result {
+            Ok(matching[tool].clone())
+        } else {
+            crate::warn!("Failed to prompt for tool, defaulting...");
+            Ok(matching[0].clone())
         }
     }
 
     /// Returns whether the tool is installed.
     ///
     /// This will check if the tool's directory exists and if the tool is linked.
+    #[must_use]
     pub fn is_installed(&self) -> bool {
         self.as_path().exists()
     }

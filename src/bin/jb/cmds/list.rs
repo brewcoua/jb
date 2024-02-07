@@ -53,14 +53,7 @@ pub(crate) fn dispatch() -> Result<()> {
         };
 
         if linked {
-            println!(
-                "{:<1} {:<30} {:<15} {:<15} {:<15}",
-                icon,
-                kind,
-                version,
-                build,
-                release,
-            );
+            println!("{icon:<1} {kind:<30} {version:<15} {build:<15} {release:<15}");
         } else {
             println!(
                 "{:<1} {:<30} {:<15} {:<15} {:<15}",

@@ -1,6 +1,6 @@
-//! # JetBrains CLI
+//! # `JetBrains` CLI
 //!
-//! This crate is made to provide a simple CLI for JetBrains tools.
+//! This crate is made to provide a simple CLI for `JetBrains` tools.
 
 #[cfg(not(target_os = "linux"))]
 compile_error!("This crate only supports Linux");
