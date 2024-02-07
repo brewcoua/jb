@@ -3,7 +3,22 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.3.2](https://github.com/brewcoua/jb/compare/v1.3.1..1.3.2) - 2024-02-05
+## [1.4.0](https://github.com/brewcoua/jb/compare/v1.3.2..1.4.0) - 2024-02-07
+
+### Bug Fixes
+
+- **(error)** add unwrap to avoid displaying option - ([9c3160d](https://github.com/brewcoua/jb/commit/9c3160dc9e9d2e34281474690ce480b9fae8196d)) - Brewen Couaran
+- **(install)** add folder strip and link step - ([7ecbf57](https://github.com/brewcoua/jb/commit/7ecbf57f45aa43796f1121863174e402259d1044)) - Brewen Couaran
+- **(install)** fix linking step, add strip component after extracting and show install message - ([5e7a683](https://github.com/brewcoua/jb/commit/5e7a6838696f8ae32250d32f0875ab2240e802df)) - Brewen Couaran
+- **(install)** clean up step with only related tools and avoid uselessly checking link status - ([515803c](https://github.com/brewcoua/jb/commit/515803c26d11cc6137315e0b823421104797c8d2)) - Brewen Couaran
+
+### Features
+
+- **(log)** switch from tracing to using custom logger - ([6f4b207](https://github.com/brewcoua/jb/commit/6f4b207ee8a8e60dfd4964ff847363bb5e0e0303)) - Brewen Couaran
+- **(uninstall)** add step by step logs and run concurrently - ([535dc2b](https://github.com/brewcoua/jb/commit/535dc2b5ba4ffad6634b112d982b26e91fbd7026)) - Brewen Couaran
+
+---
+## [1.3.2](https://github.com/brewcoua/jb/compare/v1.3.1..v1.3.2) - 2024-02-05
 
 ### Bug Fixes
 
