@@ -7,7 +7,7 @@ use console::Emoji;
 use indicatif::{MultiProgress, ProgressBar};
 use jb::{Tool, Result, Batch};
 use jb::api::deserial::Download;
-use jb::tool::{Install, Link, Probe};
+use jb::tool::{Link, List, Probe};
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -29,7 +29,9 @@ static LOOKING_GLASS: Emoji = Emoji("🔎", "");
 static LINK: Emoji = Emoji("🔗", "");
 static DOWNLOAD: Emoji = Emoji("⬇️", "");
 static CLEAN: Emoji = Emoji("🧹", "");
+static BIN: Emoji = Emoji("🗑️", "");
 static CHECK: Emoji = Emoji("✅ ", "");
+static SKIP: Emoji = Emoji("⏭️", "");
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools: Vec<Tool> = args
@@ -41,7 +43,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let clean = args.get_flag("clean");
     let mut error_batch = Batch::new();
 
-    jb::info!("{} Resolving tool releases...", LOOKING_GLASS);
+    jb::info!("{LOOKING_GLASS} Resolving tool releases...");
 
     // First step, find releases for all tools. If any fails, ignore them (while warning)
     let mut tools = crate::concurrent_step!(error_batch, tools, |mut tool: Tool| {
@@ -50,7 +52,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         let release = match tool.sync() {
             Ok(release) => release,
             Err(err) => {
-                jb::warn!("Failed to fetch release for {tool}, skipping...");
+                jb::warn!("Failed to fetch release for {tool}, skipping... {SKIP}");
                 return Err(err);
             }
         };
@@ -65,7 +67,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     // Second step, download and extract all tools. If any fails, ignore them (while warning)
     // All errors will be collected and returned at the end
-    jb::info!("{} Downloading tools...", DOWNLOAD);
+    jb::info!("{DOWNLOAD} Downloading tools...");
 
     let m = MultiProgress::new();
     let ps = indicatif::ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {bytes}/{total_bytes} ({eta})")
@@ -73,17 +75,23 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
         .progress_chars("#>-");
 
-    let mut tools = crate::concurrent_step!(error_batch, tools, |(tool, release): (Tool, Download)| {
+    let tools = crate::concurrent_step!(error_batch, tools, |(tool, release): (Tool, Download)| {
         jb::make!("{}", tool.as_str());
 
         let install_dir = tool.as_path();
+
+        if install_dir.exists() {
+            jb::warn!("{} is already installed, skipping... {SKIP}", tool.as_str());
+            anyhow::bail!("{} is already installed", tool.as_str());
+        }
+
 
         let result = jb::util::download_extract(&release.link, &install_dir, Some(&pb))
             .with_context(|| format!("Failed to download {}", tool.as_str()));
 
         pb.finish();
         if let Err(e) = result {
-            jb::warn!("Failed to download {}, skipping...", tool.as_str());
+            jb::warn!("Failed to download {}, skipping... {SKIP}", tool.as_str());
 
             // Make sure to delete the directory if it was created
             if install_dir.exists() {
@@ -103,7 +111,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     m.clear().unwrap();
 
     // Third step, link all tools. If any fails, ignore them (while warning)
-    jb::info!("{} Linking tools...", LINK);
+    jb::info!("{LINK} Linking tools...");
 
     //* Remove all duplicate tool kinds, keeping the latest version (we can only have one version linked of each tool)
     let mut filtered_tools = tools.clone();
@@ -117,7 +125,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
             .with_context(|| format!("Failed to link {}", tool.as_str()));
 
         if let Err(e) = result {
-            jb::warn!("Failed to link {}, skipping...", tool.as_str());
+            jb::warn!("Failed to link {}, skipping... {SKIP}", tool.as_str());
             return Err(e);
         }
 
@@ -126,24 +134,46 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
 
     // Fourth step, clean up old versions, if requested
     if clean {
-        jb::info!("{} Cleaning up old versions...", CLEAN);
+        let old_tools = Tool::list();
+        if let Err(e) = old_tools {
+            jb::warn!("Failed to list installed tools, skipping cleanup... {SKIP}");
+            jb::batch_with!(error_batch, e);
+        } else {
+            let kinds = tools.iter().map(|tool| tool.kind.clone()).collect::<Vec<_>>();
+            let old_tools = old_tools
+                .unwrap()
+                .into_iter()
+                .filter(|tool| kinds.contains(&tool.kind) && !tools.contains(tool))
+                .collect::<Vec<_>>();
 
-        tools = crate::concurrent_step!(error_batch, tools, |tool: Tool| {
-            jb::make!("{}", tool.as_str());
+            if old_tools.is_empty() {
+                jb::info!("{CLEAN} No old versions to clean up, skipping... {SKIP}");
+            } else {
+                jb::info!("{CLEAN} Cleaning up old versions...");
 
-            let result = tool.uninstall()
-                .with_context(|| format!("Failed to clean {}", tool.as_str()));
+                let cleaned_tools = crate::concurrent_step!(error_batch, old_tools, |tool: Tool| {
+                    jb::make!("{}", tool.as_str());
 
-            if let Err(e) = result {
-                jb::warn!("Failed to clean {}, skipping...", tool.as_str());
-                return Err(e);
+                    let path = tool.as_path();
+                    let result = std::fs::remove_dir_all(&path)
+                        .with_context(|| format!("Failed to clean {}", tool.as_str()));
+
+                    if let Err(e) = result {
+                        jb::warn!("Failed to clean {}, skipping... {SKIP}", tool.as_str());
+                        return Err(e);
+                    }
+
+                    Ok(tool)
+                });
+
+                for cleaned_tool in cleaned_tools {
+                    println!("{BIN} {cleaned_tool}");
+                }
             }
-
-            Ok(tool)
-        });
+        }
     }
 
-    jb::info!("{} Done!", CHECK);
+    jb::info!("{CHECK} Done!");
     for tool in tools {
         println!("- {tool}");
     }
