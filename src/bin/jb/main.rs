@@ -1,8 +1,10 @@
 use jb::env::Variable;
 
 mod util;
+mod emoji;
 mod cmds;
 mod update;
+
 
 fn main() {
     let cli = cmds::cli();

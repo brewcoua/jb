@@ -23,11 +23,18 @@ pub trait Link {
     /// Unlinks the tool.
     ///
     /// This removes the symlink to the tool's binary and icon in the PATH and icons directory, respectively.
-    /// It will also try to link an alternative version if one is available (with the latest version taking priority).
     ///
     /// # Errors
     /// This function will return an error if the tool is not linked, or if the symlinks fail.
     fn unlink(&self) -> anyhow::Result<()> where Self: Sized;
+
+    /// Unlinks the tool and links an alternative version.
+    ///
+    /// This removes the symlink to the tool's binary and icon in the PATH and icons directory, respectively, and try to link an alternative version if available.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is not linked or if the symlinks fail.
+    fn unlink_with_alternative(&self) -> anyhow::Result<()> where Self: Sized;
 }
 
 impl Link for Tool {
@@ -114,6 +121,12 @@ impl Link for Tool {
 
         crate::debug!("Unlinked icon");
 
+        Ok(())
+    }
+
+    fn unlink_with_alternative(&self) -> anyhow::Result<()> {
+        self.unlink()?;
+
         // Find an alternative version to link
         let mut tools = Tool::list_kind(self.kind)
             .with_context(|| format!("Failed to list installed tools for {}", self.kind))?;
@@ -123,7 +136,7 @@ impl Link for Tool {
         if let Some(tool) = tools.first() {
             crate::debug!("Found alternative version: {}", tool.as_str());
             tool.link()?;
-            crate::info!("Linked alternative version {tool}");
+            crate::debug!("Linked alternative version {tool}");
         }
 
         Ok(())

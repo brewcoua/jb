@@ -3,11 +3,11 @@ use std::thread;
 use anyhow::{anyhow, Context};
 
 use clap::{arg, value_parser, Command};
-use console::Emoji;
 use indicatif::{MultiProgress, ProgressBar};
 use jb::{Tool, Result, Batch};
 use jb::api::deserial::Download;
 use jb::tool::{Link, List, Probe};
+use crate::emoji::*;
 
 pub(crate) fn command() -> Command {
     Command::new("install")
@@ -25,13 +25,6 @@ pub(crate) fn command() -> Command {
         )
 }
 
-static LOOKING_GLASS: Emoji = Emoji("🔎", "");
-static LINK: Emoji = Emoji("🔗", "");
-static DOWNLOAD: Emoji = Emoji("⬇️", "");
-static CLEAN: Emoji = Emoji("🧹", "");
-static BIN: Emoji = Emoji("🗑️", "");
-static CHECK: Emoji = Emoji("✅ ", "");
-static SKIP: Emoji = Emoji("⏭️", "");
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     let tools: Vec<Tool> = args
@@ -61,6 +54,14 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         Ok((tool, release))
     });
 
+    if tools.is_empty() {
+        jb::warn!("No tools left to install, exiting... {SKIP}");
+        return match error_batch.is_empty() {
+            true => Ok(()),
+            false => Err(error_batch),
+        };
+    }
+
     // Remove duplicate tools (avoid installing the same tool twice)
     tools.sort_by(|a, b| a.0.cmp(&b.0));
     tools.dedup_by(|a, b| a.0 == b.0);
@@ -70,13 +71,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     jb::info!("{DOWNLOAD} Downloading tools...");
 
     let m = MultiProgress::new();
-    let ps = indicatif::ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {bytes}/{total_bytes} ({eta})")
+    let ps = indicatif::ProgressStyle::with_template("{prefix:.bold.dim} [{elapsed_precise}] {wide_bar:.cyan/blue} {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
         .unwrap()
         .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
         .progress_chars("#>-");
 
     let tools = crate::concurrent_step!(error_batch, tools, |(tool, release): (Tool, Download)| {
         jb::make!("{}", tool.as_str());
+
+        pb.set_prefix(format!("[{}]", tool.as_str()));
 
         let install_dir = tool.as_path();
 
@@ -109,6 +112,14 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     });
 
     m.clear().unwrap();
+
+    if tools.is_empty() {
+        jb::warn!("No tools left to install, exiting... {SKIP}");
+        return match error_batch.is_empty() {
+            true => Ok(()),
+            false => Err(error_batch),
+        };
+    }
 
     // Third step, link all tools. If any fails, ignore them (while warning)
     jb::info!("{LINK} Linking tools...");

@@ -15,7 +15,7 @@ macro_rules! concurrent_step {
             match result {
                 Ok(Ok(result)) => results.push(result),
                 Ok(Err(e)) => $error_batch.add(e),
-                Err(e) => $error_batch.add(anyhow!("Thread panicked: {:?}", e)),
+                Err(e) => $error_batch.add(anyhow::anyhow!("Thread panicked: {:?}", e)),
             }
         }
 

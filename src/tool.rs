@@ -155,6 +155,13 @@ impl Tool {
             }
         }
     }
+
+    /// Returns whether the tool is installed.
+    ///
+    /// This will check if the tool's directory exists and if the tool is linked.
+    pub fn is_installed(&self) -> bool {
+        self.as_path().exists()
+    }
 }
 
 impl Display for Tool {

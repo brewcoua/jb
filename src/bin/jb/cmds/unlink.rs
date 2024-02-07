@@ -28,15 +28,14 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         Err(err) => jb::bail_with!(err, "Failed to fill {tool}")
     };
 
-    match tool.unlink() {
+    match tool.unlink_with_alternative() {
         Ok(()) => {}
         Err(err) => jb::bail_with!(err, "Failed to unlink {tool}")
     }
 
     jb::info!(
-        "Unlinked {} from {}",
+        "Unlinked {tool} from {}",
         tool.kind.as_str(),
-        tool.as_path().display(),
     );
 
     Ok(())

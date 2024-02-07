@@ -22,6 +22,12 @@ pub trait List {
     /// # Errors
     /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
     fn list_kind(kind: Kind) -> anyhow::Result<Vec<Tool>> where Self: Sized;
+
+    /// Lists tools that match the current tool.
+    ///
+    /// # Errors
+    /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
+    fn list_matching(&self) -> anyhow::Result<Vec<Tool>> where Self: Sized;
 }
 
 impl List for Tool {
@@ -52,6 +58,15 @@ impl List for Tool {
             Self::list()?
                 .into_iter()
                 .filter(|tool| tool.kind == kind)
+                .collect()
+        )
+    }
+
+    fn list_matching(&self) -> anyhow::Result<Vec<Tool>> {
+        Ok(
+            Self::list()?
+                .into_iter()
+                .filter(|tool| self.matched(tool))
                 .collect()
         )
     }
