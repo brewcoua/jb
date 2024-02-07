@@ -40,20 +40,8 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
                     archive.unpack(&folder)
                         .with_context(|| format!("Failed to extract to {}", folder.display()))?;
 
-                    // Move all content of the unpacked folder into the parent folder (the specified folder)
-                    let mut entries = std::fs::read_dir(&folder)
-                        .with_context(|| format!("Failed to read {}", folder.display()))?;
-                    while let Some(entry) = entries.next() {
-                        let entry = entry
-                            .with_context(|| format!("Failed to read {}", folder.display()))?;
-                        let path = entry.path();
-                        let new_path = folder.join(path.file_name().unwrap());
-                        std::fs::rename(&path, &new_path)
-                            .with_context(|| format!("Failed to move {} to {}", path.display(), new_path.display()))?;
-                    }
-
-                    std::fs::remove_dir(&folder)
-                        .with_context(|| format!("Failed to remove {}", folder.display()))?;
+                    strip_content(&folder)
+                        .with_context(|| format!("Failed to strip content of {}", folder.display()))?;
 
                     Ok::<(), anyhow::Error>(())
                 });
@@ -73,8 +61,12 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
                             pb.set_position(min(downloaded, content_length));
                         }
 
-                        tx.send_async(chunk.to_vec()).await
-                            .with_context(|| "Failed to send chunk")?;
+                        if let Err(err) = tx.send(chunk.to_vec()) {
+                            match err.to_string().as_str() {
+                                "sending on a closed channel" => break,
+                                _ => anyhow::bail!("Failed to send chunk: {}", err),
+                            }
+                        }
                     }
                     drop(tx);
                 } else {
@@ -116,4 +108,33 @@ impl Read for ChannelRead {
 
         self.current.read(buf)
     }
+}
+
+/// Strip the content of a folder, moving all files and folders one level up.
+///
+/// # Errors
+/// This function will return an error if any file or folder cannot be moved.
+pub fn strip_content(folder: &PathBuf) -> anyhow::Result<()> {
+    let entries = std::fs::read_dir(&folder)
+        .with_context(|| format!("Failed to read {}", folder.display()))?;
+    for entry in entries {
+        let entry = entry
+            .with_context(|| format!("Failed to read {}", folder.display()))?;
+        let path = entry.path();
+        let entries = std::fs::read_dir(&path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
+
+        for entry in entries {
+            let entry = entry
+                .with_context(|| format!("Failed to read {}", path.display()))?;
+            let path = entry.path();
+            let new_path = folder.join(path.file_name().unwrap());
+            std::fs::rename(&path, &new_path)
+                .with_context(|| format!("Failed to move {} to {}", path.display(), new_path.display()))?;
+        }
+
+        std::fs::remove_dir(&path)
+            .with_context(|| format!("Failed to remove {}", path.display()))?;
+    }
+    Ok(())
 }

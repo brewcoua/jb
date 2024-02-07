@@ -1,5 +1,6 @@
 use jb::env::Variable;
 
+mod util;
 mod cmds;
 mod update;
 
