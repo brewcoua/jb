@@ -1,7 +1,8 @@
 use std::thread;
 use clap::{arg, value_parser, Command};
-use jb::{Tool, Result, Batch, bail_with, error_with};
-use jb::tool::{Install, List};
+use jb::{Tool, Result, Batch};
+use jb::tool::{Link, List};
+use crate::emoji::*;
 
 pub(crate) fn command() -> Command {
     Command::new("uninstall")
@@ -12,82 +13,67 @@ pub(crate) fn command() -> Command {
                 .value_parser(value_parser!(Tool))
                 .num_args(1..=10),
         )
-        .arg(
-            arg!(-d --directory <PATH>)
-                .help("The directory to uninstall the tool from")
-                .value_parser(value_parser!(std::path::PathBuf)),
-        )
 }
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
-    let args_tools = args
+    let args_tools: Vec<_> = args
         .get_many::<Tool>("tools")
-        .expect("Could not find argument tool");
-
-    let mut tools: Vec<Tool> = Vec::new();
-    let installed_tools = match Tool::list() {
-        Ok(tools) => tools,
-        Err(e) => bail_with!(e, "Could not list installed tools"),
-    };
+        .expect("Could not find argument tool")
+        .map(Clone::clone)
+        .collect();
 
     let mut error_batch = Batch::new();
 
-    for tool in args_tools {
-        if tool.version.is_none() {
-            let installed_tools = installed_tools.clone()
-                .into_iter()
-                .filter(|t| t.kind == tool.kind)
-                .collect::<Vec<Tool>>();
-
-            if installed_tools.is_empty() {
-                error_with!(error_batch, "Could not find any installed versions of {tool}");
-            } else {
-                tools.extend(installed_tools);
-            }
-        } else {
-            let installed_tools = installed_tools.clone()
-                .into_iter()
-                .filter(|t| tool.matched(t))
-                .collect::<Vec<Tool>>();
-
-            if installed_tools.is_empty() {
-                error_with!(error_batch, "Could not find any installed versions of {tool}");
-            } else {
-                tools.extend(installed_tools);
-            }
-        }
-    }
-
-    if !error_batch.is_empty() {
-        return Err(error_batch);
-    }
+    // First step, list all tools that match the given tools
+    jb::info!("{LOOKING_GLASS} Searching for matching tools...");
+    let mut tools: Vec<_> = crate::concurrent_step!(error_batch, args_tools, |tool: Tool| {
+        let matched_tools = tool.list_matching()?;
+        Ok(matched_tools)
+    }).into_iter().flatten().collect();
 
     tools.sort(); tools.dedup();
 
-    let handles: Vec<_> = tools
-        .iter()
-        .map(|tool| {
-            let tool = tool.clone();
+    if tools.is_empty() {
+        jb::bail!("No tools found, nothing to uninstall");
+    }
 
-            thread::spawn(move || {
-                let span = tracing::info_span!("task", tool = tool.as_str());
-                let _guard = span.enter();
-
-                tool.uninstall()?;
-
-                Ok(())
-            })
-        }).collect();
-
-    let mut error_batch = Batch::new();
-
-    for handle in handles {
-        let result = handle.join();
-        match result {
-            Ok(Ok(())) => {}
-            Ok(Err(e)) => error_batch.add(e),
-            Err(e) => error_with!(error_batch, "Thread panicked: {e:?}"),
+    // Second step, unlink all tools
+    jb::info!("{LINK} Unlinking tools...");
+    let tools = crate::concurrent_step!(error_batch, tools, |tool: Tool| {
+        if tool.is_linked() {
+            tool.unlink()?;
         }
+        Ok(tool)
+    });
+
+    if tools.is_empty() {
+        jb::warn!("No tools left to uninstall, skipping... {SKIP}");
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
+        }
+    }
+
+    // Third step, uninstall all tools
+    jb::info!("{BIN} Uninstalling tools...");
+    let tools = crate::concurrent_step!(error_batch, tools, |tool: Tool| {
+        std::fs::remove_dir_all(tool.as_path())?;
+        Ok(tool)
+    });
+
+    if tools.is_empty() {
+        jb::warn!("No tools left to uninstall, skipping... {SKIP}");
+        return if error_batch.is_empty() {
+            Ok(())
+        } else {
+            Err(error_batch)
+        }
+    }
+
+    jb::info!("{CHECK} Uninstalled all tools:");
+    for tool in tools {
+        println!("- {tool}");
     }
 
     if error_batch.is_empty() {

@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 use anyhow::Context;
 use serde::Deserialize;
+use crate::emoji::{LOOKING_GLASS,TAG,DOWNLOAD};
 
 #[derive(Deserialize, Debug)]
 pub struct Release {
@@ -33,21 +34,26 @@ impl Release {
 
     /// Try updating the CLI, if there is a new release.
     pub fn try_update(location: &PathBuf, force: bool) -> anyhow::Result<(bool, String)> {
+        jb::info!("{LOOKING_GLASS} Checking for updates...");
+
         let latest = Self::latest()?;
         let current = env!("CARGO_PKG_VERSION");
         let target = env!("TARGET");
 
+        jb::info!("{TAG} Found latest version: {} (current: v{current})", latest.tag_name);
+
         if latest.tag_name == format!("v{current}") {
             if force {
-                tracing::warn!("The latest version is already installed ({})", current);
-                tracing::warn!("Forcing the update...");
+                jb::warn!("The latest version is already installed, forcing the update...");
             } else {
-                tracing::error!("The latest version is already installed ({current})");
+                jb::error!("The latest version is already installed ({current})");
                 return Ok((false, String::new()));
             }
         }
 
-        tracing::debug!("Installing the latest version ({}) for target {} to {}", latest.tag_name, target, location.display());
+        jb::debug!("Installing the latest version ({}) for target {} to {}", latest.tag_name, target, location.display());
+
+        jb::info!("{DOWNLOAD} Downloading the latest version...");
 
         let tempdir = tempfile::tempdir()?;
 

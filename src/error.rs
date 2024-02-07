@@ -57,6 +57,11 @@ impl Batch {
     pub fn errors(&self) -> &Vec<Error> {
         &self.errors
     }
+
+    /// Extend the batch with another batch
+    pub fn extend(&mut self, other: Batch) {
+        self.errors.extend(other.errors);
+    }
 }
 
 impl Display for Batch {
@@ -64,7 +69,7 @@ impl Display for Batch {
         if self.errors.is_empty() {
             return write!(f, "No errors occurred");
         } else if self.errors.len() == 1 {
-            return write!(f, "{:?}", self.first());
+            return write!(f, "{:?}", self.first().unwrap());
         }
 
         writeln!(

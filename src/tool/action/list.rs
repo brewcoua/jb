@@ -22,13 +22,16 @@ pub trait List {
     /// # Errors
     /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
     fn list_kind(kind: Kind) -> anyhow::Result<Vec<Tool>> where Self: Sized;
+
+    /// Lists tools that match the current tool.
+    ///
+    /// # Errors
+    /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
+    fn list_matching(&self) -> anyhow::Result<Vec<Tool>> where Self: Sized;
 }
 
 impl List for Tool {
     fn list() -> anyhow::Result<Vec<Tool>> {
-        let span = tracing::debug_span!("list");
-        let _enter = span.enter();
-
         let tools_directory = Variable::ToolsDirectory.get::<PathBuf>();
 
         let mut tools = vec![];
@@ -42,7 +45,7 @@ impl List for Tool {
                 if let Ok(tool) = Tool::from_str(name) {
                     tools.push(tool);
                 } else {
-                    tracing::debug!("Skipping invalid tool directory: {name}");
+                    crate::debug!("Skipping invalid tool directory: {name}");
                 }
             }
         }
@@ -55,6 +58,15 @@ impl List for Tool {
             Self::list()?
                 .into_iter()
                 .filter(|tool| tool.kind == kind)
+                .collect()
+        )
+    }
+
+    fn list_matching(&self) -> anyhow::Result<Vec<Tool>> {
+        Ok(
+            Self::list()?
+                .into_iter()
+                .filter(|tool| self.matched(tool))
                 .collect()
         )
     }

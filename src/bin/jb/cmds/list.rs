@@ -1,6 +1,6 @@
 use clap::Command;
-use colored::Colorize;
-use jb::{Tool, Result, bail_with};
+use console::style;
+use jb::{Tool, Result};
 use jb::tool::{Link, List};
 
 pub(crate) fn command() -> Command {
@@ -11,57 +11,57 @@ pub(crate) fn command() -> Command {
 pub(crate) fn dispatch() -> Result<()> {
     let installed_tools = match Tool::list() {
         Ok(tools) => tools,
-        Err(err) => bail_with!(err, "Failed to list tools"),
+        Err(err) => jb::bail_with!(err, "Failed to list tools"),
     };
 
     println!(
         "{:<1} {:<30} {:<15} {:<15} {:<15}",
         " ",
-        "Tool".bold().underline(),
-        "Version".bold().underline(),
-        "Build".bold().underline(),
-        "Release Type".bold().underline(),
+        style("Tool").bold().underlined(),
+        style("Version").bold().underlined(),
+        style("Build").bold().underlined(),
+        style("Release Type").bold().underlined(),
     );
 
-    let checkmark = char::from_u32(0x2714).unwrap().to_string();
-    let cross = char::from_u32(0x2718).unwrap().to_string();
+    let checkmark = style(char::from_u32(0x2714).unwrap()).green();
+    let cross = style(char::from_u32(0x2718).unwrap()).red();
 
     for tool in &installed_tools {
         let linked = tool.is_linked();
 
         let icon = if linked {
-            checkmark.green()
+            &checkmark
         } else {
-            cross.red()
+            &cross
         };
 
-        let line = format!(
-            "{:<1} {:<30} {:<15} {:<15} {:<15}",
-            icon,
-            tool.kind.to_string(),
-            if let Some(version) = &tool.version {
-                version.to_string()
-            } else {
-                "N/A".to_string()
-            },
-            if let Some(build) = &tool.build {
-                build.to_string()
-            } else {
-                "N/A".to_string()
-            },
-            if let Some(release) = &tool.release {
-                release.to_string()
-            } else {
-                "N/A".to_string()
-            },
-        );
+        let kind = tool.kind.to_string();
+        let version = if let Some(version) = &tool.version {
+            version.to_string()
+        } else {
+            "N/A".to_string()
+        };
+        let build = if let Some(build) = &tool.build {
+            build.to_string()
+        } else {
+            "N/A".to_string()
+        };
+        let release = if let Some(release) = &tool.release {
+            release.to_string()
+        } else {
+            "N/A".to_string()
+        };
 
         if linked {
-            println!("{line}");
+            println!("{icon:<1} {kind:<30} {version:<15} {build:<15} {release:<15}");
         } else {
             println!(
-                "{}",
-                line.dimmed(),
+                "{:<1} {:<30} {:<15} {:<15} {:<15}",
+                icon,
+                style(kind).dim(),
+                style(version).dim(),
+                style(build).dim(),
+                style(release).dim(),
             );
         }
     }
@@ -69,17 +69,19 @@ pub(crate) fn dispatch() -> Result<()> {
     if installed_tools.is_empty() {
         println!(
             "{}",
-            format!(
-                "{:<1} {:<30} {:<15} {:<15} {:<15}",
-                " ",
-                "Empty",
-                "Empty",
-                "Empty",
-                "Empty",
-            ).italic().dimmed(),
+            style(
+                format!(
+                    "{:<1} {:<30} {:<15} {:<15} {:<15}",
+                    " ",
+                    "Empty",
+                    "Empty",
+                    "Empty",
+                    "Empty",
+                )
+            ).italic().dim(),
         );
 
-        tracing::warn!("No JetBrains tools installed");
+        jb::warn!("No JetBrains tools installed");
     }
 
     Ok(())

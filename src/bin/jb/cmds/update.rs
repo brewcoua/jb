@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::{Command,arg};
 use crate::update::Release;
+use crate::emoji::CHECK;
 
 pub(crate) fn command() -> Command {
     Command::new("update")
@@ -29,7 +30,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::error::Result<()> {
             .with_context(|| "Failed to update the CLI") {
         Ok((done, changelog)) => {
             if done {
-                tracing::info!("Updated to the latest version");
+                jb::info!("{CHECK} Updated to the latest version");
                 if !changelog.is_empty() {
                     println!("\nChangelog:\n{changelog}");
                 }
