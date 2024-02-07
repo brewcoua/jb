@@ -59,6 +59,18 @@
 <a href="#59" id="59">59</a>
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! List tools
 //!
 //! This module provides the ability to list installed tools.
@@ -83,13 +95,16 @@
     /// # Errors
     /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
     </span><span class="kw">fn </span>list_kind(kind: Kind) -&gt; anyhow::Result&lt;Vec&lt;Tool&gt;&gt; <span class="kw">where </span><span class="self">Self</span>: Sized;
+
+    <span class="doccomment">/// Lists tools that match the current tool.
+    ///
+    /// # Errors
+    /// This function will return an error if the tools directory does not exist or if the tools cannot be listed.
+    </span><span class="kw">fn </span>list_matching(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Vec&lt;Tool&gt;&gt; <span class="kw">where </span><span class="self">Self</span>: Sized;
 }
 
 <span class="kw">impl </span>List <span class="kw">for </span>Tool {
     <span class="kw">fn </span>list() -&gt; anyhow::Result&lt;Vec&lt;Tool&gt;&gt; {
-        <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;list&quot;</span>);
-        <span class="kw">let </span>_enter = span.enter();
-
         <span class="kw">let </span>tools_directory = Variable::ToolsDirectory.get::&lt;PathBuf&gt;();
 
         <span class="kw">let </span><span class="kw-2">mut </span>tools = <span class="macro">vec!</span>[];
@@ -103,7 +118,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(tool) = Tool::from_str(name) {
                     tools.push(tool);
                 } <span class="kw">else </span>{
-                    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Skipping invalid tool directory: {name}&quot;</span>);
+                    <span class="macro">crate::debug!</span>(<span class="string">&quot;Skipping invalid tool directory: {name}&quot;</span>);
                 }
             }
         }
@@ -116,6 +131,15 @@
             <span class="self">Self</span>::list()<span class="question-mark">?
                 </span>.into_iter()
                 .filter(|tool| tool.kind == kind)
+                .collect()
+        )
+    }
+
+    <span class="kw">fn </span>list_matching(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Vec&lt;Tool&gt;&gt; {
+        <span class="prelude-val">Ok</span>(
+            <span class="self">Self</span>::list()<span class="question-mark">?
+                </span>.into_iter()
+                .filter(|tool| <span class="self">self</span>.matched(tool))
                 .collect()
         )
     }

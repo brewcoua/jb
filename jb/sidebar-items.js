@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["bail","bail_with","error","error_with"],"mod":["api","env","error","tool","util"]};
+window.SIDEBAR_ITEMS = {"macro":["bail","bail_with","batch","batch_with","debug","error","info","info_elapsed","log","log_elapsed","make","warn"],"mod":["api","env","error","log","tool","util"]};

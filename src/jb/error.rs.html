@@ -86,6 +86,11 @@
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module for handling errors in a batch
 //!
 //! This module provides a `Batch` struct that can be used to collect multiple errors that occur across multiple tasks.
@@ -145,6 +150,11 @@
     </span><span class="kw">pub fn </span>errors(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Vec&lt;Error&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.errors
     }
+
+    <span class="doccomment">/// Extend the batch with another batch
+    </span><span class="kw">pub fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: Batch) {
+        <span class="self">self</span>.errors.extend(other.errors);
+    }
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>Batch {
@@ -152,7 +162,7 @@
         <span class="kw">if </span><span class="self">self</span>.errors.is_empty() {
             <span class="kw">return </span><span class="macro">write!</span>(f, <span class="string">&quot;No errors occurred&quot;</span>);
         } <span class="kw">else if </span><span class="self">self</span>.errors.len() == <span class="number">1 </span>{
-            <span class="kw">return </span><span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>.first());
+            <span class="kw">return </span><span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>.first().unwrap());
         }
 
         <span class="macro">writeln!</span>(

@@ -86,10 +86,16 @@
 <a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module for utilities.
 
-</span><span class="kw">use </span>std::path::PathBuf;
+</span><span class="kw">pub mod </span>down;
+
+<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>anyhow::Context;
 <span class="kw">use </span>tokio::io::AsyncWriteExt;
 <span class="kw">use </span>futures_util::StreamExt;
+
+
+<span class="kw">pub use </span>down::download_extract;
+
 
 <span class="doccomment">/// Download a file from a URL to a path.
 ///
@@ -99,10 +105,7 @@
 /// # Panics
 /// This function will panic if the runtime cannot be started.
 </span><span class="kw">pub fn </span>download(url: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>PathBuf, size: <span class="prelude-ty">Option</span>&lt;u64&gt;) -&gt; anyhow::Result&lt;()&gt; {
-    <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;download&quot;</span>, url = url, path = path.display().to_string());
-    <span class="kw">let </span>_guard = span.enter();
-
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;start&quot;</span>);
+    <span class="macro">crate::debug!</span>(<span class="string">&quot;start&quot;</span>);
 
     tokio::task::block_in_place(|| {
         tokio::runtime::Runtime::new()
@@ -121,7 +124,7 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>downloaded_size: u64 = <span class="number">0</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>stream = response.bytes_stream();
 
-                <span class="macro">tracing::debug!</span>(<span class="string">&quot;downloading chunks with size {size}&quot;</span>);
+                <span class="macro">crate::debug!</span>(<span class="string">&quot;downloading chunks with size {size}&quot;</span>);
 
                 <span class="kw">while let </span><span class="prelude-val">Some</span>(chunk) = stream.next().<span class="kw">await </span>{
                     <span class="kw">let </span>chunk =
@@ -137,7 +140,7 @@
             })
     })<span class="question-mark">?</span>;
 
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;done&quot;</span>);
+    <span class="macro">crate::debug!</span>(<span class="string">&quot;done&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -147,10 +150,7 @@
 /// # Errors
 /// This function will return an error if the archive cannot be extracted.
 </span><span class="kw">pub fn </span>extract_archive(path: <span class="kw-2">&amp;</span>PathBuf, destination: <span class="kw-2">&amp;</span>PathBuf, strip: u8) -&gt; anyhow::Result&lt;()&gt; {
-    <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;extract_archive&quot;</span>, path = path.display().to_string(), destination = destination.display().to_string());
-    <span class="kw">let </span>_guard = span.enter();
-
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;start&quot;</span>);
+    <span class="macro">crate::debug!</span>(<span class="string">&quot;start&quot;</span>);
 
     <span class="kw">let </span>output = std::process::Command::new(<span class="string">&quot;tar&quot;</span>)
         .arg(<span class="string">&quot;--strip-components&quot;</span>)
@@ -166,7 +166,7 @@
         <span class="macro">anyhow::bail!</span>(<span class="string">&quot;Failed to extract {}: {}&quot;</span>, path.display(), String::from_utf8_lossy(<span class="kw-2">&amp;</span>output.stderr));
     }
 
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;done&quot;</span>);
+    <span class="macro">crate::debug!</span>(<span class="string">&quot;done&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div></section></main></body></html>

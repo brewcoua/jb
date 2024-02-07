@@ -155,6 +155,10 @@
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Link tools
 //!
 //! This module provides the ability to link and unlink tools, which is useful for setting up the PATH environment variable.
@@ -180,18 +184,22 @@
     <span class="doccomment">/// Unlinks the tool.
     ///
     /// This removes the symlink to the tool&#39;s binary and icon in the PATH and icons directory, respectively.
-    /// It will also try to link an alternative version if one is available (with the latest version taking priority).
     ///
     /// # Errors
     /// This function will return an error if the tool is not linked, or if the symlinks fail.
     </span><span class="kw">fn </span>unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; <span class="kw">where </span><span class="self">Self</span>: Sized;
+
+    <span class="doccomment">/// Unlinks the tool and links an alternative version.
+    ///
+    /// This removes the symlink to the tool&#39;s binary and icon in the PATH and icons directory, respectively, and try to link an alternative version if available.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool is not linked or if the symlinks fail.
+    </span><span class="kw">fn </span>unlink_with_alternative(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; <span class="kw">where </span><span class="self">Self</span>: Sized;
 }
 
 <span class="kw">impl </span>Link <span class="kw">for </span>Tool {
     <span class="kw">fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;is_linked&quot;</span>, tool = <span class="self">self</span>.as_str());
-        <span class="kw">let </span>_enter = span.enter();
-
         <span class="kw">let </span>tool_directory = <span class="self">self</span>.as_path();
 
         <span class="kw">let </span>binary_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.sh&quot;</span>, <span class="self">self</span>.kind.binary()));
@@ -201,11 +209,11 @@
         <span class="comment">// Check if linked binary is the right one (not any other version or simply doesn&#39;t exist)
         </span><span class="kw">let </span>binary = binaries_directory.join(<span class="self">self</span>.kind.as_str());
         <span class="kw">if </span>!binary.exists() || std::fs::read_link(<span class="kw-2">&amp;</span>binary).ok() != <span class="prelude-val">Some</span>(binary_path.clone()) {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Binary is not linked: {}, {:?} != {:?}&quot;</span>, binary.exists(), std::fs::read_link(binary).ok(), <span class="prelude-val">Some</span>(binary_path));
+            <span class="macro">crate::debug!</span>(<span class="string">&quot;Binary is not linked: {}, {:?} != {:?}&quot;</span>, binary.exists(), std::fs::read_link(binary).ok(), <span class="prelude-val">Some</span>(binary_path));
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Binary is linked&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Binary is linked&quot;</span>);
 
 
         <span class="kw">let </span>icon_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.svg&quot;</span>, <span class="self">self</span>.kind.binary()));
@@ -214,21 +222,18 @@
         <span class="comment">// Check if linked icon is the right one (not any other version or simply doesn&#39;t exist)
         </span><span class="kw">let </span>icon = icons_directory.join(<span class="self">self</span>.kind.as_str());
         <span class="kw">if </span>!icon.exists() || std::fs::read_link(icon).ok() != <span class="prelude-val">Some</span>(icon_path) {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Icon is not linked&quot;</span>);
+            <span class="macro">crate::debug!</span>(<span class="string">&quot;Icon is not linked&quot;</span>);
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Icon is linked&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Icon is linked&quot;</span>);
 
         <span class="bool-val">true
     </span>}
 
     <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="kw">let </span>span = <span class="macro">tracing::debug_span!</span>(<span class="string">&quot;link&quot;</span>, tool = <span class="self">self</span>.as_str());
-        <span class="kw">let </span>_enter = span.enter();
-
         <span class="kw">if </span><span class="self">self</span>.is_linked() {
-            <span class="macro">tracing::warn!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.as_str());
+            <span class="macro">crate::warn!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.as_str());
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -243,7 +248,7 @@
 
         symlink(binary_path, binaries_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Linked binary&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked binary&quot;</span>);
 
         <span class="kw">let </span>icon_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.svg&quot;</span>, <span class="self">self</span>.kind.binary()));
 
@@ -255,15 +260,12 @@
 
         symlink(icon_path, icons_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Linked icon&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked icon&quot;</span>);
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="kw">let </span>span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;unlink&quot;</span>, tool = <span class="self">self</span>.as_str());
-        <span class="kw">let </span>_enter = span.enter();
-
         <span class="kw">if </span>!<span class="self">self</span>.is_linked() {
             <span class="macro">anyhow::bail!</span>(<span class="string">&quot;{} is not linked&quot;</span>, <span class="self">self</span>.as_str());
         }
@@ -272,13 +274,19 @@
 
         std::fs::remove_file(binaries_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unlinked binary&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Unlinked binary&quot;</span>);
 
         <span class="kw">let </span>icons_directory = Variable::IconsDirectory.get::&lt;PathBuf&gt;();
 
         std::fs::remove_file(icons_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unlinked icon&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">&quot;Unlinked icon&quot;</span>);
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>unlink_with_alternative(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.unlink()<span class="question-mark">?</span>;
 
         <span class="comment">// Find an alternative version to link
         </span><span class="kw">let </span><span class="kw-2">mut </span>tools = Tool::list_kind(<span class="self">self</span>.kind)
@@ -287,9 +295,9 @@
         tools.sort();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(tool) = tools.first() {
-            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Found alternative version: {}&quot;</span>, tool.as_str());
+            <span class="macro">crate::debug!</span>(<span class="string">&quot;Found alternative version: {}&quot;</span>, tool.as_str());
             tool.link()<span class="question-mark">?</span>;
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;Linked alternative version {tool}&quot;</span>);
+            <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked alternative version {tool}&quot;</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
