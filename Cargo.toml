@@ -42,6 +42,7 @@ sha2 = "0.10" # SHA-256 hashing (for checksum verification)
 console = "0.15"
 indicatif = "0.17"
 dialoguer = "0.11"
+termimad = "0.29.0"
 
 [dependencies.reqwest] # HTTP client
 version = "0.11"

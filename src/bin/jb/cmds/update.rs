@@ -2,6 +2,7 @@ use anyhow::Context;
 use clap::{Command,arg};
 use crate::update::Release;
 use crate::emoji::CHECK;
+use termimad::crossterm::style::Color;
 
 pub(crate) fn command() -> Command {
     Command::new("update")
@@ -32,7 +33,12 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::error::Result<()> {
             if done {
                 jb::info!("{CHECK} Updated to the latest version");
                 if !changelog.is_empty() {
-                    println!("\nChangelog:\n{changelog}");
+                    let mut skin = termimad::MadSkin::default();
+                    skin.bold.set_fg(Color::AnsiValue(208));
+                    skin.italic.set_fg(Color::AnsiValue(208));
+                    skin.set_headers_fg(Color::Cyan);
+
+                    skin.print_text(&changelog);
                 }
             }
 

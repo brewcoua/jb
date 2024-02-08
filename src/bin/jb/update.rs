@@ -46,8 +46,7 @@ impl Release {
             if force {
                 jb::warn!("The latest version is already installed, forcing the update...");
             } else {
-                jb::error!("The latest version is already installed ({current})");
-                return Ok((false, String::new()));
+                anyhow::bail!("The latest version is already installed ({current})");
             }
         }
 
@@ -60,16 +59,13 @@ impl Release {
         let process = || {
             let archive = format!("jb_{target}.tar.gz");
 
-            let archive_path = tempdir.path().join(&archive);
-
             let url = format!(
                 "{}/releases/download/{}/{archive}",
                 env!("CARGO_PKG_REPOSITORY"),
                 latest.tag_name,
             );
 
-            jb::util::download(&url, &archive_path, None)?;
-            jb::util::extract_archive(&archive_path, &tempdir.path().to_path_buf(), 0)?;
+            jb::util::download_extract(&url, &tempdir.path().to_path_buf(), None, None)?;
 
             // Delete current binary
             std::fs::remove_file(location)
