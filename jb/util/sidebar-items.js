@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["download","extract_archive"],"mod":["down"]};
+window.SIDEBAR_ITEMS = {"fn":["download_extract","strip_content"]};
