@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.4.0](https://github.com/brewcoua/jb/compare/v1.3.2..1.4.0) - 2024-02-07
+## [1.4.1](https://github.com/brewcoua/jb/compare/v1.4.0..1.4.1) - 2024-02-08
+
+### Features
+
+- **(install)** verify checksum at the end of download - ([73ada06](https://github.com/brewcoua/jb/commit/73ada06b5dcaba0f3730e590b6731211b4937067)) - Brewen Couaran
+
+---
+## [1.4.0](https://github.com/brewcoua/jb/compare/v1.3.2..v1.4.0) - 2024-02-07
 
 ### Bug Fixes
 
