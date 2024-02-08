@@ -6,6 +6,7 @@ use anyhow::Context;
 use flate2::read::GzDecoder;
 use futures_lite::StreamExt;
 use tar::Archive;
+use sha2::{Digest, Sha256};
 
 /// Download and extract a tarball from a URL.
 ///
@@ -16,7 +17,12 @@ use tar::Archive;
 ///
 /// # Panics
 /// This function will panic if the folder cannot be created or written to.
-pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif::ProgressBar>) -> anyhow::Result<()> {
+pub fn download_extract(
+    url: &str,
+    folder: &PathBuf,
+    checksum_url: Option<&str>,
+    progress: Option<&indicatif::ProgressBar>,
+) -> anyhow::Result<()> {
     let filename = url.split('/').last().expect("Failed to get filename");
     if !filename.ends_with(".tar.gz") {
         anyhow::bail!("Invalid file type: {}", filename);
@@ -52,7 +58,8 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
                     strip_content(&folder)
                         .with_context(|| format!("Failed to strip content of {}", folder.display()))?;
 
-                    Ok::<(), anyhow::Error>(())
+                    let channel = archive.into_inner().into_inner();
+                    Ok::<String, anyhow::Error>(channel.hash())
                 });
 
                 if response.status() == reqwest::StatusCode::OK {
@@ -82,10 +89,26 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
                     anyhow::bail!("Failed to fetch {url}: {}", response.status());
                 }
 
-                tokio::task::spawn_blocking(|| decoder_thread.join())
+                let hash = tokio::task::spawn_blocking(|| decoder_thread.join())
                     .await
                     .with_context(|| "Failed to join decoder thread")?
                     .map_err(|e| anyhow::anyhow!("Decoder thread panicked: {:?}", e))??;
+
+                // If we have a checksum URL, we should check the hash
+                if let Some(checksum_url) = checksum_url {
+                    let checksum = client.get(checksum_url)
+                        .send()
+                        .await
+                        .with_context(|| format!("Failed to fetch {checksum_url}"))?
+                        .text()
+                        .await
+                        .with_context(|| format!("Failed to read {checksum_url}"))?;
+
+                    let checksum = checksum.split_whitespace().next().unwrap();
+                    if checksum.trim() != hash {
+                        anyhow::bail!("Checksum mismatch: expected {checksum}, got {hash}");
+                    }
+                }
 
                 Ok(())
             })
@@ -96,6 +119,7 @@ pub fn download_extract(url: &str, folder: &PathBuf, progress: Option<&indicatif
 struct ChannelRead {
     rx: flume::Receiver<Vec<u8>>,
     current: io::Cursor<Vec<u8>>,
+    hash: Sha256,
 }
 
 impl ChannelRead {
@@ -103,7 +127,12 @@ impl ChannelRead {
         Self {
             rx,
             current: io::Cursor::new(vec![]),
+            hash: Sha256::new(),
         }
+    }
+
+    pub fn hash(self) -> String {
+        format!("{:x}", self.hash.finalize())
     }
 }
 
@@ -111,6 +140,7 @@ impl Read for ChannelRead {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.current.position() == self.current.get_ref().len() as u64 {
             if let Ok(data) = self.rx.recv() {
+                self.hash.update(&data);
                 self.current = io::Cursor::new(data);
             }
         }

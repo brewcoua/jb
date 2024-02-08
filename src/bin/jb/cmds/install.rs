@@ -90,7 +90,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         }
 
 
-        let result = jb::util::download_extract(&release.link, &install_dir, Some(&pb))
+        let result = jb::util::download_extract(&release.link, &install_dir, Some(&release.checksum_link), Some(&pb))
             .with_context(|| format!("Failed to download {}", tool.as_str()));
 
         pb.finish();
