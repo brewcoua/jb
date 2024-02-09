@@ -37,12 +37,13 @@ flume = "0.11" # Thread-safe channel (for async stream download)
 dashmap = "5.5" # Concurrent map (for thread-safe shared loggers)
 once_cell = "1.19" # Lazy initialization (for thread-safe shared loggers)
 sha2 = "0.10" # SHA-256 hashing (for checksum verification)
+notify-rust = "4.10" # Notifications (--notify flag)
 
 # Terminal UI
 console = "0.15"
 indicatif = "0.17"
 dialoguer = "0.11"
-termimad = "0.29.0"
+termimad = "0.29"
 
 [dependencies.reqwest] # HTTP client
 version = "0.11"

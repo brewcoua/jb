@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use anyhow::Context;
 use flate2::read::GzDecoder;
 use futures_lite::StreamExt;
+use notify_rust::{Hint, Notification, Timeout};
 use tar::Archive;
 use sha2::{Digest, Sha256};
 
@@ -188,6 +189,27 @@ pub fn strip_content(folder: &PathBuf) -> anyhow::Result<()> {
 
         std::fs::remove_dir(&path)
             .with_context(|| format!("Failed to remove {}", path.display()))?;
+    }
+    Ok(())
+}
+
+/// Show a desktop notification.
+///
+/// # Errors
+/// This function will return an error if the notification cannot be shown.
+pub fn notify(msg: &str, icon: &str) -> anyhow::Result<()> {
+    let result = Notification::new()
+        .summary("JetBrains CLI")
+        .body(msg)
+        .icon(icon)
+        .appname("jb")
+        .hint(Hint::Category("Development".to_owned()))
+        .hint(Hint::Category("IDE".to_owned()))
+        .timeout(Timeout::Milliseconds(4000))
+        .show();
+
+    if let Err(e) = result {
+        anyhow::bail!("Failed to show notification: {}", e);
     }
     Ok(())
 }

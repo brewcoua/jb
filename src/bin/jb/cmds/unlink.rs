@@ -1,5 +1,6 @@
 use clap::{arg, value_parser, Command};
 use jb::{Tool, Result};
+use jb::env::Variable;
 use jb::tool::Link;
 
 pub(crate) fn command() -> Command {
@@ -37,6 +38,15 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         "Unlinked {tool} from {}",
         tool.kind.as_str(),
     );
+
+    if Variable::Notify.get_bool() {
+        jb::catch!(
+            jb::notify(
+                &format!("Unlinked {tool} from {}", tool.kind.as_str()),
+                tool.as_icon().to_str().unwrap(),
+            )
+        );
+    }
 
     Ok(())
 }

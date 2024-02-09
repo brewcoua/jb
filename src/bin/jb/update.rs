@@ -33,7 +33,7 @@ impl Release {
     }
 
     /// Try updating the CLI, if there is a new release.
-    pub fn try_update(location: &PathBuf, force: bool) -> anyhow::Result<(bool, String)> {
+    pub fn try_update(location: &PathBuf, force: bool) -> anyhow::Result<String> {
         jb::info!("{LOOKING_GLASS} Checking for updates...");
 
         let latest = Self::latest()?;
@@ -83,7 +83,7 @@ impl Release {
         tempdir.close()?;
 
         match output {
-            Ok(()) => Ok((true, latest.body)),
+            Ok(()) => Ok(latest.body),
             Err(e) => Err(e),
         }
     }

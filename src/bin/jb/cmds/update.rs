@@ -3,6 +3,7 @@ use clap::{Command,arg};
 use crate::update::Release;
 use crate::emoji::CHECK;
 use termimad::crossterm::style::Color;
+use jb::env::Variable;
 
 pub(crate) fn command() -> Command {
     Command::new("update")
@@ -24,17 +25,19 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::error::Result<()> {
 
     match Release::try_update(&location, force)
             .with_context(|| "Failed to update the CLI") {
-        Ok((done, changelog)) => {
-            if done {
-                jb::info!("{CHECK} Updated to the latest version");
-                if !changelog.is_empty() {
-                    let mut skin = termimad::MadSkin::default();
-                    skin.bold.set_fg(Color::AnsiValue(208));
-                    skin.italic.set_fg(Color::AnsiValue(208));
-                    skin.set_headers_fg(Color::Cyan);
+        Ok(changelog) => {
+            jb::info!("{CHECK} Updated to the latest version");
+            if !changelog.is_empty() {
+                let mut skin = termimad::MadSkin::default();
+                skin.bold.set_fg(Color::AnsiValue(208));
+                skin.italic.set_fg(Color::AnsiValue(208));
+                skin.set_headers_fg(Color::Cyan);
 
-                    skin.print_text(&changelog);
-                }
+                skin.print_text(&changelog);
+            }
+
+            if Variable::Notify.get_bool() {
+                jb::catch!(jb::notify("Updated JetBrains CLI to the latest version", "updates-notifier"));
             }
 
             Ok(())

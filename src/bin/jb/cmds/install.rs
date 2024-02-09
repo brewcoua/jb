@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::{arg, value_parser, Command};
 use jb::{Tool, Result, Batch};
+use jb::env::Variable;
 use jb::tool::{List};
 use crate::emoji::*;
 
@@ -82,15 +83,26 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
                 });
 
                 for cleaned_tool in cleaned_tools {
-                    println!("{BIN} {cleaned_tool}");
+                    println!("{WASTEBASKET} {cleaned_tool}");
                 }
             }
         }
     }
 
+    let notify = Variable::Notify.get_bool();
+
     jb::info!("{CHECK} Done!");
     for tool in tools {
         println!("{PACKAGE} {tool}");
+        if notify {
+            jb::catch_with!(
+                error_batch,
+                jb::notify(
+                    &format!("Installed {tool}"),
+                    tool.as_icon().to_str().unwrap()
+                )
+            );
+        }
     }
 
 

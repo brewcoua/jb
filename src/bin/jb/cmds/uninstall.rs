@@ -1,5 +1,6 @@
 use clap::{arg, value_parser, Command};
 use jb::{Tool, Result, Batch};
+use jb::env::Variable;
 use jb::tool::{Link, List};
 use crate::emoji::*;
 
@@ -55,7 +56,7 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
     }
 
     // Third step, uninstall all tools
-    jb::info!("{BIN} Uninstalling tools...");
+    jb::info!("{WASTEBASKET} Uninstalling tools...");
     let tools = crate::concurrent_step!(error_batch, tools, |tool: Tool| {
         std::fs::remove_dir_all(tool.as_path())?;
         Ok(tool)
@@ -70,9 +71,20 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> Result<()> {
         }
     }
 
+    let notify = Variable::Notify.get_bool();
+
     jb::info!("{CHECK} Uninstalled all tools:");
     for tool in tools {
-        println!("- {tool}");
+        println!("{FIRECRACKER} {tool}");
+        if notify {
+            jb::catch_with!(
+                error_batch,
+                jb::notify(
+                    &format!("Uninstalled {tool}"),
+                    tool.kind.as_str(),
+                )
+            );
+        }
     }
 
     if error_batch.is_empty() {

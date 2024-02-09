@@ -84,13 +84,23 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
                 jb::warn!("Failed to clean up {tool}, skipping... {SKIP}");
                 error_batch.add(err.into());
             }
-            println!("{BIN} {tool}");
+            println!("{FIRECRACKER} {tool}");
         }
     }
+
+    let notify = jb::env::Variable::Notify.get_bool();
 
     jb::info!("{CHECK} Done!");
     for tool in tools {
         println!("{CIRCLE_ARROWS} {tool}");
+        if notify {
+            jb::catch!(
+                jb::notify(
+                    &format!("Updated {tool} to the latest version"),
+                    tool.as_icon().to_str().unwrap(),
+                )
+            );
+        }
     }
 
     if error_batch.is_empty() {
