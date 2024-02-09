@@ -3,7 +3,19 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.4.2](https://github.com/brewcoua/jb/compare/v1.4.1..1.4.2) - 2024-02-08
+## [1.4.3](https://github.com/brewcoua/jb/compare/v1.4.2..1.4.3) - 2024-02-09
+
+### Bug Fixes
+
+- **(kind)** normalize icon and executable path and fix fleet's paths - ([5233935](https://github.com/brewcoua/jb/commit/523393508cec4ada4d647026c4fdc9b558c55a62)) - Brewen Couaran
+
+### Features
+
+- **(cmds)** add cd command and update readme docs - ([66af588](https://github.com/brewcoua/jb/commit/66af5887d7f6192a6355d7fd90e0b9cf54bf53e0)) - Brewen Couaran
+- **(cmds)** add refresh command for updating tools - ([a3817ac](https://github.com/brewcoua/jb/commit/a3817ac9a042f3a6c58e0414a5e88d23aa927384)) - Brewen Couaran
+
+---
+## [1.4.2](https://github.com/brewcoua/jb/compare/v1.4.1..v1.4.2) - 2024-02-08
 
 ### Features
 
