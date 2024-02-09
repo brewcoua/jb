@@ -75,7 +75,30 @@ impl Kind {
             Self::IntelliJIdeaUltimate | Self::IntelliJIdeaCommunity => "idea",
             Self::PyCharmProfessional | Self::PyCharmCommunity => "pycharm",
             Self::CLionNova => "clion",
+            Self::Fleet => "Fleet",
             _ => self.as_str(),
+        }
+    }
+
+    /// Get the relative path to the executable for this tool kind.
+    ///
+    /// This is used to determine the binary path for a tool kind and symbolically link it to the correct binary.
+    #[must_use]
+    pub fn as_executable(&self) -> String {
+        match self {
+            Self::Fleet => format!("bin/{}", self.binary()),
+            _ => format!("bin/{}.sh", self.binary()),
+        }
+    }
+
+    /// Get the relative path to the icon for this tool kind.
+    ///
+    /// This is used to determine the icon path for a tool kind and symbolically link it to the correct icon.
+    #[must_use]
+    pub fn as_icon(&self) -> String {
+        match self {
+            Self::Fleet => format!("lib/{}.png", self.binary()),
+            _ => format!("bin/{}.svg", self.binary()),
         }
     }
 

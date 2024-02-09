@@ -68,6 +68,18 @@ impl Tool {
             .join(self.as_str())
     }
 
+    /// Returns the path to the tool's executable.
+    #[must_use]
+    pub fn as_executable(&self) -> std::path::PathBuf {
+        self.as_path().join(self.kind.as_executable())
+    }
+
+    /// Returns the path to the tool's icon.
+    #[must_use]
+    pub fn as_icon(&self) -> std::path::PathBuf {
+        self.as_path().join(self.kind.as_icon())
+    }
+
     /// Returns whether the tool matches another tool.
     ///
     /// This is used in arguments to match multiple tools.

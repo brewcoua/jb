@@ -39,23 +39,21 @@ pub trait Link {
 
 impl Link for Tool {
     fn is_linked(&self) -> bool {
-        let tool_directory = self.as_path();
-
-        let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
+        let executable_path = self.as_executable();
         let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
 
 
         // Check if linked binary is the right one (not any other version or simply doesn't exist)
         let binary = binaries_directory.join(self.kind.as_str());
-        if !binary.exists() || std::fs::read_link(&binary).ok() != Some(binary_path.clone()) {
-            crate::debug!("Binary is not linked: {}, {:?} != {:?}", binary.exists(), std::fs::read_link(binary).ok(), Some(binary_path));
+        if !binary.exists() || std::fs::read_link(&binary).ok() != Some(executable_path.clone()) {
+            crate::debug!("Binary is not linked: {}, {:?} != {:?}", binary.exists(), std::fs::read_link(binary).ok(), Some(executable_path));
             return false;
         }
 
         crate::debug!("Binary is linked");
 
 
-        let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
+        let icon_path = self.as_icon();
         let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         // Check if linked icon is the right one (not any other version or simply doesn't exist)
@@ -76,21 +74,18 @@ impl Link for Tool {
             return Ok(());
         }
 
-        let tool_directory = self.as_path();
-
-        let binary_path = tool_directory.join(format!("bin/{}.sh", self.kind.binary()));
+        let executable_path = self.as_executable();
         let binaries_directory = Variable::BinariesDirectory.get::<PathBuf>();
 
         if !binaries_directory.exists() {
             std::fs::create_dir_all(&binaries_directory)?;
         }
 
-        symlink(binary_path, binaries_directory.join(self.kind.as_str()))?;
+        symlink(executable_path, binaries_directory.join(self.kind.as_str()))?;
 
         crate::debug!("Linked binary");
 
-        let icon_path = tool_directory.join(format!("bin/{}.svg", self.kind.binary()));
-
+        let icon_path = self.as_icon();
         let icons_directory = Variable::IconsDirectory.get::<PathBuf>();
 
         if !icons_directory.exists() {
