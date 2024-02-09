@@ -13,7 +13,12 @@ pub(crate) fn command() -> Command {
         )
         .arg(
             arg!(-f --force)
-                .help("Force update, even if the tool is already up to date or not installed")
+                .help("Force update, even if the tool is already up to date")
+                .required(false),
+        )
+        .arg(
+            arg!(-i --install)
+                .help("Install the tool if it is not already installed")
                 .required(false),
         )
 }
@@ -23,13 +28,14 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
         .expect("Could not find argument tools")
         .map(Clone::clone);
     let force = args.get_flag("force");
+    let install = args.get_flag("install");
 
     let mut error_batch = jb::Batch::new();
     let mut tools: Vec<Tool> = kinds.filter(|kind| {
             let tools = Tool::list_kind(*kind);
             if tools.is_err() || tools.unwrap().is_empty() {
-                if force {
-                    jb::warn!("No tools found for {kind}, but forcing update...");
+                if install {
+                    jb::warn!("No tools found for {kind}, but installing anyway...");
                 } else {
                     jb::warn!("No tools found for {kind}, skipping... {SKIP}");
                     return false;
