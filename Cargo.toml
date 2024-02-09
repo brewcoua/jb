@@ -9,7 +9,7 @@ readme = "README.md"
 homepage = "https://github.com/brewcoua/jb"
 repository = "https://github.com/brewcoua/jb"
 license = "MIT OR Apache-2.0"
-version = "1.4.1"
+version = "1.4.2"
 
 [lib]
 name = "jb"

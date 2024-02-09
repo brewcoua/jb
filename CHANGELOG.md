@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.4.1](https://github.com/brewcoua/jb/compare/v1.4.0..1.4.1) - 2024-02-08
+## [1.4.2](https://github.com/brewcoua/jb/compare/v1.4.1..1.4.2) - 2024-02-08
+
+### Features
+
+- **(update)** add markdown display for changelog - ([110a8c4](https://github.com/brewcoua/jb/commit/110a8c436643e783df062878b7258f8d62896a10)) - Brewen Couaran
+
+---
+## [1.4.1](https://github.com/brewcoua/jb/compare/v1.4.0..v1.4.1) - 2024-02-08
 
 ### Features
 
