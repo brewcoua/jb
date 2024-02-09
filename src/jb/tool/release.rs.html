@@ -93,9 +93,18 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::str::FromStr;
 <span class="kw">use </span>std::fmt::Display;
-<span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span><span class="kw">super</span>::kind::Kind;
 
 <span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -161,6 +170,15 @@
     {
         <span class="kw">let </span>s = String::deserialize(deserializer)<span class="question-mark">?</span>;
         <span class="self">Self</span>::from_str(<span class="kw-2">&amp;</span>s).map_err(serde::de::Error::custom)
+    }
+}
+
+<span class="kw">impl </span>Serialize <span class="kw">for </span>Type {
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        <span class="self">self</span>.as_str().serialize(serializer)
     }
 }
 

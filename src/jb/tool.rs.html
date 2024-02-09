@@ -252,7 +252,7 @@
 <span class="kw">pub use </span>release::Type;
 
 <span class="doccomment">/// A tool.
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+</span><span class="attr">#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[readonly::make]
 </span><span class="kw">pub struct </span>Tool {
     <span class="kw">pub </span>kind: Kind,

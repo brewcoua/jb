@@ -105,7 +105,7 @@
 <span class="kw">use </span>serde::Deserialize;
 
 <span class="doccomment">/// A build version number
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="attr">#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 </span><span class="kw">pub struct </span>Build {
     <span class="kw">pub </span>major: u16,

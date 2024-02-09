@@ -139,7 +139,7 @@
 <span class="kw">use </span>serde::Deserialize;
 
 <span class="doccomment">/// A version number
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="attr">#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 </span><span class="kw">pub struct </span>Version {
     <span class="doccomment">/// The major version (e.g. 2021.1)
@@ -149,7 +149,7 @@
 }
 
 <span class="doccomment">/// A major version number (e.g. 2021.1)
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="attr">#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 </span><span class="kw">pub struct </span>Major {
     <span class="kw">pub </span>year: u16,
