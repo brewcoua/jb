@@ -264,6 +264,8 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool kinds and parsing
 //!
 //! This module contains types and parsing for `JetBrains` tool kinds.
@@ -271,7 +273,7 @@
 </span><span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::str::FromStr;
 <span class="kw">use </span><span class="kw">crate</span>::Tool;
-<span class="kw">use </span><span class="kw">crate</span>::tool::{Link, List};
+<span class="kw">use </span><span class="kw">super</span>::List;
 
 <span class="doccomment">/// The tool kind.
 </span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -351,7 +353,8 @@
     <span class="doccomment">/// Get the relative path to the executable for this tool kind.
     ///
     /// This is used to determine the binary path for a tool kind and symbolically link it to the correct binary.
-    </span><span class="attr">#[must_use]
+    </span><span class="attr">#[allow(clippy::single_match_else)]
+    #[must_use]
     </span><span class="kw">pub fn </span>as_executable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Fleet =&gt; <span class="macro">format!</span>(<span class="string">"bin/{}"</span>, <span class="self">self</span>.binary()),
@@ -362,7 +365,8 @@
     <span class="doccomment">/// Get the relative path to the icon for this tool kind.
     ///
     /// This is used to determine the icon path for a tool kind and symbolically link it to the correct icon.
-    </span><span class="attr">#[must_use]
+    </span><span class="attr">#[allow(clippy::single_match_else)]
+    #[must_use]
     </span><span class="kw">pub fn </span>as_icon(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Fleet =&gt; <span class="macro">format!</span>(<span class="string">"lib/{}.png"</span>, <span class="self">self</span>.binary()),
@@ -441,7 +445,7 @@
     /// This function will return an error if the tool list fails.
     </span><span class="kw">pub fn </span>linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Tool&gt;&gt; {
         <span class="kw">let </span>tools = Tool::list_kind(<span class="kw-2">*</span><span class="self">self</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(tools.into_iter().find(|tool| tool.is_linked()))
+        <span class="prelude-val">Ok</span>(tools.into_iter().find(<span class="kw">super</span>::Link::is_linked))
     }
 
     <span class="doccomment">/// Get the latest tool of this kind.
