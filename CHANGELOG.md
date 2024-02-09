@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.5.0](https://github.com/brewcoua/jb/compare/v1.4.3..1.5.0) - 2024-02-09
+## [1.5.1](https://github.com/brewcoua/jb/compare/v1.5.0..1.5.1) - 2024-02-09
+
+### Features
+
+- implement notifications and add them to most commands - ([59c94b7](https://github.com/brewcoua/jb/commit/59c94b73f02f4bd4240a53af0d684e84b537a6de)) - Brewen Couaran
+
+---
+## [1.5.0](https://github.com/brewcoua/jb/compare/v1.4.3..v1.5.0) - 2024-02-09
 
 ### Features
 
