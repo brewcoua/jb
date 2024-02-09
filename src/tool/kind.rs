@@ -5,7 +5,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 use crate::Tool;
-use crate::tool::{Link, List};
+use super::List;
 
 /// The tool kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -85,6 +85,7 @@ impl Kind {
     /// Get the relative path to the executable for this tool kind.
     ///
     /// This is used to determine the binary path for a tool kind and symbolically link it to the correct binary.
+    #[allow(clippy::single_match_else)]
     #[must_use]
     pub fn as_executable(&self) -> String {
         match self {
@@ -96,6 +97,7 @@ impl Kind {
     /// Get the relative path to the icon for this tool kind.
     ///
     /// This is used to determine the icon path for a tool kind and symbolically link it to the correct icon.
+    #[allow(clippy::single_match_else)]
     #[must_use]
     pub fn as_icon(&self) -> String {
         match self {
@@ -175,7 +177,7 @@ impl Kind {
     /// This function will return an error if the tool list fails.
     pub fn linked(&self) -> anyhow::Result<Option<Tool>> {
         let tools = Tool::list_kind(*self)?;
-        Ok(tools.into_iter().find(|tool| tool.is_linked()))
+        Ok(tools.into_iter().find(super::Link::is_linked))
     }
 
     /// Get the latest tool of this kind.

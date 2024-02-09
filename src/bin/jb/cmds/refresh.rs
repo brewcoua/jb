@@ -37,12 +37,12 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
             }
             true
         })
-        .map(|kind| Tool::from_kind(kind))
+        .map(Tool::from_kind)
         .collect();
 
     let mut old_tools: Vec<Tool> = tools
         .iter()
-        .map(|tool| {
+        .filter_map(|tool| {
             // Either find the linked tool for this kind, or the latest version
             let linked = tool.kind.linked().unwrap();
             if let Some(linked) = linked {
@@ -51,8 +51,6 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
                 tool.kind.latest().unwrap()
             }
         })
-        .filter(|tool| tool.is_some())
-        .map(|tool| tool.unwrap())
         .collect();
 
     tools.sort(); tools.dedup();
@@ -77,17 +75,17 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
         tools.iter().any(|new_tool| new_tool.kind == tool.kind)
     });
 
-    if !old_tools.is_empty() {
+    if old_tools.is_empty() {
+        jb::info!("{CLEAN} No old versions to clean up, skipping... {SKIP}");
+    } else {
         jb::info!("{CLEAN} Cleaning up old versions...");
         for tool in old_tools {
             if let Err(err) = std::fs::remove_dir_all(tool.as_path()) {
                 jb::warn!("Failed to clean up {tool}, skipping... {SKIP}");
                 error_batch.add(err.into());
             }
-            println!("{BIN} {tool}")
+            println!("{BIN} {tool}");
         }
-    } else {
-        jb::info!("{CLEAN} No old versions to clean up, skipping... {SKIP}");
     }
 
     jb::info!("{CHECK} Done!");
