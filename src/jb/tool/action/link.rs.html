@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tool/action/link.rs`."><title>link.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jb" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tool/action/link.rs`."><title>link.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jb" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -154,11 +155,6 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Link tools
 //!
 //! This module provides the ability to link and unlink tools, which is useful for setting up the PATH environment variable.
@@ -175,7 +171,7 @@
 
     <span class="doccomment">/// Links the tool.
     ///
-    /// This creates a symlink to the tool&#39;s binary and icon in the PATH and icons directory, respectively.
+    /// This creates a symlink to the tool's binary and icon in the PATH and icons directory, respectively.
     ///
     /// # Errors
     /// This function will return an error if the tool is already linked, or if the symlinks fail.
@@ -183,7 +179,7 @@
 
     <span class="doccomment">/// Unlinks the tool.
     ///
-    /// This removes the symlink to the tool&#39;s binary and icon in the PATH and icons directory, respectively.
+    /// This removes the symlink to the tool's binary and icon in the PATH and icons directory, respectively.
     ///
     /// # Errors
     /// This function will return an error if the tool is not linked, or if the symlinks fail.
@@ -191,7 +187,7 @@
 
     <span class="doccomment">/// Unlinks the tool and links an alternative version.
     ///
-    /// This removes the symlink to the tool&#39;s binary and icon in the PATH and icons directory, respectively, and try to link an alternative version if available.
+    /// This removes the symlink to the tool's binary and icon in the PATH and icons directory, respectively, and try to link an alternative version if available.
     ///
     /// # Errors
     /// This function will return an error if the tool is not linked or if the symlinks fail.
@@ -200,58 +196,53 @@
 
 <span class="kw">impl </span>Link <span class="kw">for </span>Tool {
     <span class="kw">fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>tool_directory = <span class="self">self</span>.as_path();
-
-        <span class="kw">let </span>binary_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.sh&quot;</span>, <span class="self">self</span>.kind.binary()));
+        <span class="kw">let </span>executable_path = <span class="self">self</span>.as_executable();
         <span class="kw">let </span>binaries_directory = Variable::BinariesDirectory.get::&lt;PathBuf&gt;();
 
 
-        <span class="comment">// Check if linked binary is the right one (not any other version or simply doesn&#39;t exist)
+        <span class="comment">// Check if linked binary is the right one (not any other version or simply doesn't exist)
         </span><span class="kw">let </span>binary = binaries_directory.join(<span class="self">self</span>.kind.as_str());
-        <span class="kw">if </span>!binary.exists() || std::fs::read_link(<span class="kw-2">&amp;</span>binary).ok() != <span class="prelude-val">Some</span>(binary_path.clone()) {
-            <span class="macro">crate::debug!</span>(<span class="string">&quot;Binary is not linked: {}, {:?} != {:?}&quot;</span>, binary.exists(), std::fs::read_link(binary).ok(), <span class="prelude-val">Some</span>(binary_path));
+        <span class="kw">if </span>!binary.exists() || std::fs::read_link(<span class="kw-2">&amp;</span>binary).ok() != <span class="prelude-val">Some</span>(executable_path.clone()) {
+            <span class="macro">crate::debug!</span>(<span class="string">"Binary is not linked: {}, {:?} != {:?}"</span>, binary.exists(), std::fs::read_link(binary).ok(), <span class="prelude-val">Some</span>(executable_path));
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Binary is linked&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Binary is linked"</span>);
 
 
-        <span class="kw">let </span>icon_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.svg&quot;</span>, <span class="self">self</span>.kind.binary()));
+        <span class="kw">let </span>icon_path = <span class="self">self</span>.as_icon();
         <span class="kw">let </span>icons_directory = Variable::IconsDirectory.get::&lt;PathBuf&gt;();
 
-        <span class="comment">// Check if linked icon is the right one (not any other version or simply doesn&#39;t exist)
+        <span class="comment">// Check if linked icon is the right one (not any other version or simply doesn't exist)
         </span><span class="kw">let </span>icon = icons_directory.join(<span class="self">self</span>.kind.as_str());
         <span class="kw">if </span>!icon.exists() || std::fs::read_link(icon).ok() != <span class="prelude-val">Some</span>(icon_path) {
-            <span class="macro">crate::debug!</span>(<span class="string">&quot;Icon is not linked&quot;</span>);
+            <span class="macro">crate::debug!</span>(<span class="string">"Icon is not linked"</span>);
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Icon is linked&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Icon is linked"</span>);
 
         <span class="bool-val">true
     </span>}
 
     <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
         <span class="kw">if </span><span class="self">self</span>.is_linked() {
-            <span class="macro">crate::warn!</span>(<span class="string">&quot;{} is already linked&quot;</span>, <span class="self">self</span>.as_str());
+            <span class="macro">crate::warn!</span>(<span class="string">"{} is already linked"</span>, <span class="self">self</span>.as_str());
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let </span>tool_directory = <span class="self">self</span>.as_path();
-
-        <span class="kw">let </span>binary_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.sh&quot;</span>, <span class="self">self</span>.kind.binary()));
+        <span class="kw">let </span>executable_path = <span class="self">self</span>.as_executable();
         <span class="kw">let </span>binaries_directory = Variable::BinariesDirectory.get::&lt;PathBuf&gt;();
 
         <span class="kw">if </span>!binaries_directory.exists() {
             std::fs::create_dir_all(<span class="kw-2">&amp;</span>binaries_directory)<span class="question-mark">?</span>;
         }
 
-        symlink(binary_path, binaries_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
+        symlink(executable_path, binaries_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked binary&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Linked binary"</span>);
 
-        <span class="kw">let </span>icon_path = tool_directory.join(<span class="macro">format!</span>(<span class="string">&quot;bin/{}.svg&quot;</span>, <span class="self">self</span>.kind.binary()));
-
+        <span class="kw">let </span>icon_path = <span class="self">self</span>.as_icon();
         <span class="kw">let </span>icons_directory = Variable::IconsDirectory.get::&lt;PathBuf&gt;();
 
         <span class="kw">if </span>!icons_directory.exists() {
@@ -260,27 +251,27 @@
 
         symlink(icon_path, icons_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked icon&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Linked icon"</span>);
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_linked() {
-            <span class="macro">anyhow::bail!</span>(<span class="string">&quot;{} is not linked&quot;</span>, <span class="self">self</span>.as_str());
+            <span class="macro">anyhow::bail!</span>(<span class="string">"{} is not linked"</span>, <span class="self">self</span>.as_str());
         }
 
         <span class="kw">let </span>binaries_directory = Variable::BinariesDirectory.get::&lt;PathBuf&gt;();
 
         std::fs::remove_file(binaries_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Unlinked binary&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Unlinked binary"</span>);
 
         <span class="kw">let </span>icons_directory = Variable::IconsDirectory.get::&lt;PathBuf&gt;();
 
         std::fs::remove_file(icons_directory.join(<span class="self">self</span>.kind.as_str()))<span class="question-mark">?</span>;
 
-        <span class="macro">crate::debug!</span>(<span class="string">&quot;Unlinked icon&quot;</span>);
+        <span class="macro">crate::debug!</span>(<span class="string">"Unlinked icon"</span>);
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -290,14 +281,14 @@
 
         <span class="comment">// Find an alternative version to link
         </span><span class="kw">let </span><span class="kw-2">mut </span>tools = Tool::list_kind(<span class="self">self</span>.kind)
-            .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;Failed to list installed tools for {}&quot;</span>, <span class="self">self</span>.kind))<span class="question-mark">?</span>;
+            .with_context(|| <span class="macro">format!</span>(<span class="string">"Failed to list installed tools for {}"</span>, <span class="self">self</span>.kind))<span class="question-mark">?</span>;
         tools.retain(|tool| tool != <span class="self">self</span>);
         tools.sort();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(tool) = tools.first() {
-            <span class="macro">crate::debug!</span>(<span class="string">&quot;Found alternative version: {}&quot;</span>, tool.as_str());
+            <span class="macro">crate::debug!</span>(<span class="string">"Found alternative version: {}"</span>, tool.as_str());
             tool.link()<span class="question-mark">?</span>;
-            <span class="macro">crate::debug!</span>(<span class="string">&quot;Linked alternative version {tool}&quot;</span>);
+            <span class="macro">crate::debug!</span>(<span class="string">"Linked alternative version {tool}"</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
