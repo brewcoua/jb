@@ -10,3 +10,4 @@ pub static BIN: Emoji = Emoji("\u{1F5D1}\u{FE0F} ", "");
 pub static CHECK: Emoji = Emoji("\u{2705}", "");
 pub static SKIP: Emoji = Emoji("\u{23ED}\u{FE0F} ", "");
 pub static TAG: Emoji = Emoji("\u{1F3F7}\u{FE0F} ", "");
+pub static FOLDER: Emoji = Emoji("\u{1F4C2}", "");

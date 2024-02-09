@@ -26,7 +26,8 @@ SUBCOMMANDS:
     list       List installed JetBrains tools
     link       Link a JetBrains tool to the PATH
     unlink     Unlink a JetBrains tool from the PATH
-    update     Update the CLI
+    update     Update the CLI to the latest version
+    cd         Open a new shell in the tools directory
     help       Print help
 ```
 

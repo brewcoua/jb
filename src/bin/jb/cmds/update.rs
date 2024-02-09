@@ -6,12 +6,7 @@ use termimad::crossterm::style::Color;
 
 pub(crate) fn command() -> Command {
     Command::new("update")
-        .about("Update the CLI")
-        .long_about("Update the CLI to the latest version")
-        .after_help(
-            "This command will update the CLI to the latest version. \
-            It will download the latest version and replace the current version with it.",
-        )
+        .about("Update the CLI to the latest version")
         .arg(
             arg!(-f --force)
                 .help("Force the update, even if the latest version is already installed")

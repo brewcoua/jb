@@ -4,6 +4,7 @@ mod list;
 mod uninstall;
 mod unlink;
 mod update;
+mod cd;
 
 use clap::{arg, Arg, Command, value_parser};
 use jb::error::Result;
@@ -60,6 +61,7 @@ pub fn cli() -> Command {
         .subcommand(link::command())
         .subcommand(unlink::command())
         .subcommand(update::command())
+        .subcommand(cd::command())
 }
 
 pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
@@ -71,6 +73,7 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),
             "update" => update::dispatch(sub_matches),
+            "cd" => cd::dispatch(),
             _ => jb::bail!("Unknown subcommand {} provided", name),
         }
     } else {
