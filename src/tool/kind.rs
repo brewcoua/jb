@@ -4,6 +4,7 @@
 
 use std::fmt::Display;
 use std::str::FromStr;
+use serde::Serialize;
 use crate::Tool;
 use super::List;
 
@@ -263,5 +264,13 @@ impl Ord for Kind {
 impl PartialOrd for Kind {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Serialize for Kind {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        self.as_str().serialize(serializer)
     }
 }

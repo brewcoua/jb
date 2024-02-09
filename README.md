@@ -28,6 +28,8 @@ SUBCOMMANDS:
     unlink     Unlink a JetBrains tool from the PATH
     update     Update the CLI to the latest version
     cd         Open a new shell in the tools directory
+    info       Print information about the current environment and available tools
+    meta       Print metadata about the current environment and available tools in JSON format
     help       Print help
 ```
 

@@ -1,3 +1,6 @@
+//! Module for the `jb` command line interface
+
+/// Commands
 mod install;
 mod uninstall;
 mod refresh;
@@ -6,6 +9,9 @@ mod unlink;
 mod list;
 mod update;
 mod cd;
+mod info;
+mod meta;
+
 
 use clap::{arg, Arg, Command, value_parser};
 use jb::error::Result;
@@ -64,6 +70,8 @@ pub fn cli() -> Command {
         .subcommand(unlink::command())
         .subcommand(update::command())
         .subcommand(cd::command())
+        .subcommand(info::command())
+        .subcommand(meta::command())
 }
 
 pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
@@ -77,6 +85,11 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "unlink" => unlink::dispatch(sub_matches),
             "update" => update::dispatch(sub_matches),
             "cd" => cd::dispatch(),
+            "info" => {
+                info::dispatch();
+                Ok(())
+            },
+            "meta" => meta::dispatch(),
             _ => jb::bail!("Unknown subcommand {} provided", name),
         }
     } else {

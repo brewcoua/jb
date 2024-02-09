@@ -8,7 +8,7 @@ use anyhow::Context;
 use serde::Deserialize;
 
 /// A version number
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 pub struct Version {
     /// The major version (e.g. 2021.1)
@@ -18,7 +18,7 @@ pub struct Version {
 }
 
 /// A major version number (e.g. 2021.1)
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 pub struct Major {
     pub year: u16,

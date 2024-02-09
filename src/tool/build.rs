@@ -8,7 +8,7 @@ use anyhow::Context;
 use serde::Deserialize;
 
 /// A build version number
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[readonly::make]
 pub struct Build {
     pub major: u16,

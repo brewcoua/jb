@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use std::fmt::Display;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use super::kind::Kind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -66,6 +66,15 @@ impl<'de> Deserialize<'de> for Type {
     {
         let s = String::deserialize(deserializer)?;
         Self::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+impl Serialize for Type {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.as_str().serialize(serializer)
     }
 }
 

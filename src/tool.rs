@@ -20,7 +20,7 @@ pub use build::Build;
 pub use release::Type;
 
 /// A tool.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[readonly::make]
 pub struct Tool {
     pub kind: Kind,
