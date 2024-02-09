@@ -1,8 +1,9 @@
 mod install;
-mod link;
-mod list;
 mod uninstall;
+mod refresh;
+mod link;
 mod unlink;
+mod list;
 mod update;
 mod cd;
 
@@ -57,6 +58,7 @@ pub fn cli() -> Command {
         )
         .subcommand(install::command())
         .subcommand(uninstall::command())
+        .subcommand(refresh::command())
         .subcommand(list::command())
         .subcommand(link::command())
         .subcommand(unlink::command())
@@ -69,6 +71,7 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
         match name {
             "install" => install::dispatch(sub_matches),
             "uninstall" => uninstall::dispatch(sub_matches),
+            "refresh" => refresh::dispatch(sub_matches),
             "list" => list::dispatch(),
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),

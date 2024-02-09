@@ -1,4 +1,3 @@
-use std::thread;
 use clap::{arg, value_parser, Command};
 use jb::{Tool, Result, Batch};
 use jb::tool::{Link, List};

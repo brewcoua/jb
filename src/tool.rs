@@ -35,6 +35,11 @@ impl Tool {
         Self { kind, version, build, release }
     }
 
+    #[must_use]
+    pub fn from_kind(kind: Kind) -> Self {
+        Self::new(kind, None, None, None)
+    }
+
     /// Returns the tool as a string.
     ///
     /// This is used to convert the tool to a string for display purposes and for serialization.

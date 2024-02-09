@@ -4,6 +4,8 @@
 
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::Tool;
+use crate::tool::{Link, List};
 
 /// The tool kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -163,6 +165,28 @@ impl Kind {
             Self::Space => "SPA",
             Self::Gateway => "GW",
         }
+    }
+
+    /// Get the linked tool of this kind.
+    ///
+    /// This returns the linked tool of this kind, if any.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool list fails.
+    pub fn linked(&self) -> anyhow::Result<Option<Tool>> {
+        let tools = Tool::list_kind(*self)?;
+        Ok(tools.into_iter().find(|tool| tool.is_linked()))
+    }
+
+    /// Get the latest tool of this kind.
+    ///
+    /// This returns the latest tool of this kind, if any.
+    ///
+    /// # Errors
+    /// This function will return an error if the tool list fails.
+    pub fn latest(&self) -> anyhow::Result<Option<Tool>> {
+        let tools = Tool::list_kind(*self)?;
+        Ok(tools.into_iter().max())
     }
 }
 
