@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.5.1](https://github.com/brewcoua/jb/compare/v1.5.0..1.5.1) - 2024-02-09
+## [1.5.2](https://github.com/brewcoua/jb/compare/v1.5.1..1.5.2) - 2024-02-09
+
+### Bug Fixes
+
+- **(refresh)** add install flag for installing if tool not already installed - ([74e1ba2](https://github.com/brewcoua/jb/commit/74e1ba2ccb42ff0a23be94be3236d33e0ae1651e)) - Brewen Couaran
+
+---
+## [1.5.1](https://github.com/brewcoua/jb/compare/v1.5.0..v1.5.1) - 2024-02-09
 
 ### Features
 
