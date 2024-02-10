@@ -3,7 +3,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.5.2](https://github.com/brewcoua/jb/compare/v1.5.1..1.5.2) - 2024-02-09
+## [1.5.3](https://github.com/brewcoua/jb/compare/v1.5.2..1.5.3) - 2024-02-10
+
+### Features
+
+- **(refresh)** add --all flag for updating all installed tools - ([1e3e4c8](https://github.com/brewcoua/jb/commit/1e3e4c820864799fbd6662b78c883096e4de31c8)) - Brewen Couaran
+- add desktop command for generating desktop entries - ([45a3314](https://github.com/brewcoua/jb/commit/45a33145450935b3c5e82f85f613d35cfeb4c44a)) - Brewen Couaran
+- add auto updates through systemd service and timer - ([d84161b](https://github.com/brewcoua/jb/commit/d84161b53a73aaa66f6bc0ea5bec95cc7f4edda8)) - Brewen Couaran
+
+---
+## [1.5.2](https://github.com/brewcoua/jb/compare/v1.5.1..v1.5.2) - 2024-02-09
 
 ### Bug Fixes
 
