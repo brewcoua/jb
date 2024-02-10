@@ -8,6 +8,7 @@ mod link;
 mod unlink;
 mod desktop;
 mod list;
+mod auto;
 mod update;
 mod cd;
 mod info;
@@ -70,6 +71,7 @@ pub fn cli() -> Command {
         .subcommand(link::command())
         .subcommand(unlink::command())
         .subcommand(desktop::command())
+        .subcommand(auto::command())
         .subcommand(update::command())
         .subcommand(cd::command())
         .subcommand(info::command())
@@ -86,6 +88,7 @@ pub(crate) fn dispatch(args: Option<(&str, &clap::ArgMatches)>) -> Result<()> {
             "link" => link::dispatch(sub_matches),
             "unlink" => unlink::dispatch(sub_matches),
             "desktop" => desktop::dispatch(),
+            "auto" => auto::dispatch(sub_matches),
             "update" => update::dispatch(sub_matches),
             "cd" => cd::dispatch(),
             "info" => {

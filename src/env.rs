@@ -35,6 +35,13 @@ pub enum Variable {
     ///
     /// `JB_DESKTOP_DIR`
     DesktopDirectory,
+
+    /// The directory where systemd service files are installed. (e.g. /usr/local/share/systemd/user)
+    /// This is used to manage timers for automatic updates.
+    /// The default value is $HOME/.config/systemd/user or /etc/systemd/user if running as root.
+    ///
+    /// `JB_SYSTEMD_DIR`
+    SystemdDirectory,
 }
 
 impl Variable {
@@ -156,6 +163,18 @@ impl Variable {
                     .to_string()
                     .into()
             },
+            Variable::SystemdDirectory => {
+                if Self::is_root() {
+                    return "/etc/systemd/user".to_string().into();
+                }
+
+                PathBuf::from(env::var("HOME").expect("HOME environment variable not set"))
+                    .join(".config/systemd/user")
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+                    .into()
+            },
         }
     }
 
@@ -169,6 +188,7 @@ impl Variable {
             Variable::IconsDirectory => "JB_ICONS_DIR",
             Variable::BinariesDirectory => "JB_BINARIES_DIR",
             Variable::DesktopDirectory => "JB_DESKTOP_DIR",
+            Variable::SystemdDirectory => "JB_SYSTEMD_DIR",
         }
     }
 
