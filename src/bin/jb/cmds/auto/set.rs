@@ -73,6 +73,15 @@ pub(super) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
 
     jb::catch!(std::fs::write(&timer_path, timer_content));
 
+    // Reload daemon
+    jb::debug!("Reloading systemd daemon");
+    jb::catch!(
+        std::process::Command::new("systemctl")
+            .arg("--user")
+            .arg("daemon-reload")
+            .status()
+    );
+
     jb::info!("{CHECK} Set automatic updates to {}", frequency);
 
     Ok(())
