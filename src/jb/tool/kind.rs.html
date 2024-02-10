@@ -275,6 +275,36 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `JetBrains` tool kinds and parsing
 //!
 //! This module contains types and parsing for `JetBrains` tool kinds.
@@ -444,6 +474,36 @@
 
             <span class="self">Self</span>::Space =&gt; <span class="string">"SPA"</span>,
             <span class="self">Self</span>::Gateway =&gt; <span class="string">"GW"</span>,
+        }
+    }
+
+    <span class="doccomment">/// Get the tool kind as a human-readable description.
+    ///
+    /// These descriptions are directly from the `JetBrains` website.
+    /// This is used to display a description in desktop entries.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>description(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::IntelliJIdeaCommunity | <span class="self">Self</span>::IntelliJIdeaUltimate =&gt; <span class="string">"The Leading Java and Kotlin IDE"</span>,
+            <span class="self">Self</span>::PyCharmCommunity | <span class="self">Self</span>::PyCharmProfessional =&gt; <span class="string">"The Python IDE for Professional Developers"</span>,
+            <span class="self">Self</span>::CLion | <span class="self">Self</span>::CLionNova =&gt; <span class="string">"A cross-platform IDE for C and C++"</span>,
+            <span class="self">Self</span>::RustRover =&gt; <span class="string">"Focus on what matters"</span>,
+            <span class="self">Self</span>::WebStorm =&gt; <span class="string">"The JavaScript and TypeScript IDE"</span>,
+            <span class="self">Self</span>::PhpStorm =&gt; <span class="string">"The Lightning-Smart PHP IDE"</span>,
+            <span class="self">Self</span>::Rider =&gt; <span class="string">"Fast &amp; powerful cross-platform .NET IDE"</span>,
+            <span class="self">Self</span>::GoLand =&gt; <span class="string">"The complete IDE crafted for Gophers"</span>,
+            <span class="self">Self</span>::RubyMine =&gt; <span class="string">"Empowering Ruby Developers"</span>,
+            <span class="self">Self</span>::DataGrip =&gt; <span class="string">"Many databases, one tool"</span>,
+            <span class="self">Self</span>::DataSpell =&gt; <span class="string">"Turn data into insights with ease"</span>,
+            <span class="self">Self</span>::Fleet =&gt; <span class="string">"Next-generation IDE by JetBrains"</span>,
+            <span class="self">Self</span>::Aqua =&gt; <span class="string">"An IDE for writing tests you can be proud of"</span>,
+            <span class="self">Self</span>::Writerside =&gt; <span class="string">"Write, test, build, and publish the best documentation"</span>,
+            <span class="self">Self</span>::DotMemory =&gt; <span class="string">"The .NET Memory Profiler"</span>,
+            <span class="self">Self</span>::DotTrace =&gt; <span class="string">".NET Performance Profiler"</span>,
+            <span class="self">Self</span>::MPS =&gt; <span class="string">"Meta Programming System"</span>,
+
+            <span class="self">Self</span>::Space =&gt; <span class="string">"The Intelligent Code Collaboration Platform"</span>,
+            <span class="self">Self</span>::Gateway =&gt; <span class="string">"Your single entry point to all remote development environments"</span>,
         }
     }
 

@@ -230,6 +230,36 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module for tools and tool actions.
 //!
 //! Tools can be installed, updated, and removed. They can also be used to perform actions.
@@ -410,6 +440,36 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>is_installed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.as_path().exists()
+    }
+
+    <span class="doccomment">/// Returns a formatted string for the tool's desktop entry.
+    ///
+    /// This is used to create a desktop entry for the tool.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>as_desktop(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">let </span>binary_path = Variable::BinariesDirectory.get::&lt;std::path::PathBuf&gt;()
+            .join(<span class="self">self</span>.kind.as_str());
+        <span class="kw">let </span>icon_path = Variable::IconsDirectory.get::&lt;std::path::PathBuf&gt;()
+            .join(<span class="self">self</span>.kind.as_str());
+
+        <span class="macro">format!</span>(<span class="string">"[Desktop Entry]\n\
+                 Version=1.4\n\
+                 Type=Application\n\
+                 Name={kind}\n\
+                 Comment={description}\n\
+                 Categories=Development;IDE;\n\
+                 Icon={icon}\n\
+                 Exec={binary} %f\n\
+                 \n\
+                 Terminal=false\n\
+                 StartupWMClass=jetbrains-{kind_str}\n\
+                 StartupNotify=true"</span>,
+                 kind = <span class="self">self</span>.kind,
+                 kind_str = <span class="self">self</span>.kind.as_str(),
+                 description = <span class="self">self</span>.kind.description(),
+                 icon = icon_path.display(),
+                 binary = binary_path.display(),
+        )
     }
 }
 
