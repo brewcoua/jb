@@ -179,6 +179,36 @@ impl Tool {
     pub fn is_installed(&self) -> bool {
         self.as_path().exists()
     }
+
+    /// Returns a formatted string for the tool's desktop entry.
+    ///
+    /// This is used to create a desktop entry for the tool.
+    #[must_use]
+    pub fn as_desktop(&self) -> String {
+        let binary_path = Variable::BinariesDirectory.get::<std::path::PathBuf>()
+            .join(self.kind.as_str());
+        let icon_path = Variable::IconsDirectory.get::<std::path::PathBuf>()
+            .join(self.kind.as_str());
+
+        format!("[Desktop Entry]\n\
+                 Version=1.4\n\
+                 Type=Application\n\
+                 Name={kind}\n\
+                 Comment={description}\n\
+                 Categories=Development;IDE;\n\
+                 Icon={icon}\n\
+                 Exec={binary} %f\n\
+                 \n\
+                 Terminal=false\n\
+                 StartupWMClass=jetbrains-{kind_str}\n\
+                 StartupNotify=true",
+                 kind = self.kind,
+                 kind_str = self.kind.as_str(),
+                 description = self.kind.description(),
+                 icon = icon_path.display(),
+                 binary = binary_path.display(),
+        )
+    }
 }
 
 impl Display for Tool {

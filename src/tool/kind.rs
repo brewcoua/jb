@@ -170,6 +170,36 @@ impl Kind {
         }
     }
 
+    /// Get the tool kind as a human-readable description.
+    ///
+    /// These descriptions are directly from the `JetBrains` website.
+    /// This is used to display a description in desktop entries.
+    #[must_use]
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::IntelliJIdeaCommunity | Self::IntelliJIdeaUltimate => "The Leading Java and Kotlin IDE",
+            Self::PyCharmCommunity | Self::PyCharmProfessional => "The Python IDE for Professional Developers",
+            Self::CLion | Self::CLionNova => "A cross-platform IDE for C and C++",
+            Self::RustRover => "Focus on what matters",
+            Self::WebStorm => "The JavaScript and TypeScript IDE",
+            Self::PhpStorm => "The Lightning-Smart PHP IDE",
+            Self::Rider => "Fast & powerful cross-platform .NET IDE",
+            Self::GoLand => "The complete IDE crafted for Gophers",
+            Self::RubyMine => "Empowering Ruby Developers",
+            Self::DataGrip => "Many databases, one tool",
+            Self::DataSpell => "Turn data into insights with ease",
+            Self::Fleet => "Next-generation IDE by JetBrains",
+            Self::Aqua => "An IDE for writing tests you can be proud of",
+            Self::Writerside => "Write, test, build, and publish the best documentation",
+            Self::DotMemory => "The .NET Memory Profiler",
+            Self::DotTrace => ".NET Performance Profiler",
+            Self::MPS => "Meta Programming System",
+
+            Self::Space => "The Intelligent Code Collaboration Platform",
+            Self::Gateway => "Your single entry point to all remote development environments",
+        }
+    }
+
     /// Get the linked tool of this kind.
     ///
     /// This returns the linked tool of this kind, if any.

@@ -30,6 +30,11 @@ pub enum Variable {
     ///
     /// `JB_BINARIES_DIR`
     BinariesDirectory,
+    /// The directory where desktop files are installed. (e.g. /usr/local/share/applications)
+    /// The default value is $HOME/.local/share/applications or /usr/local/share/applications if running as root.
+    ///
+    /// `JB_DESKTOP_DIR`
+    DesktopDirectory,
 }
 
 impl Variable {
@@ -139,6 +144,18 @@ impl Variable {
                     .to_string()
                     .into()
             },
+            Variable::DesktopDirectory => {
+                if Self::is_root() {
+                    return "/usr/local/share/applications".to_string().into();
+                }
+
+                PathBuf::from(env::var("HOME").expect("HOME environment variable not set"))
+                    .join(".local/share/applications")
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+                    .into()
+            },
         }
     }
 
@@ -151,6 +168,7 @@ impl Variable {
             Variable::ToolsDirectory => "JB_TOOLS_DIR",
             Variable::IconsDirectory => "JB_ICONS_DIR",
             Variable::BinariesDirectory => "JB_BINARIES_DIR",
+            Variable::DesktopDirectory => "JB_DESKTOP_DIR",
         }
     }
 
