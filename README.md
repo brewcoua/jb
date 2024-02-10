@@ -26,6 +26,8 @@ SUBCOMMANDS:
     list       List installed JetBrains tools
     link       Link a JetBrains tool to the PATH
     unlink     Unlink a JetBrains tool from the PATH
+    desktop    Create or update the desktop entries for installed tools
+    auto       Manage automatic updates for tools
     update     Update the CLI to the latest version
     cd         Open a new shell in the tools directory
     info       Print information about the current environment and available tools
