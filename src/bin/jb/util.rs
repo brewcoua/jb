@@ -32,9 +32,9 @@ pub(crate) fn install_tools(error_batch: &mut jb::Batch, tools: Vec<jb::Tool>, f
     let tools: Vec<(jb::Tool, jb::api::deserial::Download)> = tools.iter().filter(|(tool, _)| {
         if tool.as_path().exists() {
             if force {
-                jb::warn!("{} is already installed, but force is enabled, continuing...", tool.as_str());
+                jb::warn!("{tool} is already installed, but force is enabled, continuing...");
             } else {
-                jb::warn!("{} is already installed, skipping... {SKIP}", tool.as_str());
+                jb::warn!("{tool} is already installed, skipping... {SKIP}");
                 return false;
             }
         }

@@ -13,4 +13,4 @@ pub static TAG: Emoji = Emoji("\u{1F3F7}\u{FE0F} ", "");
 pub static FOLDER: Emoji = Emoji("\u{1F4C2}", "");
 pub static CIRCLE_ARROWS: Emoji = Emoji("\u{1F504}", "");
 pub static PACKAGE: Emoji = Emoji("\u{1F4E6}", "");
-pub static FIRECRACKER: Emoji = Emoji("\u{1F9E8} ", "");
+pub static FIRECRACKER: Emoji = Emoji("\u{1F9E8}", "");

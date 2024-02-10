@@ -7,7 +7,7 @@ pub(crate) fn command() -> Command {
         .about("Update a JetBrains tool to the latest version")
         .arg(
             arg!(tools: <TOOLS> "The tools to update")
-                .required(true)
+                .required(false)
                 .value_parser(value_parser!(Kind))
                 .num_args(1..=10),
         )
@@ -21,30 +21,57 @@ pub(crate) fn command() -> Command {
                 .help("Install the tool if it is not already installed")
                 .required(false),
         )
+        .arg(
+            arg!(--all)
+                .help("Apply the command to all installed tools (overrides the tools argument)")
+                .long_help("Apply the command to all installed tools (overrides the tools argument)\nIt will not install any tools that are not already installed, regardless of the --install flag")
+                .required(false),
+        )
 }
 
 pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
-    let kinds = args.get_many::<Kind>("tools")
-        .expect("Could not find argument tools")
-        .map(Clone::clone);
+    let kinds = args.get_many::<Kind>("tools");
+    let all = args.get_flag("all");
     let force = args.get_flag("force");
     let install = args.get_flag("install");
 
+    if kinds.is_none() && !all {
+        jb::bail!("No tools specified, nothing to update");
+    } else if all && kinds.is_some() {
+        jb::warn!("Ignoring tools argument, --all flag is set... {SKIP}");
+    }
+
     let mut error_batch = jb::Batch::new();
-    let mut tools: Vec<Tool> = kinds.filter(|kind| {
-            let tools = Tool::list_kind(*kind);
-            if tools.is_err() || tools.unwrap().is_empty() {
-                if install {
-                    jb::warn!("No tools found for {kind}, but installing anyway...");
-                } else {
-                    jb::warn!("No tools found for {kind}, skipping... {SKIP}");
-                    return false;
+    let mut tools: Vec<Tool>;
+
+    if all { // If the --all flag is set, get all installed tools
+        let mut installed_tools = jb::catch!(Tool::list());
+        installed_tools.sort_by(|a, b| a.kind.cmp(&b.kind));
+        installed_tools.dedup_by(|a, b| a.kind == b.kind);
+
+        tools = installed_tools
+            .iter()
+            .map(|tool| Tool::from_kind(tool.kind))
+            .collect();
+    } else { // Otherwise, get the tools from the arguments
+        tools = kinds.unwrap().map(Clone::clone)
+            .filter(|kind| {
+                let tools = Tool::list_kind(*kind);
+                if tools.is_err() || tools.unwrap().is_empty() {
+                    if install {
+                        jb::warn!("No tools found for {kind}, but installing anyway...");
+                    } else {
+                        jb::warn!("No tools found for {kind}, skipping... {SKIP}");
+                        return false;
+                    }
                 }
-            }
-            true
-        })
-        .map(Tool::from_kind)
-        .collect();
+                true
+            })
+            .map(Tool::from_kind)
+            .collect();
+
+        tools.sort(); tools.dedup();
+    }
 
     let mut old_tools: Vec<Tool> = tools
         .iter()
@@ -58,8 +85,6 @@ pub(crate) fn dispatch(args: &clap::ArgMatches) -> jb::Result<()> {
             }
         })
         .collect();
-
-    tools.sort(); tools.dedup();
 
     if tools.is_empty() {
         jb::bail!("No tools found, nothing to update");
