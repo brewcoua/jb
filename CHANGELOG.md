@@ -3,7 +3,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.5.3](https://github.com/brewcoua/jb/compare/v1.5.2..1.5.3) - 2024-02-10
+## [1.5.4](https://github.com/brewcoua/jb/compare/v1.5.3..1.5.4) - 2024-02-10
+
+### Bug Fixes
+
+- **(auto)** reload daemon when updating services - ([12e4703](https://github.com/brewcoua/jb/commit/12e47037d77e68c03e01c3a805648118254deb5f)) - Brewen Couaran
+
+---
+## [1.5.3](https://github.com/brewcoua/jb/compare/v1.5.2..v1.5.3) - 2024-02-10
 
 ### Features
 
