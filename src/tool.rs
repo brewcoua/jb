@@ -200,10 +200,10 @@ impl Tool {
                  Exec={binary} %f\n\
                  \n\
                  Terminal=false\n\
-                 StartupWMClass=jetbrains-{kind_str}\n\
+                 StartupWMClass=jetbrains-{binary_str}\n\
                  StartupNotify=true",
                  kind = self.kind,
-                 kind_str = self.kind.as_str(),
+                 binary_str = self.kind.binary().to_lowercase(),
                  description = self.kind.description(),
                  icon = icon_path.display(),
                  binary = binary_path.display(),
