@@ -462,10 +462,10 @@
                  Exec={binary} %f\n\
                  \n\
                  Terminal=false\n\
-                 StartupWMClass=jetbrains-{kind_str}\n\
+                 StartupWMClass=jetbrains-{binary_str}\n\
                  StartupNotify=true"</span>,
                  kind = <span class="self">self</span>.kind,
-                 kind_str = <span class="self">self</span>.kind.as_str(),
+                 binary_str = <span class="self">self</span>.kind.binary().to_lowercase(),
                  description = <span class="self">self</span>.kind.description(),
                  icon = icon_path.display(),
                  binary = binary_path.display(),
