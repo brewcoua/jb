@@ -97,6 +97,12 @@ jobs:
             echo "needed=false" >> "$GITHUB_OUTPUT"
           else
             echo "latest_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+          
+            # If the version starts with a 'v', strip it
+            if [[ $BUMPED_VERSION == v* ]]; then
+              BUMPED_VERSION=${BUMPED_VERSION:1}
+            fi
+          
             echo "bumped_version=$BUMPED_VERSION" >> "$GITHUB_OUTPUT"
             echo "needed=true" >> "$GITHUB_OUTPUT"
           fi
