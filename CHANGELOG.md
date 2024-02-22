@@ -3,11 +3,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
-## [1.5.4](https://github.com/brewcoua/jb/compare/v1.5.3..1.5.4) - 2024-02-10
+## [1.5.4](https://github.com/brewcoua/jb/compare/v1.5.3..v1.5.4) - 2024-02-10
 
 ### Bug Fixes
 
 - **(auto)** reload daemon when updating services - ([12e4703](https://github.com/brewcoua/jb/commit/12e47037d77e68c03e01c3a805648118254deb5f)) - Brewen Couaran
+- **(desktop)** WMClass not matching with the binary name - ([2270e8f](https://github.com/brewcoua/jb/commit/2270e8f4b299951d8330c632c95e9da7258e040f)) - Brewen Couaran
 
 ---
 ## [1.5.3](https://github.com/brewcoua/jb/compare/v1.5.2..v1.5.3) - 2024-02-10
@@ -42,6 +43,13 @@ All notable changes to this project will be documented in this file. See [conven
 ---
 ## [1.4.3](https://github.com/brewcoua/jb/compare/v1.4.2..v1.4.3) - 2024-02-09
 
+### Features
+
+- **(cmds)** add refresh command for updating tools - ([a3817ac](https://github.com/brewcoua/jb/commit/a3817ac9a042f3a6c58e0414a5e88d23aa927384)) - Brewen Couaran
+
+---
+## [1.4.2](https://github.com/brewcoua/jb/compare/v1.4.1..v1.4.2) - 2024-02-08
+
 ### Bug Fixes
 
 - **(kind)** normalize icon and executable path and fix fleet's paths - ([5233935](https://github.com/brewcoua/jb/commit/523393508cec4ada4d647026c4fdc9b558c55a62)) - Brewen Couaran
@@ -49,13 +57,6 @@ All notable changes to this project will be documented in this file. See [conven
 ### Features
 
 - **(cmds)** add cd command and update readme docs - ([66af588](https://github.com/brewcoua/jb/commit/66af5887d7f6192a6355d7fd90e0b9cf54bf53e0)) - Brewen Couaran
-- **(cmds)** add refresh command for updating tools - ([a3817ac](https://github.com/brewcoua/jb/commit/a3817ac9a042f3a6c58e0414a5e88d23aa927384)) - Brewen Couaran
-
----
-## [1.4.2](https://github.com/brewcoua/jb/compare/v1.4.1..v1.4.2) - 2024-02-08
-
-### Features
-
 - **(update)** add markdown display for changelog - ([110a8c4](https://github.com/brewcoua/jb/commit/110a8c436643e783df062878b7258f8d62896a10)) - Brewen Couaran
 
 ---
@@ -92,13 +93,6 @@ All notable changes to this project will be documented in this file. See [conven
 - **(bin)** add update command to update cli - ([d3402f7](https://github.com/brewcoua/jb/commit/d3402f7c4b525bf0e24a42d53c77bcbbde558a44)) - Brewen Couaran
 
 ---
-## [1.3.1](https://github.com/brewcoua/jb/compare/v1.3.0..v1.3.1) - 2024-02-05
-
-### Security
-
-- **(atty)** remove atty and use std as atty is unmaintained - ([6ddf6c7](https://github.com/brewcoua/jb/commit/6ddf6c712b808840e495dc8826f4ec57ed2b4867)) - Brewen Couaran
-
----
 ## [1.3.0](https://github.com/brewcoua/jb/compare/v1.2.5..v1.3.0) - 2024-02-05
 
 ### Bug Fixes
@@ -124,6 +118,10 @@ All notable changes to this project will be documented in this file. See [conven
 - move back lib and bin crates together - ([9894b7b](https://github.com/brewcoua/jb/commit/9894b7b34ab6fb85a23d987f0f6d565264326874)) - Brewen Couaran
 - remove old files and rename parse mod to api - ([6cc824f](https://github.com/brewcoua/jb/commit/6cc824fbdc3879f3a258b4df516cd9f6739f5a4b)) - Brewen Couaran
 
+### Security
+
+- **(atty)** remove atty and use std as atty is unmaintained - ([6ddf6c7](https://github.com/brewcoua/jb/commit/6ddf6c712b808840e495dc8826f4ec57ed2b4867)) - Brewen Couaran
+
 ---
 ## [1.2.5](https://github.com/brewcoua/jb/compare/v1.2.4..v1.2.5) - 2024-02-04
 
@@ -132,18 +130,12 @@ All notable changes to this project will be documented in this file. See [conven
 - **(tool)** take longest match first - ([06c67df](https://github.com/brewcoua/jb/commit/06c67df651706d638e25a04ff282f805aa969b1d)) - Brewen Couaran
 
 ---
-## [1.2.4](https://github.com/brewcoua/jb/compare/v1.2.3..v1.2.4) - 2024-02-04
-
-### Bug Fixes
-
-- **(tool)** kind parsing error on tool names with hyphens - ([6eee164](https://github.com/brewcoua/jb/commit/6eee16427940708930a724474e6324f0aba773ca)) - Brewen Couaran
-
----
 ## [1.2.3](https://github.com/brewcoua/jb/compare/v1.2.2..v1.2.3) - 2024-02-04
 
 ### Bug Fixes
 
 - **(cargo)** set release profile with lto and strip - ([691d833](https://github.com/brewcoua/jb/commit/691d83319c2b2c258edc221a8ab2bc3a84b6bf9e)) - Brewen Couaran
+- **(tool)** kind parsing error on tool names with hyphens - ([6eee164](https://github.com/brewcoua/jb/commit/6eee16427940708930a724474e6324f0aba773ca)) - Brewen Couaran
 
 ---
 ## [1.2.1](https://github.com/brewcoua/jb/compare/v1.2.0..v1.2.1) - 2024-02-03
