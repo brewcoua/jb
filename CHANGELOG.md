@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [1.5.6](https://github.com/brewcoua/jb/compare/v1.5.5..v1.5.6) - 2024-03-11
+
+### Security
+
+- **(deps)** bump dependencies and fix mio vulnerability - ([d317cb9](https://github.com/brewcoua/jb/commit/d317cb965fbb4ba37b1ae5c0e345cd5648f05679)) - Brewen Couaran
+
+---
 ## [1.5.4](https://github.com/brewcoua/jb/compare/v1.5.3..v1.5.4) - 2024-02-10
 
 ### Bug Fixes
