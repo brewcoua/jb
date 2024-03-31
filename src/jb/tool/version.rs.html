@@ -130,6 +130,10 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Version types and parsing
 //!
 //! This module contains types and parsing for version numbers.
@@ -211,9 +215,13 @@
 
         <span class="comment">// If it has 3 parts, both the major and minor version are present
         </span><span class="kw">let </span>minor = parts[<span class="number">2</span>].parse::&lt;u8&gt;()
-            .with_context(|| <span class="macro">format!</span>(<span class="string">"Failed to parse minor version: {}"</span>, parts[<span class="number">2</span>]))<span class="question-mark">?</span>;
+            .with_context(|| <span class="macro">format!</span>(<span class="string">"Failed to parse minor version: {}"</span>, parts[<span class="number">2</span>]));
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new(major, <span class="prelude-val">Some</span>(minor)))
+        <span class="kw">if </span>minor.is_err() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">Self</span>::new(major, <span class="prelude-val">None</span>));
+        }
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new(major, <span class="prelude-val">Some</span>(minor.unwrap())))
     }
 }
 
