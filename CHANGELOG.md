@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [1.5.7](https://github.com/brewcoua/jb/compare/v1.5.6..v1.5.7) - 2024-03-31
+
+### Bug Fixes
+
+- **(kinds)** remove clion-nova as it is merged with clion - ([ba11b40](https://github.com/brewcoua/jb/commit/ba11b40eb79aa49c5ff159ef8837fbf42c53f93f)) - Brewen Couaran
+
+---
 ## [1.5.6](https://github.com/brewcoua/jb/compare/v1.5.5..v1.5.6) - 2024-03-11
 
 ### Security
