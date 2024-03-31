@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"jb":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.76.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"jb/error/struct.Batch.html\" title=\"struct jb::error::Batch\">Batch</a>"]]
+"jb":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.77.1/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"jb/error/struct.Batch.html\" title=\"struct jb::error::Batch\">Batch</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
