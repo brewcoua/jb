@@ -18,7 +18,7 @@ impl Type {
     pub fn kind_default(kind: Kind) -> Self {
         match kind {
             Kind::Fleet | Kind::Aqua => Self::Preview,
-            Kind::Writerside | Kind::CLionNova | Kind::RustRover => Self::EAP,
+            Kind::Writerside | Kind::RustRover => Self::EAP,
             _ => Self::Release,
         }
     }
