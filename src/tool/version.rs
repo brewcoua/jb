@@ -79,9 +79,13 @@ impl FromStr for Version {
 
         // If it has 3 parts, both the major and minor version are present
         let minor = parts[2].parse::<u8>()
-            .with_context(|| format!("Failed to parse minor version: {}", parts[2]))?;
+            .with_context(|| format!("Failed to parse minor version: {}", parts[2]));
 
-        Ok(Self::new(major, Some(minor)))
+        if minor.is_err() {
+            return Ok(Self::new(major, None));
+        }
+
+        Ok(Self::new(major, Some(minor.unwrap())))
     }
 }
 
