@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---
+## [1.5.8](https://github.com/brewcoua/jb/compare/v1.5.7..v1.5.8) - 2024-03-31
+
+### Bug Fixes
+
+- **(version)** avoid panic on invalid minor version (e.g. letter) - ([e53ce1f](https://github.com/brewcoua/jb/commit/e53ce1f5b6e95c29d2ddbacce855667a8bf91f6b)) - Brewen Couaran
+
+---
 ## [1.5.7](https://github.com/brewcoua/jb/compare/v1.5.6..v1.5.7) - 2024-03-31
 
 ### Bug Fixes
