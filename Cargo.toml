@@ -46,7 +46,7 @@ dialoguer = "0.11"
 termimad = "0.29"
 
 [dependencies.reqwest] # HTTP client
-version = "0.11"
+version = "0.12"
 default-features = false
 features = ["blocking","json","stream","rustls-tls"]
 
